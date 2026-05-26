@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order UGC Video — Vishleshak UGC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0A1628;
+      --navy-soft: #0f1f3d;
+      --gold: #C9A84C;
+      --gold-dark: #a8832e;
+      --gold-light: #fef6e4;
+      --white: #ffffff;
+      --bg: #f0f4f8;
+      --ink: #1a2740;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --green: #16a34a;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--navy);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    /* Header */
+    .header {
+      background: var(--navy);
+      padding: 24px 20px 20px;
+      text-align: center;
+    }
+    .header-logo {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .header h1 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+    .header p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+    }
+    /* Page wrapper */
+    .page {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+    /* Card */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: 0 8px 32px rgba(10,22,40,0.18);
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 20px;
+    }
+    /* Field */
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .field input[type="text"],
+    .field input[type="tel"],
+    .field input[type="email"],
+    .field textarea {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+      background: #fafbfc;
+    }
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--gold);
+      background: var(--white);
+    }
+    .field textarea { resize: vertical; min-height: 80px; }
+    /* Dictate */
+    .notes-wrap { position: relative; }
+    .notes-wrap textarea { padding-right: 44px; }
+    .mic-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+      z-index: 1;
+    }
+    .mic-btn:hover { background: #e2e8f0; }
+    .mic-btn.listening { background: #fee2e2; color: #ef4444; animation: pulse-mic 1s infinite; }
+    @keyframes pulse-mic { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,0)} }
+    /* Segmented */
+    .segmented {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .segmented button {
+      flex: 1;
+      min-width: 72px;
+      padding: 9px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: 9px;
+      background: #fafbfc;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .segmented button.active {
+      border-color: var(--gold);
+      background: var(--gold-light);
+      color: var(--ink);
+      font-weight: 600;
+    }
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed var(--line);
+      border-radius: 12px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: #fafbfc;
+      position: relative;
+    }
+    .drop-zone:hover,
+    .drop-zone.drag-over { border-color: var(--gold); background: var(--gold-light); }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-zone-icon { font-size: 28px; margin-bottom: 8px; }
+    .drop-zone-text { font-size: 13px; color: var(--muted); }
+    .drop-zone-text strong { color: var(--gold-dark); }
+    .preview-img {
+      max-width: 100%; max-height: 200px; border-radius: 10px; object-fit: contain;
+      display: none; margin: 0 auto;
+    }
+    /* Duration (hidden when image selected) */
+    #duration-field { transition: opacity 0.2s; }
+    #duration-field.hidden { display: none; }
+    /* Submit button */
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--gold);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .submit-btn:hover { background: var(--gold-dark); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Error */
+    .error-msg {
+      background: #fef2f2; color: #991b1b;
+      border: 1px solid #fecaca;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; margin-top: 12px;
+      display: none;
+    }
+    /* Success card */
+    .success-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 36px 24px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(10,22,40,0.18);
+      display: none;
+    }
+    .success-icon { font-size: 48px; margin-bottom: 12px; }
+    .success-card h2 { font-size: 1.3rem; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .success-card p { color: var(--muted); font-size: 14px; margin-bottom: 4px; }
+    .order-id-box {
+      background: #f8fafc; border: 1.5px solid var(--line);
+      border-radius: 8px; padding: 10px 16px;
+      font-size: 12px; color: var(--muted);
+      margin: 14px 0 20px;
+      word-break: break-all;
+    }
+    .order-id-box strong { display: block; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .track-btn {
+      display: inline-block;
+      padding: 12px 28px;
+      background: var(--gold);
+      color: var(--white);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .track-btn:hover { background: var(--gold-dark); }
+    .muted { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <p class="header-logo">Vishleshak UGC</p>
+    <h1>Order Your AI Video Ad</h1>
+    <p>AI-Powered UGC Video Ads for Your Products</p>
+  </div>
+
+  <div class="page">
+    <!-- Order Form -->
+    <div class="card" id="order-form-card">
+      <p class="card-title">Tell us about your product</p>
+
+      <div class="field">
+        <label>Full Name *</label>
+        <input type="text" id="customer-name" placeholder="Your full name" required />
+      </div>
+
+      <div class="field">
+        <label>WhatsApp Number *</label>
+        <div style="display:flex">
+          <span style="display:flex;align-items:center;padding:0 12px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-right:0;border-radius:8px 0 0 8px;font-size:14px;font-weight:600;color:#0f172a;white-space:nowrap">🇮🇳 +91</span>
+          <input type="tel" id="customer-phone" placeholder="98765 43210" required style="border-radius:0 8px 8px 0 !important;flex:1;min-width:0" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Email <span class="muted">(optional)</span></label>
+        <input type="email" id="customer-email" placeholder="you@example.com" />
+      </div>
+
+      <div class="field">
+        <label>Product Photo *</label>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="product-file" accept="image/*" />
+          <img class="preview-img" id="preview-img" alt="Product preview" />
+          <div id="drop-placeholder">
+            <div class="drop-zone-icon">📷</div>
+            <div class="drop-zone-text"><strong>Click or drag</strong> to upload product image<br/><small>JPG, PNG, WEBP up to 15MB</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Presenter Type</label>
+        <div class="segmented" id="presenter-group">
+          <button type="button" class="active" data-presenter="ai">🤖 AI Generated</button>
+          <button type="button" data-presenter="uploaded">📸 Use Our Model</button>
+        </div>
+        <small style="color:#64748b;font-size:11px;margin-top:6px;display:block">AI Generated = unique AI face every time · Use Our Model = our trained presenter</small>
+      </div>
+
+      <div class="field">
+        <label>Language</label>
+        <div class="segmented" id="lang-group">
+          <button type="button" class="active" data-lang="hindi">🇮🇳 Hindi</button>
+          <button type="button" data-lang="english">🌐 English</button>
+          <button type="button" data-lang="hinglish">✨ Hinglish</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Target Platform</label>
+        <div class="segmented" id="platform-group">
+          <button type="button" class="active" data-platform="instagram" data-ratio="9:16">📸 Instagram</button>
+          <button type="button" data-platform="facebook" data-ratio="16:9">👥 Facebook</button>
+          <button type="button" data-platform="youtube" data-ratio="16:9">▶ YouTube</button>
+          <button type="button" data-platform="x" data-ratio="16:9">✕ X</button>
+        </div>
+        <small style="color:#64748b;font-size:11px;margin-top:6px;display:block">Instagram = vertical 9:16 · Facebook/YouTube/X = horizontal 16:9</small>
+      </div>
+
+      <div class="field">
+        <label>Video Style</label>
+        <div class="segmented" id="style-group">
+          <button type="button" class="active" data-style="kling">🎙️ Talking Ad</button>
+          <button type="button" data-style="seedance">🎬 Lifestyle / Fashion</button>
+        </div>
+        <small style="color:#64748b;font-size:11px;margin-top:6px;display:block">Talking Ad = lip-synced voiceover · Lifestyle = cinematic motion reel</small>
+      </div>
+
+      <div class="field">
+        <label>Output Type</label>
+        <div class="segmented" id="output-group">
+          <button type="button" class="active" data-output="video">🎬 Video</button>
+          <button type="button" data-output="image">📸 Image Only</button>
+        </div>
+      </div>
+
+      <div class="field" id="duration-field">
+        <label>Duration</label>
+        <div class="segmented" id="duration-group">
+          <button type="button" data-duration="5">⚡ 5s</button>
+          <button type="button" data-duration="10">🔥 10s</button>
+          <button type="button" data-duration="15">▶ 15s</button>
+          <button type="button" class="active" data-duration="30">🎬 30s</button>
+          <button type="button" data-duration="60">🎥 60s</button>
+        </div>
+      </div>
+
+      <div class="field" id="quality-field">
+        <label>Quality</label>
+        <div class="segmented" id="quality-group">
+          <button type="button" data-quality="standard">⚡ Standard</button>
+          <button type="button" class="active" data-quality="high">✨ High</button>
+          <button type="button" data-quality="ultra">💎 Ultra</button>
+        </div>
+        <small style="color:#64748b;font-size:11px;margin-top:6px;display:block">Standard = faster · High = recommended · Ultra = best quality, slower</small>
+      </div>
+
+      <div class="field">
+        <label>Special Notes <span class="muted">(optional)</span></label>
+        <div class="notes-wrap">
+          <textarea id="notes" placeholder="E.g. bridal jewelry, premium look, emphasize gold work..."></textarea>
+          <button class="mic-btn" id="mic-btn" type="button" title="Dictate notes">🎤</button>
+        </div>
+        <small id="mic-status" style="color:#64748b;font-size:11px;margin-top:4px;display:none"></small>
+      </div>
+
+      <button class="submit-btn" id="preview-btn" type="button">
+        <span class="spinner" id="preview-spinner"></span>
+        ✨ Preview Script →
+      </button>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <!-- Script Preview Card -->
+    <div class="card" id="script-preview-card" style="display:none;margin-top:16px">
+      <p class="card-title">📝 Your Script Preview</p>
+      <p style="font-size:13px;color:#64748b;margin-bottom:12px">AI has written this script based on your product. You can edit it before submitting.</p>
+      <textarea id="script-edit-area" style="width:100%;min-height:140px;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:14px;color:#1a2740;background:#fafbfc;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="submit-btn" id="submit-btn" type="button" style="flex:1">
+          <span class="spinner" id="submit-spinner"></span>
+          ✅ Confirm & Submit Order
+        </button>
+        <button type="button" id="back-btn" style="padding:14px 18px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:14px;font-weight:600;color:#64748b;cursor:pointer">← Edit</button>
+      </div>
+    </div>
+
+    <!-- Success Card -->
+    <div class="success-card" id="success-card">
+      <div class="success-icon">🎉</div>
+      <h2>Order Received!</h2>
+      <p>We'll process your request within 30 minutes.</p>
+      <p style="margin-top:6px">You'll be notified on WhatsApp once your video is ready.</p>
+      <div class="order-id-box">
+        <strong>Your Order ID</strong>
+        <span id="success-order-id"></span>
+      </div>
+      <a class="track-btn" id="track-btn" href="#">Track Your Order</a>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let selectedLang = "hindi";
+    let selectedStyle = "kling";
+    let selectedOutput = "video";
+    let selectedDuration = "30";
+    let selectedQuality = "high";
+    let selectedPresenter = "ai";
+    let selectedPlatform = "instagram";
+    let selectedRatio = "9:16";
+    let productFile = null;
+
+    // Segmented controls
+    function wireSegmented(groupId, onChange) {
+      const group = document.getElementById(groupId);
+      group.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          group.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          onChange(btn);
+        });
+      });
+    }
+
+    wireSegmented("presenter-group", btn => { selectedPresenter = btn.dataset.presenter; });
+    wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; });
+    wireSegmented("platform-group", btn => {
+      selectedPlatform = btn.dataset.platform;
+      selectedRatio = btn.dataset.ratio;
+    });
+    wireSegmented("lang-group", btn => { selectedLang = btn.dataset.lang; });
+    wireSegmented("output-group", btn => {
+      selectedOutput = btn.dataset.output;
+      document.getElementById("duration-field").classList.toggle("hidden", selectedOutput === "image");
+    });
+    wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
+    wireSegmented("quality-group", btn => { selectedQuality = btn.dataset.quality; });
+
+    // ── Voice dictation ──────────────────────────────────────────────────────
+    const micBtn    = document.getElementById("mic-btn");
+    const micStatus = document.getElementById("mic-status");
+    const notesArea = document.getElementById("notes");
+    let recognition = null;
+    let isListening = false;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      micBtn.title = "Voice dictation not supported in this browser";
+      micBtn.style.opacity = "0.4";
+      micBtn.disabled = true;
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "hi-IN"; // Hindi by default; switches with language selector
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add("listening");
+        micBtn.textContent = "⏹";
+        micStatus.textContent = "🎤 Listening… speak your notes";
+        micStatus.style.display = "block";
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎤";
+        micStatus.textContent = "";
+        micStatus.style.display = "none";
+      };
+
+      let finalTranscript = "";
+      recognition.onresult = (e) => {
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalTranscript += t + " ";
+          else interim = t;
+        }
+        notesArea.value = (notesArea.dataset.base || "") + finalTranscript + interim;
+      };
+
+      recognition.onerror = (e) => {
+        micStatus.textContent = "Error: " + e.error + ". Try again.";
+        micStatus.style.color = "#ef4444";
+        micStatus.style.display = "block";
+        setTimeout(() => { micStatus.style.display = "none"; micStatus.style.color = "#64748b"; }, 3000);
+      };
+
+      micBtn.addEventListener("click", () => {
+        if (isListening) {
+          recognition.stop();
+        } else {
+          // Save current text as base so dictation appends
+          notesArea.dataset.base = notesArea.value ? notesArea.value.trimEnd() + " " : "";
+          finalTranscript = "";
+          // Match recognition language to selected language
+          const lang = document.querySelector("#lang-group button.active")?.dataset.lang;
+          recognition.lang = lang === "english" ? "en-IN" : "hi-IN";
+          recognition.start();
+        }
+      });
+    }
+
+    // File / drag-drop
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("product-file");
+    const previewImg = document.getElementById("preview-img");
+    const dropPlaceholder = document.getElementById("drop-placeholder");
+
+    function showPreview(file) {
+      productFile = file;
+      const url = URL.createObjectURL(file);
+      previewImg.src = url;
+      previewImg.style.display = "block";
+      dropPlaceholder.style.display = "none";
+    }
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files[0]) showPreview(fileInput.files[0]);
+    });
+
+    dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+    dropZone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropZone.classList.remove("drag-over");
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) showPreview(file);
+    });
+
+    function validateForm() {
+      const name = document.getElementById("customer-name").value.trim();
+      const rawPhone = document.getElementById("customer-phone").value.trim().replace(/^\+?91/, "").replace(/\D/g, "");
+      if (!name) { showError("Please enter your full name."); return null; }
+      if (!rawPhone || rawPhone.length < 10) { showError("Please enter a valid 10-digit WhatsApp number."); return null; }
+      if (!productFile) { showError("Please upload a product photo."); return null; }
+      return { name, phone: "+91" + rawPhone, email: document.getElementById("customer-email").value.trim() };
+    }
+
+    // Step 1 — Preview Script
+    document.getElementById("preview-btn").addEventListener("click", async () => {
+      const fields = validateForm();
+      if (!fields) return;
+
+      document.getElementById("error-msg").style.display = "none";
+      const btn = document.getElementById("preview-btn");
+      const spinner = document.getElementById("preview-spinner");
+      btn.disabled = true;
+      spinner.style.display = "block";
+      btn.childNodes[btn.childNodes.length - 1].textContent = " Analyzing product…";
+
+      try {
+        const fd = new FormData();
+        fd.append("image", productFile);
+        fd.append("auto_mode", "true");
+        fd.append("language", selectedLang);
+        fd.append("presenter_source", selectedPresenter);
+        fd.append("model_gender", "female");
+
+        const resp = await fetch("/api/generate-script", { method: "POST", body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Script generation failed");
+
+        document.getElementById("script-edit-area").value = data.script || "";
+        document.getElementById("order-form-card").style.display = "none";
+        document.getElementById("script-preview-card").style.display = "block";
+      } catch (e) {
+        showError(e.message);
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = "none";
+        btn.childNodes[btn.childNodes.length - 1].textContent = " ✨ Preview Script →";
+      }
+    });
+
+    // Back button — go back to form
+    document.getElementById("back-btn").addEventListener("click", () => {
+      document.getElementById("script-preview-card").style.display = "none";
+      document.getElementById("order-form-card").style.display = "block";
+    });
+
+    // Step 2 — Confirm & Submit
+    document.getElementById("submit-btn").addEventListener("click", async () => {
+      const fields = validateForm();
+      if (!fields) return;
+
+      const btn = document.getElementById("submit-btn");
+      const spinner = document.getElementById("submit-spinner");
+      btn.disabled = true;
+      spinner.style.display = "block";
+
+      const fd = new FormData();
+      fd.append("customer_name", fields.name);
+      fd.append("customer_phone", fields.phone);
+      fd.append("customer_email", fields.email);
+      fd.append("language", selectedLang);
+      fd.append("output_type", selectedOutput);
+      fd.append("video_duration", selectedDuration);
+      fd.append("video_quality", selectedQuality);
+      fd.append("presenter_source", selectedPresenter);
+      fd.append("platform", selectedPlatform);
+      fd.append("aspect_ratio", selectedRatio);
+      fd.append("notes", document.getElementById("notes").value.trim());
+      fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
+      fd.append("video_style", selectedStyle);
+      fd.append("product_image", productFile);
+
+      try {
+        const resp = await fetch("/api/orders", { method: "POST", body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Submission failed");
+        document.getElementById("script-preview-card").style.display = "none";
+        document.getElementById("success-order-id").textContent = data.order_id;
+        document.getElementById("track-btn").href = `/order/result/${data.order_id}`;
+        document.getElementById("success-card").style.display = "block";
+      } catch (e) {
+        showError(e.message);
+        btn.disabled = false;
+        spinner.style.display = "none";
+      }
+    });
+
+    function showError(msg) {
+      const el = document.getElementById("error-msg");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+  </script>
+</body>
+</html>

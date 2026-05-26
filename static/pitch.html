@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vishleshak — AI Video Ads for Jewellers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #F0D080;
+      --gold-dark: #9A7A30;
+      --black: #0A0A0A;
+      --dark: #111111;
+      --dark2: #1A1A1A;
+      --white: #FFFFFF;
+      --text: #E8E8E8;
+      --muted: #999;
+    }
+
+    body {
+      background: var(--black);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      position: sticky; top: 0;
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--gold);
+      letter-spacing: 1px;
+    }
+    .logo span { color: var(--white); }
+    .nav-cta {
+      background: var(--gold);
+      color: var(--black);
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 10px 20px;
+      border-radius: 50px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 60px 24px 40px;
+      background: radial-gradient(ellipse at top, rgba(201,168,76,0.12) 0%, transparent 70%);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(201,168,76,0.15);
+      border: 1px solid rgba(201,168,76,0.4);
+      color: var(--gold-light);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 50px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .hero h1 span { color: var(--gold); }
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+    .hero-hindi {
+      font-size: 1.1rem;
+      color: var(--gold-light);
+      margin-bottom: 32px;
+      font-weight: 500;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--black);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 28px;
+      border-radius: 50px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 24px rgba(201,168,76,0.35);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--gold);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 14px 28px;
+      border-radius: 50px;
+      border: 1.5px solid var(--gold);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── VIDEO SHOWCASE ── */
+    .video-section {
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .section-sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 36px;
+    }
+    .video-card {
+      background: var(--dark2);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 20px;
+      overflow: hidden;
+      max-width: 380px;
+      margin: 0 auto;
+      box-shadow: 0 8px 40px rgba(201,168,76,0.15);
+    }
+    .video-card video {
+      width: 100%;
+      display: block;
+      max-height: 520px;
+      object-fit: cover;
+      background: #000;
+    }
+    .video-card-footer {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .video-tag {
+      background: rgba(201,168,76,0.15);
+      color: var(--gold-light);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 50px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .video-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how-section {
+      padding: 48px 24px;
+      background: var(--dark2);
+    }
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: var(--dark);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .step-num {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--black);
+      font-weight: 800;
+      font-size: 1rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-title {
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .step-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── RESULTS ── */
+    .results-section {
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 480px;
+      margin: 0 auto 40px;
+    }
+    .stat {
+      background: var(--dark2);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 16px;
+      padding: 20px 12px;
+    }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: var(--gold);
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── PRICING ── */
+    .pricing-section {
+      padding: 48px 24px;
+      background: var(--dark2);
+    }
+    .plans {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .plan {
+      background: var(--dark);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+    }
+    .plan.popular {
+      border-color: var(--gold);
+      box-shadow: 0 0 30px rgba(201,168,76,0.2);
+    }
+    .popular-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--black);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 16px;
+      border-radius: 50px;
+      white-space: nowrap;
+    }
+    .plan-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .plan-price {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--gold);
+    }
+    .plan-price span {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .plan-features {
+      list-style: none;
+      margin: 16px 0;
+    }
+    .plan-features li {
+      font-size: 0.875rem;
+      color: var(--text);
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .plan-features li::before {
+      content: "✓";
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .plan-btn {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      margin-top: 16px;
+    }
+    .plan-btn-gold {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--black);
+    }
+    .plan-btn-outline {
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+    }
+
+    /* ── DEMO CTA ── */
+    .demo-section {
+      padding: 60px 24px;
+      text-align: center;
+      background: radial-gradient(ellipse at bottom, rgba(201,168,76,0.1) 0%, transparent 70%);
+    }
+    .demo-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+    .demo-section p {
+      color: var(--muted);
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+    .whatsapp-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #25D366;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 16px 32px;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(37,211,102,0.4);
+    }
+    .try-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--black);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 16px 32px;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 4px 24px rgba(201,168,76,0.4);
+      margin-bottom: 16px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 24px;
+      text-align: center;
+      border-top: 1px solid rgba(201,168,76,0.15);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    footer span { color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Reel<span>Ads</span></div>
+  <a href="/" class="nav-cta">Try Now →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">✦ AI-Powered Video Ads</div>
+  <h1>Your Jewellery.<br/><span>Her Voice. Hindi.</span></h1>
+  <p class="hero-hindi">बस एक फोटो अपलोड करो — हम पूरा Ad बना देंगे।</p>
+  <p class="hero-sub">Upload your product photo. Get a professional UGC video ad in minutes — with an AI model wearing your jewellery and speaking in Hindi.</p>
+  <div class="hero-btns">
+    <a href="/" class="btn-primary">🎬 Create Free Video</a>
+    <a href="#how" class="btn-secondary">How it works</a>
+  </div>
+</section>
+
+<!-- VIDEO SHOWCASE -->
+<section class="video-section">
+  <p class="section-label">✦ Live Example</p>
+  <h2 class="section-title">Real Ad. Real Hindi.<br/>Real Results.</h2>
+  <p class="section-sub">This video was made in under 5 minutes</p>
+  <div class="video-card">
+    <video autoplay muted loop playsinline>
+      <source src="/static/videos/852e9045-4ec1-469e-9c1c-5d6fa5be30de.mp4" type="video/mp4" />
+    </video>
+    <div class="video-card-footer">
+      <span class="video-tag">✨ AI Generated</span>
+      <span class="video-desc">Gold necklace · Hindi voiceover</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div style="text-align:center; margin-bottom:32px;">
+    <p class="section-label">✦ Process</p>
+    <h2 class="section-title">3 Steps. 5 Minutes.</h2>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">📸 Upload Product Photo</div>
+        <div class="step-desc">Just take a photo of your jewellery or any product on your phone and upload it.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">🤖 AI Creates the Ad</div>
+        <div class="step-desc">Our AI puts your product on a model, writes a Hindi script, and generates a full talking video.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">📱 Download & Post</div>
+        <div class="step-desc">Download your video and post it on Instagram, WhatsApp, or Facebook. Done!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="results-section">
+  <p class="section-label">✦ Why Vishleshak</p>
+  <h2 class="section-title" style="margin-bottom:32px;">Built for Indian Shops</h2>
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">5 min</span>
+      <div class="stat-label">Per Video</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">Hindi</span>
+      <div class="stat-label">Voice & Script</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">₹0</span>
+      <div class="stat-label">Model Cost</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div style="text-align:center; margin-bottom:32px;">
+    <p class="section-label">✦ Pricing</p>
+    <h2 class="section-title">Simple Pricing</h2>
+    <p class="section-sub">No hidden charges. Pay only for what you use.</p>
+  </div>
+  <div class="plans">
+
+    <div class="plan">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">₹199 <span>/ video</span></div>
+      <ul class="plan-features">
+        <li>1 AI video ad</li>
+        <li>Hindi voiceover</li>
+        <li>HD quality</li>
+        <li>Ready in 5 minutes</li>
+      </ul>
+      <a href="/" class="plan-btn plan-btn-outline">Get Started</a>
+    </div>
+
+    <div class="plan popular">
+      <div class="popular-badge">⭐ Most Popular</div>
+      <div class="plan-name">Monthly</div>
+      <div class="plan-price">₹1,499 <span>/ month</span></div>
+      <ul class="plan-features">
+        <li>10 AI video ads/month</li>
+        <li>Hindi voiceover</li>
+        <li>HD quality</li>
+        <li>Priority processing</li>
+        <li>WhatsApp support</li>
+      </ul>
+      <a href="/" class="plan-btn plan-btn-gold">Get Started</a>
+    </div>
+
+    <div class="plan">
+      <div class="plan-name">Growth</div>
+      <div class="plan-price">₹2,999 <span>/ month</span></div>
+      <ul class="plan-features">
+        <li>25 AI video ads/month</li>
+        <li>Hindi voiceover</li>
+        <li>HD quality</li>
+        <li>Priority processing</li>
+        <li>Dedicated support</li>
+        <li>Custom model photo</li>
+      </ul>
+      <a href="/" class="plan-btn plan-btn-outline">Get Started</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- DEMO CTA -->
+<section class="demo-section">
+  <h2>देखिए अपना पहला Ad<br/>बिल्कुल मुफ्त</h2>
+  <p>No registration needed. Upload your product photo and see the magic.</p>
+  <a href="/" class="try-btn">🎬 Try It Free Now</a>
+  <br/>
+  <a href="https://wa.me/919953910987?text=Hi%2C%20I%20want%20to%20know%20more%20about%20Vishleshak" class="whatsapp-btn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Chat on WhatsApp
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Made with ❤️ for Indian Jewellers &nbsp;·&nbsp; <span>Vishleshak</span> © 2026</p>
+</footer>
+
+</body>
+</html>

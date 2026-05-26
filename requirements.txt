@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart
+httpx
+anthropic
+python-dotenv
+moviepy
+imageio-ffmpeg
+pillow
+edge-tts
+fal-client

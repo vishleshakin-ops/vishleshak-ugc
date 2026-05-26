@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vishleshak UGC - AI Video Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/fa-all.min.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="topbar" aria-label="Project status">
+      <div>
+        <p class="eyebrow">AI UGC Video Studio</p>
+        <h1>Vishleshak UGC</h1>
+      </div>
+      <div class="server-pill">
+        <span class="dot"></span>
+        Local server
+      </div>
+      <button id="orders-tab-btn" class="orders-tab-btn" type="button">
+        📋 Orders <span id="orders-badge" class="orders-badge hidden">0</span>
+      </button>
+    </section>
+
+    <section class="workspace">
+      <aside class="side-panel" aria-label="Setup">
+        <div class="panel-section model-card">
+          <div class="section-heading">
+            <span>Presenter</span>
+            <button id="model-upload-btn" class="text-button" type="button">Change</button>
+          </div>
+          <div class="source-toggle" role="group" aria-label="Presenter source">
+            <button id="presenter-uploaded" class="source-option selected" type="button" data-presenter-source="uploaded">
+              Uploaded photo
+            </button>
+            <button id="presenter-ai" class="source-option" type="button" data-presenter-source="ai">
+              AI presenter
+            </button>
+          </div>
+          <input id="model-file-input" type="file" accept="image/*" hidden />
+          <div class="model-preview">
+            <img id="model-preview" alt="Presenter preview" />
+            <div id="model-empty" class="model-empty">No photo</div>
+          </div>
+          <p id="model-status-text" class="status-title">Checking model photo...</p>
+          <p id="model-status-sub" class="muted">The presenter image is loaded from your local model folder.</p>
+          <div id="model-uploading" class="inline-status hidden">
+            <span class="spinner"></span>
+            Uploading presenter photo
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="section-heading">
+            <span>Product</span>
+            <button id="change-product-btn" class="text-button hidden" type="button">Replace</button>
+          </div>
+          <label id="drop-zone" class="drop-zone" for="file-input">
+            <input id="file-input" type="file" accept="image/*" hidden />
+            <img id="product-preview" class="product-preview hidden" alt="Product preview" />
+            <span id="upload-placeholder" class="upload-placeholder">
+              <strong>Upload product photo</strong>
+              <small>JPG, PNG or WEBP up to 15 MB</small>
+            </span>
+          </label>
+        </div>
+      </aside>
+
+      <section class="main-panel">
+        <!-- COMPOSE VIEW -->
+        <div id="compose-view" class="view">
+          <div class="view-header">
+            <div>
+              <p class="eyebrow">Create</p>
+              <h2>Generate a UGC reel</h2>
+            </div>
+            <button id="generate-btn" class="primary-button" type="button" disabled>Generate Script</button>
+          </div>
+
+          <div class="mode-grid" role="group" aria-label="Generation mode">
+            <button id="mode-auto" class="mode-card selected" type="button" data-mode="auto">
+              <span class="mode-title">Auto director</span>
+              <span class="mode-copy">AI chooses model fit, scene, action and script.</span>
+            </button>
+            <button id="mode-manual" class="mode-card" type="button" data-mode="manual">
+              <span class="mode-title">Manual control</span>
+              <span class="mode-copy">Choose the presenter style, background and action yourself.</span>
+            </button>
+          </div>
+
+          <!-- Output type selector -->
+          <div class="field-group">
+            <label>Output Type</label>
+            <div class="segmented" role="group" aria-label="Output type">
+              <button class="segment selected" type="button" data-output="video">🎬 Video</button>
+              <button class="segment" type="button" data-output="image">📸 Image Only</button>
+            </div>
+          </div>
+
+          <!-- Language selector -->
+          <div id="language-field" class="field-group">
+            <label>Language</label>
+            <div class="segmented" role="group" aria-label="Script language">
+              <button class="segment selected" type="button" data-lang="hindi">🇮🇳 Hindi</button>
+              <button class="segment" type="button" data-lang="english">🌐 English</button>
+              <button class="segment" type="button" data-lang="hinglish">✨ Hinglish</button>
+            </div>
+          </div>
+
+          <div id="auto-panel" class="info-panel">
+            <h3>Auto will decide</h3>
+            <div class="decision-grid">
+              <span>Best gender for product</span>
+              <span>Skin tone and audience fit</span>
+              <span>Scene and product action</span>
+              <span>Script in chosen language</span>
+            </div>
+          </div>
+
+          <div id="manual-panel" class="manual-panel hidden">
+            <div class="field-group">
+              <label>Presenter</label>
+              <div class="segmented" role="group" aria-label="Presenter gender">
+                <button class="segment selected" type="button" data-gender="female">Female</button>
+                <button class="segment" type="button" data-gender="male">Male</button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Skin tone</label>
+              <div class="swatches" role="group" aria-label="Skin tone">
+                <button class="swatch selected" type="button" data-tone="wheatish" style="--tone:#c58b57"><span>Wheatish</span></button>
+                <button class="swatch" type="button" data-tone="fair" style="--tone:#f0c99d"><span>Fair</span></button>
+                <button class="swatch" type="button" data-tone="dusky" style="--tone:#8f572f"><span>Dusky</span></button>
+                <button class="swatch" type="button" data-tone="dark" style="--tone:#3f2415"><span>Dark</span></button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Scene</label>
+              <div class="scene-grid" role="group" aria-label="Scene">
+                <button class="scene selected" type="button" data-scene="studio">Studio</button>
+                <button class="scene" type="button" data-scene="beach">Beach</button>
+                <button class="scene" type="button" data-scene="ramp">Fashion ramp</button>
+                <button class="scene" type="button" data-scene="cafe">Cafe</button>
+                <button class="scene" type="button" data-scene="garden">Garden</button>
+                <button class="scene" type="button" data-scene="outdoor">Outdoor</button>
+                <button class="scene" type="button" data-scene="custom">Custom</button>
+              </div>
+              <input id="custom-scene-input" class="text-input hidden" type="text" placeholder="Describe the exact background" />
+            </div>
+
+            <div class="field-grid">
+              <label>
+                Model action
+                <textarea id="model-action-input" placeholder="Example: wearing the necklace, touching it gently, smiling at camera"></textarea>
+              </label>
+              <label>
+                Additional notes
+                <textarea id="additional-notes-input" placeholder="Example: elegant bridal styling, premium lighting, no floating jewelry"></textarea>
+              </label>
+            </div>
+          </div>
+
+          <!-- Aspect ratio selector -->
+          <div class="field-group">
+            <label>Aspect Ratio</label>
+            <div class="segmented" role="group" aria-label="Aspect ratio">
+              <button class="segment selected" type="button" data-ratio="9:16">📱 9:16 Reels</button>
+              <button class="segment" type="button" data-ratio="1:1">⬜ 1:1 Feed</button>
+              <button class="segment" type="button" data-ratio="16:9">🖥️ 16:9 YouTube</button>
+            </div>
+          </div>
+
+          <!-- Video duration + quality — hidden for image-only -->
+          <div id="video-options-field" class="field-grid">
+            <div class="field-group">
+              <label>Duration</label>
+              <div class="segmented" role="group" aria-label="Video duration">
+                <button class="segment" type="button" data-duration="5">⚡ 5s</button>
+                <button class="segment" type="button" data-duration="10">🔥 10s</button>
+                <button class="segment" type="button" data-duration="15">▶ 15s</button>
+                <button class="segment selected" type="button" data-duration="30">🎬 30s</button>
+                <button class="segment" type="button" data-duration="60">🎥 60s</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Quality</label>
+              <div class="segmented" role="group" aria-label="Video quality">
+                <button class="segment" type="button" data-quality="standard">Standard</button>
+                <button class="segment selected" type="button" data-quality="high">High</button>
+                <button class="segment" type="button" data-quality="ultra">Ultra</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI tool selection hint -->
+          <div id="tool-hint" class="tool-hint-box">
+            <span id="tool-hint-text">AI will use the best pipeline for <strong>30s · High quality</strong></span>
+          </div>
+
+          <!-- Platform target selector — placed last, horizontal -->
+          <div class="field-group" id="platform-target-field">
+            <label>Post To Platform</label>
+            <div class="platform-grid">
+              <button class="platform-target selected" type="button" data-platform-target="instagram" data-platform-ratio="9:16">
+                <span class="plat-icon insta"><i class="fa-brands fa-instagram"></i></span>
+                Instagram
+              </button>
+              <button class="platform-target" type="button" data-platform-target="facebook" data-platform-ratio="16:9">
+                <span class="plat-icon fb"><i class="fa-brands fa-facebook"></i></span>
+                Facebook
+              </button>
+              <button class="platform-target" type="button" data-platform-target="youtube" data-platform-ratio="16:9">
+                <span class="plat-icon yt"><i class="fa-brands fa-youtube"></i></span>
+                YouTube
+              </button>
+              <button class="platform-target" type="button" data-platform-target="x" data-platform-ratio="16:9">
+                <span class="plat-icon xtw"><i class="fa-brands fa-x-twitter"></i></span>
+                X
+              </button>
+            </div>
+          </div>
+
+          <div id="ready-note" class="ready-note">
+            Upload a product image to begin.
+          </div>
+
+          <!-- Cost estimate line -->
+          <p id="cost-estimate" class="cost-estimate muted"></p>
+        </div>
+
+        <!-- SCRIPT PREVIEW VIEW -->
+        <div id="script-view" class="view hidden">
+          <div class="view-header">
+            <div>
+              <p class="eyebrow">Review Script</p>
+              <h2>Edit before generating</h2>
+            </div>
+            <button id="back-to-compose-btn" class="secondary-button" type="button">← Back</button>
+          </div>
+
+          <div class="script-preview-card">
+            <div class="script-preview-header">
+              <span class="script-label">Generated Script</span>
+              <span id="product-type-badge" class="product-badge"></span>
+            </div>
+            <textarea id="script-edit-area" class="script-edit-textarea" rows="4" placeholder="Script will appear here..."></textarea>
+            <div class="script-preview-actions">
+              <button id="regen-script-btn" class="secondary-button" type="button">
+                <span id="regen-spinner" class="spinner hidden"></span>
+                Re-generate Script
+              </button>
+              <button id="confirm-generate-btn" class="primary-button" type="button">Generate Video →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROGRESS VIEW -->
+        <div id="progress-view" class="view hidden">
+          <div class="view-header">
+            <div>
+              <p class="eyebrow">Processing</p>
+              <h2 id="progress-title">Creating your video</h2>
+            </div>
+            <button id="cancel-local-btn" class="secondary-button" type="button">Back</button>
+          </div>
+
+          <div class="timeline">
+            <div class="timeline-step" data-step="analyzing">
+              <span></span>
+              <div><strong>Analyze product</strong><small>Detect product type and selling angle</small></div>
+            </div>
+            <div class="timeline-step" data-step="compositing_product">
+              <span></span>
+              <div><strong>Create presenter image</strong><small>Blend model and product naturally</small></div>
+            </div>
+            <div class="timeline-step" data-step="generating_audio">
+              <span></span>
+              <div><strong>Generate voice</strong><small>Create the voiceover audio</small></div>
+            </div>
+            <div class="timeline-step" data-step="generating_video">
+              <span></span>
+              <div><strong>Lip-sync avatar</strong><small>Generate the talking video</small></div>
+            </div>
+            <div class="timeline-step" data-step="processing_video">
+              <span></span>
+              <div><strong>Export final MP4</strong><small>Re-encode at high quality</small></div>
+            </div>
+          </div>
+
+          <div class="job-box">
+            <span id="job-status-label">Starting job...</span>
+            <small id="job-id-label"></small>
+          </div>
+        </div>
+
+        <!-- RESULT VIEW -->
+        <div id="result-view" class="view hidden">
+          <div class="view-header">
+            <div>
+              <p class="eyebrow">Ready</p>
+              <h2 id="result-heading">Your UGC video is ready</h2>
+            </div>
+            <button id="new-video-btn" class="secondary-button" type="button">Create Another</button>
+          </div>
+          <div class="result-grid">
+            <video id="video-player" controls playsinline></video>
+            <img id="image-result" class="hidden" alt="Generated UGC image" style="max-width:100%;border-radius:12px;object-fit:contain;" />
+            <div class="script-card">
+              <h3>Generated script / caption</h3>
+              <p id="script-text"></p>
+              <div class="result-actions">
+                <a id="download-btn" class="primary-button" download="vishleshak-ugc.mp4">⬇ Download</a>
+                <a id="whatsapp-btn" class="secondary-button whatsapp-btn" target="_blank" rel="noopener">📱 WhatsApp</a>
+                <button id="copy-caption-btn" class="secondary-button" type="button">📋 Copy Caption</button>
+              </div>
+
+              <div class="platform-share-section">
+                <p>Share to Platform</p>
+                <div class="platform-share-btns">
+                  <button class="platform-share-btn insta" type="button" data-share="instagram">
+                    <i class="fa-brands fa-instagram"></i> Instagram
+                  </button>
+                  <button class="platform-share-btn fb" type="button" data-share="facebook">
+                    <i class="fa-brands fa-facebook"></i> Facebook
+                  </button>
+                  <button class="platform-share-btn yt" type="button" data-share="youtube">
+                    <i class="fa-brands fa-youtube"></i> YouTube
+                  </button>
+                  <button class="platform-share-btn xtw" type="button" data-share="x">
+                    <i class="fa-brands fa-x-twitter"></i> X
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ERROR VIEW -->
+        <div id="error-view" class="view hidden">
+          <div class="error-panel">
+            <p class="eyebrow">Failed</p>
+            <h2>Video generation stopped</h2>
+            <p id="error-message">An unexpected error occurred.</p>
+            <div class="button-row">
+              <button id="retry-btn" class="primary-button" type="button">Try Again</button>
+              <button id="reset-btn" class="secondary-button" type="button">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- VIDEO HISTORY GALLERY -->
+    <section id="history-section" class="history-section hidden">
+      <div class="history-header">
+        <h2>Recent Videos</h2>
+        <span id="history-count" class="muted"></span>
+      </div>
+      <div id="history-grid" class="history-grid"></div>
+    </section>
+
+    <!-- CUSTOMER ORDERS PANEL -->
+    <section id="orders-panel" class="orders-panel hidden">
+      <div class="orders-panel-header">
+        <h2>Customer Orders</h2>
+        <span class="muted" id="orders-summary"></span>
+      </div>
+      <div id="orders-list" class="orders-list"></div>
+    </section>
+  </main>
+
+  <!-- Platform upload confirmation modal -->
+  <div id="share-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-icon" id="modal-platform-icon"></div>
+      <h3 id="modal-title">Share to Instagram</h3>
+      <p id="modal-message"></p>
+      <div class="modal-actions">
+        <button id="modal-confirm-btn" class="primary-button" type="button">Yes, Open Instagram</button>
+        <button id="modal-cancel-btn" class="secondary-button" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Status — Vishleshak UGC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0A1628;
+      --gold: #C9A84C;
+      --gold-dark: #a8832e;
+      --gold-light: #fef6e4;
+      --white: #ffffff;
+      --ink: #1a2740;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--navy);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    .header {
+      background: var(--navy);
+      padding: 24px 20px 20px;
+      text-align: center;
+    }
+    .header-logo { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+    .header h1 { font-size: 1.5rem; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+    .header p { font-size: 13px; color: rgba(255,255,255,0.5); }
+    .page { max-width: 520px; margin: 0 auto; padding: 24px 16px 60px; }
+    .card { background: var(--white); border-radius: var(--radius); padding: 28px 24px; box-shadow: 0 8px 32px rgba(10,22,40,0.18); margin-bottom: 16px; }
+
+    /* Status icon row */
+    .status-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .status-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
+    .status-title { font-size: 1.1rem; font-weight: 700; }
+    .status-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    /* Spinner */
+    .spin-wrap { width: 36px; height: 36px; flex-shrink: 0; }
+    .ring {
+      width: 36px; height: 36px;
+      border: 3px solid #dbeafe;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Timeline */
+    .timeline { display: flex; flex-direction: column; gap: 0; margin-top: 16px; }
+    .tl-step {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 0;
+      border-left: 2px solid var(--line);
+      margin-left: 10px;
+      padding-left: 18px;
+      position: relative;
+    }
+    .tl-step:last-child { border-left-color: transparent; }
+    .tl-dot {
+      position: absolute; left: -7px; top: 14px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--line);
+      border: 2px solid var(--white);
+    }
+    .tl-step.done .tl-dot { background: #10b981; }
+    .tl-step.active .tl-dot { background: #3b82f6; animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); } 50% { box-shadow: 0 0 0 5px rgba(59,130,246,0); } }
+    .tl-label { font-size: 13px; font-weight: 500; color: var(--ink); }
+    .tl-step.done .tl-label { color: #10b981; }
+    .tl-step.active .tl-label { color: #3b82f6; font-weight: 600; }
+    .tl-sub { font-size: 11px; color: var(--muted); }
+
+    /* Result */
+    video, .result-img { width: 100%; border-radius: 12px; display: block; margin-bottom: 12px; }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .dl-btn {
+      flex: 1; min-width: 120px;
+      padding: 11px 16px;
+      background: var(--gold);
+      color: var(--white);
+      border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      text-decoration: none; text-align: center;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .dl-btn:hover { background: var(--gold-dark); }
+    .copy-btn {
+      flex: 1; min-width: 120px;
+      padding: 11px 16px;
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--gold); background: var(--gold-light); }
+    .script-box { background: #f8fafc; border-radius: 10px; padding: 14px; font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; white-space: pre-wrap; }
+
+    /* Order ID */
+    .order-id-row { font-size: 11px; color: var(--muted); word-break: break-all; }
+
+    /* Back link */
+    .back-link { display: block; text-align: center; margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; }
+    .back-link:hover { color: var(--gold); }
+
+    /* Skeleton loader */
+    .skeleton { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 8px; height: 60px; margin-bottom: 12px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <p class="header-logo">Vishleshak UGC</p>
+    <h1>Order Status</h1>
+    <p>Your AI video ad is being prepared</p>
+  </div>
+
+  <div class="page">
+    <div class="card" id="status-card">
+      <div class="skeleton"></div>
+      <div class="skeleton" style="height:40px"></div>
+    </div>
+    <a class="back-link" href="/order">← Place a new order</a>
+  </div>
+
+  <script>
+    const orderId = location.pathname.split("/").pop();
+    let pollTimer = null;
+
+    const STEPS = [
+      { key: "analyzing",           label: "Analyze product",          sub: "Detect product and write script" },
+      { key: "compositing_product", label: "Create presenter image",    sub: "Blend model and product with AI" },
+      { key: "generating_audio",    label: "Generate voice",            sub: "Create voiceover audio" },
+      { key: "generating_video",    label: "Lip-sync avatar",           sub: "Generate talking video" },
+      { key: "processing_video",    label: "Export final MP4",          sub: "Re-encode at high quality" },
+    ];
+
+    async function poll() {
+      try {
+        const resp = await fetch(`/api/orders/${orderId}`);
+        if (!resp.ok) { renderError("Order not found. Please check your order ID."); return; }
+        const order = await resp.json();
+        render(order);
+        if (order.status === "completed" || order.status === "rejected" || order.status === "failed") {
+          clearInterval(pollTimer);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function render(order) {
+      const card = document.getElementById("status-card");
+      const s = order.status;
+
+      if (s === "pending") {
+        card.innerHTML = `
+          <div class="status-row">
+            <div class="status-icon">⏳</div>
+            <div>
+              <div class="status-title">Waiting for approval</div>
+              <div class="status-sub">We'll start processing your order soon!</div>
+            </div>
+          </div>
+          <div class="order-id-row">Order ID: ${order.id}</div>`;
+
+      } else if (s === "processing") {
+        const currentStep = order.job_step || "analyzing";
+        const stepIdx = STEPS.findIndex(s => s.key === currentStep);
+        const stepsHtml = STEPS.map((step, i) => {
+          const cls = i < stepIdx ? "done" : i === stepIdx ? "active" : "";
+          return `<div class="tl-step ${cls}">
+            <div class="tl-dot"></div>
+            <div>
+              <div class="tl-label">${i < stepIdx ? "✓ " : ""}${step.label}</div>
+              <div class="tl-sub">${step.sub}</div>
+            </div>
+          </div>`;
+        }).join("");
+        card.innerHTML = `
+          <div class="status-row">
+            <div class="spin-wrap"><div class="ring"></div></div>
+            <div>
+              <div class="status-title">Generating your video</div>
+              <div class="status-sub">This takes 8–12 minutes. Please wait.</div>
+            </div>
+          </div>
+          <div class="timeline">${stepsHtml}</div>
+          <div style="margin-top:14px" class="order-id-row">Order ID: ${order.id}</div>`;
+
+      } else if (s === "completed") {
+        const hasVideo = order.video_url;
+        const hasImage = order.image_url;
+        const mediaHtml = hasVideo
+          ? `<video controls playsinline src="${order.video_url}"></video>`
+          : hasImage
+          ? `<img class="result-img" src="${order.image_url}" alt="Generated UGC" />`
+          : "";
+        const dlUrl = order.video_url || order.image_url || "#";
+        const dlName = order.video_url ? "vishleshak-ugc.mp4" : "vishleshak-ugc.jpg";
+        const scriptHtml = order.script ? `<div class="script-box">${order.script}</div>` : "";
+        card.innerHTML = `
+          <div class="status-row" style="margin-bottom:20px">
+            <div class="status-icon">✅</div>
+            <div>
+              <div class="status-title">Your video is ready!</div>
+              <div class="status-sub">Download or copy your caption below.</div>
+            </div>
+          </div>
+          ${mediaHtml}
+          ${scriptHtml}
+          <div class="action-row">
+            <a class="dl-btn" href="${dlUrl}" download="${dlName}">⬇ Download</a>
+            ${order.script ? `<button class="copy-btn" id="copy-caption-btn" type="button">📋 Copy Caption</button>` : ""}
+          </div>
+          <div style="margin-top:14px" class="order-id-row">Order ID: ${order.id}</div>`;
+        if (order.script) {
+          document.getElementById("copy-caption-btn").addEventListener("click", () => {
+            navigator.clipboard.writeText(order.script).then(() => {
+              const btn = document.getElementById("copy-caption-btn");
+              btn.textContent = "✓ Copied!";
+              setTimeout(() => { btn.textContent = "📋 Copy Caption"; }, 2000);
+            });
+          });
+        }
+
+      } else if (s === "rejected") {
+        card.innerHTML = `
+          <div class="status-row">
+            <div class="status-icon">❌</div>
+            <div>
+              <div class="status-title">Order not accepted</div>
+              <div class="status-sub">Please contact us on WhatsApp for assistance.</div>
+            </div>
+          </div>
+          ${order.rejected_reason ? `<p style="margin-top:12px;font-size:13px;color:var(--muted)">Reason: ${order.rejected_reason}</p>` : ""}
+          <div style="margin-top:14px" class="order-id-row">Order ID: ${order.id}</div>`;
+
+      } else if (s === "failed") {
+        card.innerHTML = `
+          <div class="status-row">
+            <div class="status-icon">❗</div>
+            <div>
+              <div class="status-title">Generation failed</div>
+              <div class="status-sub">Please contact us on WhatsApp and share your order ID.</div>
+            </div>
+          </div>
+          ${order.error ? `<p style="margin-top:12px;font-size:12px;color:#991b1b;word-break:break-all">${order.error}</p>` : ""}
+          <div style="margin-top:14px" class="order-id-row">Order ID: ${order.id}</div>`;
+      }
+    }
+
+    function renderError(msg) {
+      document.getElementById("status-card").innerHTML = `
+        <div class="status-row">
+          <div class="status-icon">❗</div>
+          <div>
+            <div class="status-title">Not found</div>
+            <div class="status-sub">${msg}</div>
+          </div>
+        </div>`;
+    }
+
+    // Start polling
+    poll();
+    pollTimer = setInterval(poll, 5000);
+  </script>
+</body>
+</html>
