@@ -770,11 +770,6 @@ footer {
   <p class="section-sub">Real videos created by our AI — ready to post on Instagram, YouTube & Facebook.</p>
   <div class="samples-grid">
     <div class="sample-card">
-      <video src="/static/samples/sample1.mp4" playsinline preload="metadata"></video>
-      <div class="sample-overlay"><button class="sample-play">▶</button></div>
-      <button class="sample-mute" title="Unmute">🔇</button>
-    </div>
-    <div class="sample-card">
       <video src="/static/samples/sample2.mp4" playsinline preload="metadata"></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
@@ -976,7 +971,6 @@ footer {
   const heroVideo = document.getElementById('hero-video');
   if (!heroVideo) return;
   const samples = [
-    '/static/samples/sample1.mp4',
     '/static/samples/sample2.mp4',
     '/static/samples/sample3.mp4',
     '/static/samples/sample4.mp4',
