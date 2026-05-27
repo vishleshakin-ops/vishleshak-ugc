@@ -1123,6 +1123,75 @@ async function rejectOrder(orderId) {
 wireEvents();
 loadModelStatus();
 loadPipelineInfo();
-loadHistory();
-loadOrdersBadge();
-startOrderNotificationPolling();
+
+// ── Mode detection (admin vs client) ─────────────────────────────────────────
+async function initAppMode() {
+  try {
+    const cfg = await fetch("/api/config").then(r => r.json());
+    const isClient = cfg.mode === "client";
+    const railwayUrl = cfg.railway_url || "";
+
+    if (isClient) {
+      // CLIENT mode (Railway): hide history, orders, generate UI — show order form link
+      const ordersBtn = $("orders-tab-btn");
+      if (ordersBtn) ordersBtn.style.display = "none";
+      const hist = $("history-section");
+      if (hist) hist.style.display = "none";
+      // Hide the full compose/admin shell — redirect root to /order
+      if (window.location.pathname === "/" || window.location.pathname === "") {
+        window.location.replace("/order");
+      }
+    } else {
+      // ADMIN mode (local): show everything + add Sync button if Railway URL is set
+      loadHistory();
+      loadOrdersBadge();
+      startOrderNotificationPolling();
+      if (railwayUrl) addSyncButton(railwayUrl);
+    }
+  } catch(e) {
+    // fallback: treat as admin
+    loadHistory();
+    loadOrdersBadge();
+    startOrderNotificationPolling();
+  }
+}
+
+function addSyncButton(railwayUrl) {
+  const header = document.querySelector(".orders-panel-header");
+  if (!header) return;
+  const btn = document.createElement("button");
+  btn.className = "approve-btn";
+  btn.style.cssText = "background:linear-gradient(135deg,#7C3AED,#2563EB);font-size:12px;padding:6px 14px;";
+  btn.textContent = "☁️ Sync Railway Orders";
+  btn.addEventListener("click", () => syncRailwayOrders(railwayUrl));
+  header.appendChild(btn);
+}
+
+async function syncRailwayOrders(railwayUrl) {
+  try {
+    showToast("Syncing orders from Railway...");
+    const url = railwayUrl.replace(/\/$/, "") + "/api/orders";
+    const remoteOrders = await fetch(url).then(r => r.json());
+    const localResp = await fetch("/api/orders").then(r => r.json());
+    const localIds = new Set(localResp.map(o => o.id));
+    const newOrders = remoteOrders.filter(o => !localIds.has(o.id));
+    if (newOrders.length === 0) {
+      showToast("Already up to date — no new orders.");
+      return;
+    }
+    // Push each new order to local server
+    for (const order of newOrders) {
+      await fetch("/api/sync-order", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(order)
+      });
+    }
+    showToast(`✅ Synced ${newOrders.length} new order(s) from Railway!`);
+    loadOrdersAdmin();
+  } catch(e) {
+    showToast("Sync failed: " + e.message);
+  }
+}
+
+initAppMode();

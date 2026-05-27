@@ -100,6 +100,10 @@ MODEL_DIR  = os.path.join(os.path.dirname(__file__), "model")
 VIDEOS_DIR = os.path.join(os.path.dirname(__file__), "static", "videos")
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
+# "admin" on local machine, "client" on Railway (set APP_MODE=client env var)
+APP_MODE = os.getenv("APP_MODE", "admin")
+RAILWAY_URL = os.getenv("RAILWAY_URL", "")
+
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), "video_history.json")
 
 os.makedirs(VIDEOS_DIR, exist_ok=True)
@@ -524,6 +528,20 @@ async def generate_script_endpoint(
     }
 
 
+@app.post("/api/sync-order")
+async def sync_order(request: Request):
+    """Accept an order from Railway and store it locally (admin only)."""
+    order = await request.json()
+    orders = load_orders()
+    if any(o.get("id") == order.get("id") for o in orders):
+        return {"status": "exists"}
+    # Mark as pending so admin can approve locally
+    order["status"] = "pending"
+    orders.insert(0, order)
+    with open(ORDERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(orders, f, ensure_ascii=False, indent=2)
+    return {"status": "synced"}
+
 @app.post("/api/clear-model")
 async def clear_model():
     global model_image_bytes, model_image_url
@@ -551,6 +569,10 @@ async def reload_model_from_folder():
         return {"success": True, "image_url": url, "file": fname}
     raise HTTPException(status_code=404, detail="No image found in model/ folder")
 
+
+@app.get("/api/config")
+async def get_config():
+    return {"mode": APP_MODE, "railway_url": RAILWAY_URL}
 
 @app.get("/api/model-status")
 async def model_status():
