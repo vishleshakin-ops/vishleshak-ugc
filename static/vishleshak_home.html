@@ -862,6 +862,10 @@ footer {
 <script>
 // Scroll-spy: highlight active nav link
 (function() {
+  // Give the hero section an id so we can find it
+  const heroEl = document.querySelector('.hero');
+  if (heroEl && !heroEl.id) heroEl.id = 'hero';
+
   const sections = [
     { id: 'hero',         href: '#'             },
     { id: 'services',     href: '#services'     },
@@ -870,35 +874,27 @@ footer {
     { id: 'why-us',       href: '#why-us'       },
     { id: 'contact',      href: '#contact'      },
   ];
+  const NAV_H = 72; // nav bar height offset
+
   const navLinks = document.querySelectorAll('.nav-links a:not(.ugc-btn)');
 
   function setActive(href) {
-    navLinks.forEach(a => {
-      a.classList.toggle('active', a.getAttribute('href') === href);
-    });
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === href));
   }
 
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const sec = sections.find(s => s.id === entry.target.id);
-        if (sec) setActive(sec.href);
+  function updateActive() {
+    let current = sections[0].href; // default: Home
+    sections.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el && el.getBoundingClientRect().top <= NAV_H + 10) {
+        current = s.href;
       }
     });
-  }, { threshold: 0.25 });
+    setActive(current);
+  }
 
-  sections.forEach(s => {
-    const el = s.id === 'hero'
-      ? document.querySelector('.hero')
-      : document.getElementById(s.id);
-    if (el) {
-      if (s.id === 'hero') el.id = 'hero';
-      observer.observe(el);
-    }
-  });
-
-  // Set Home active on load
-  setActive('#');
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive(); // run once on load
 })();
 
 // Sample video — play/pause on click, mute button, hover-to-hear
