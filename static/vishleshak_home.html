@@ -897,17 +897,16 @@ footer {
   updateActive(); // run once on load
 })();
 
-// Sample video — play/pause on click, mute button, hover-to-hear
+// Sample video — play/pause on click, persistent mute toggle
 document.querySelectorAll('.sample-card').forEach(card => {
   const video = card.querySelector('video');
   const muteBtn = card.querySelector('.sample-mute');
 
-  // All videos start muted
-  video.muted = true;
+  video.muted = true; // start muted
 
-  // Click card body → play / pause (ignore clicks on mute button)
+  // Click card → play / pause (ignore mute button clicks)
   card.addEventListener('click', e => {
-    if (e.target === muteBtn) return;
+    if (muteBtn.contains(e.target)) return;
     if (video.paused) {
       document.querySelectorAll('.sample-card video').forEach(v => {
         v.pause();
@@ -921,31 +920,18 @@ document.querySelectorAll('.sample-card').forEach(card => {
     }
   });
 
-  // Mute button — toggle unmuted preference
+  // Mute button — simple permanent toggle, preference survives replays
   muteBtn.addEventListener('click', e => {
     e.stopPropagation();
-    const wantsSound = video.muted; // if currently muted, user wants sound
-    video.muted = !wantsSound;
-    muteBtn.textContent = wantsSound ? '🔊' : '🔇';
-    muteBtn.title      = wantsSound ? 'Mute'  : 'Unmute';
-    card.dataset.unmuted = wantsSound ? '1' : '0';
+    video.muted = !video.muted;
+    muteBtn.textContent = video.muted ? '🔇' : '🔊';
+    muteBtn.title       = video.muted ? 'Unmute' : 'Mute';
   });
 
-  // Video ended → reset to beginning and show play button; keep mute preference
+  // Video ended → reset to start, keep mute preference as-is
   video.addEventListener('ended', () => {
     video.currentTime = 0;
     card.classList.remove('playing');
-    // Keep dataset.unmuted and button icon as-is — user's choice is remembered
-    // But physically mute until they hover again (hover-to-hear rule)
-    video.muted = true;
-  });
-
-  // Mouse leave → always mute; mouse enter → restore if user chose unmuted
-  card.addEventListener('mouseleave', () => {
-    video.muted = true;
-  });
-  card.addEventListener('mouseenter', () => {
-    if (card.dataset.unmuted === '1') video.muted = false;
   });
 });
 </script>
