@@ -574,7 +574,7 @@ footer {
         <div class="phone-frame">
           <div class="phone-notch"></div>
           <div class="phone-screen">
-            <video src="/static/samples/sample1.mp4" autoplay muted loop playsinline></video>
+            <video id="hero-video" src="/static/samples/sample1.mp4" autoplay muted playsinline></video>
           </div>
           <div class="phone-home-bar"></div>
         </div>
@@ -885,6 +885,30 @@ footer {
 </footer>
 
 <script>
+// Hero phone: cycle all 6 sample videos in random order, never repeat back-to-back
+(function() {
+  const heroVideo = document.getElementById('hero-video');
+  if (!heroVideo) return;
+  const samples = [
+    '/static/samples/sample1.mp4',
+    '/static/samples/sample2.mp4',
+    '/static/samples/sample3.mp4',
+    '/static/samples/sample4.mp4',
+    '/static/samples/sample5.mp4',
+    '/static/samples/sample6.mp4',
+  ];
+  let lastIndex = 0; // sample1 is already loaded first
+
+  heroVideo.addEventListener('ended', () => {
+    // Pick a random index different from last
+    let next;
+    do { next = Math.floor(Math.random() * samples.length); } while (next === lastIndex);
+    lastIndex = next;
+    heroVideo.src = samples[next];
+    heroVideo.play();
+  });
+})();
+
 // Scroll-spy: highlight active nav link
 (function() {
   // Give the hero section an id so we can find it
