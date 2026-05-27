@@ -33,11 +33,24 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   font-size: 15px; font-weight: 500; transition: color 0.2s;
 }
 .nav-links a:hover { color: white; }
+.nav-links a.active {
+  color: white;
+  position: relative;
+}
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #7C3AED, #2563EB);
+  border-radius: 2px;
+}
 .nav-links a.ugc-btn {
   background: linear-gradient(135deg, #7C3AED, #2563EB);
   color: white; padding: 9px 20px; border-radius: 8px;
   font-weight: 600;
 }
+.nav-links a.ugc-btn::after { display: none; }
 .nav-links a.ugc-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 .nav-social { display: flex; gap: 14px; }
 .nav-social a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 16px; }
@@ -822,6 +835,47 @@ footer {
 </footer>
 
 <script>
+// Scroll-spy: highlight active nav link
+(function() {
+  const sections = [
+    { id: 'hero',         href: '#'             },
+    { id: 'services',     href: '#services'     },
+    { id: 'samples',      href: '#samples'      },
+    { id: 'testimonials', href: '#testimonials' },
+    { id: 'why-us',       href: '#why-us'       },
+    { id: 'contact',      href: '#contact'      },
+  ];
+  const navLinks = document.querySelectorAll('.nav-links a:not(.ugc-btn)');
+
+  function setActive(href) {
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === href);
+    });
+  }
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const sec = sections.find(s => s.id === entry.target.id);
+        if (sec) setActive(sec.href);
+      }
+    });
+  }, { threshold: 0.25 });
+
+  sections.forEach(s => {
+    const el = s.id === 'hero'
+      ? document.querySelector('.hero')
+      : document.getElementById(s.id);
+    if (el) {
+      if (s.id === 'hero') el.id = 'hero';
+      observer.observe(el);
+    }
+  });
+
+  // Set Home active on load
+  setActive('#');
+})();
+
 // Sample video play/pause on click
 document.querySelectorAll('.sample-card').forEach(card => {
   const video = card.querySelector('video');
