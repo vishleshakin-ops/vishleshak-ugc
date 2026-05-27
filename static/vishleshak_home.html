@@ -298,6 +298,63 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 .testi-name { font-weight: 700; color: #1a1a2e; font-size: 15px; }
 .testi-role { font-size: 13px; color: #888; }
 
+/* SAMPLE VIDEOS */
+.samples {
+  padding: 100px 60px;
+  background: #0f0a28;
+  text-align: center;
+}
+.samples .section-label { color: #a78bfa; }
+.samples .section-title { color: white; }
+.samples .section-sub { color: rgba(255,255,255,0.55); margin-bottom: 56px; }
+.samples-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.sample-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 9/16;
+  background: #1e0a4e;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.sample-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(124,58,237,0.4);
+}
+.sample-card video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.3s;
+}
+.sample-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(37,99,235,0.2));
+  transition: opacity 0.3s;
+}
+.sample-card.playing .sample-overlay { opacity: 0; }
+.sample-play {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+}
+.sample-play:hover { background: rgba(124,58,237,0.6); transform: scale(1.1); }
+
 /* CTA */
 .cta {
   padding: 100px 60px;
@@ -349,7 +406,8 @@ footer {
   .hero-title { font-size: 38px; }
   .hero-right { display: none; }
   .hero-pills { grid-template-columns: 1fr; }
-  .features, .services, .testimonials, .cta { padding: 60px 24px; }
+  .features, .services, .testimonials, .cta, .samples { padding: 60px 24px; }
+  .samples-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .features-grid, .services-grid, .testimonials-grid { grid-template-columns: 1fr; }
   .why-us { padding: 60px 24px; }
   .why-us-inner { flex-direction: column; }
@@ -372,6 +430,7 @@ footer {
   <div class="nav-links">
     <a href="#">Home</a>
     <a href="#services">Services</a>
+    <a href="#samples">Samples</a>
     <a href="#testimonials">Testimonials</a>
     <a href="#why-us">Why Us</a>
     <a href="https://vishleshak-ugc-production.up.railway.app" target="_blank" class="ugc-btn">🎬 UGC Videos</a>
@@ -603,6 +662,39 @@ footer {
   </div>
 </section>
 
+<!-- SAMPLE VIDEOS -->
+<section class="samples" id="samples">
+  <p class="section-label">Sample Work</p>
+  <h2 class="section-title">AI-Generated UGC Videos</h2>
+  <p class="section-sub">Real videos created by our AI — ready to post on Instagram, YouTube & Facebook.</p>
+  <div class="samples-grid">
+    <div class="sample-card">
+      <video src="/static/samples/sample1.mp4" loop muted playsinline preload="metadata"></video>
+      <div class="sample-overlay"><button class="sample-play">▶</button></div>
+    </div>
+    <div class="sample-card">
+      <video src="/static/samples/sample2.mp4" loop muted playsinline preload="metadata"></video>
+      <div class="sample-overlay"><button class="sample-play">▶</button></div>
+    </div>
+    <div class="sample-card">
+      <video src="/static/samples/sample3.mp4" loop muted playsinline preload="metadata"></video>
+      <div class="sample-overlay"><button class="sample-play">▶</button></div>
+    </div>
+    <div class="sample-card">
+      <video src="/static/samples/sample4.mp4" loop muted playsinline preload="metadata"></video>
+      <div class="sample-overlay"><button class="sample-play">▶</button></div>
+    </div>
+    <div class="sample-card">
+      <video src="/static/samples/sample5.mp4" loop muted playsinline preload="metadata"></video>
+      <div class="sample-overlay"><button class="sample-play">▶</button></div>
+    </div>
+    <div class="sample-card">
+      <video src="/static/samples/sample6.mp4" loop muted playsinline preload="metadata"></video>
+      <div class="sample-overlay"><button class="sample-play">▶</button></div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section class="cta" id="contact">
   <div class="cta-box">
@@ -633,5 +725,25 @@ footer {
   <div class="footer-copy">Powered by AI ⚡</div>
 </footer>
 
+<script>
+// Sample video play/pause on click
+document.querySelectorAll('.sample-card').forEach(card => {
+  const video = card.querySelector('video');
+  card.addEventListener('click', () => {
+    if (video.paused) {
+      // Pause all others
+      document.querySelectorAll('.sample-card video').forEach(v => {
+        v.pause();
+        v.closest('.sample-card').classList.remove('playing');
+      });
+      video.play();
+      card.classList.add('playing');
+    } else {
+      video.pause();
+      card.classList.remove('playing');
+    }
+  });
+});
+</script>
 </body>
 </html>
