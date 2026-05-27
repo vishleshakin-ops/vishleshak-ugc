@@ -660,7 +660,7 @@ footer {
         <div class="phone-frame">
           <div class="phone-notch"></div>
           <div class="phone-screen">
-            <video id="hero-video" src="/static/samples/sample1.mp4" autoplay muted playsinline></video>
+            <video id="hero-video" autoplay muted playsinline></video>
           </div>
           <div class="phone-home-bar"></div>
         </div>
@@ -983,15 +983,21 @@ footer {
     '/static/samples/sample5.mp4',
     '/static/samples/sample6.mp4',
   ];
-  let lastIndex = 0; // sample1 is already loaded first
 
-  heroVideo.addEventListener('ended', () => {
-    // Pick a random index different from last
+  function playRandom(excludeIndex) {
     let next;
-    do { next = Math.floor(Math.random() * samples.length); } while (next === lastIndex);
-    lastIndex = next;
+    do { next = Math.floor(Math.random() * samples.length); } while (next === excludeIndex);
     heroVideo.src = samples[next];
     heroVideo.play();
+    return next;
+  }
+
+  // Start with a random video immediately
+  let lastIndex = playRandom(-1);
+
+  // On end, pick another random one
+  heroVideo.addEventListener('ended', () => {
+    lastIndex = playRandom(lastIndex);
   });
 })();
 
