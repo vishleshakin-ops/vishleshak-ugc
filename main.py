@@ -524,6 +524,17 @@ async def generate_script_endpoint(
     }
 
 
+@app.post("/api/clear-model")
+async def clear_model():
+    global model_image_bytes, model_image_url
+    for fname in os.listdir(MODEL_DIR):
+        fpath = os.path.join(MODEL_DIR, fname)
+        if os.path.isfile(fpath):
+            os.remove(fpath)
+    model_image_bytes = None
+    model_image_url = None
+    return {"status": "cleared"}
+
 @app.post("/api/reload-model")
 async def reload_model_from_folder():
     global model_image_url
