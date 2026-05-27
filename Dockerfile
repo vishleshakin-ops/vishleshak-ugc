@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Create required directories
-RUN mkdir -p static/videos order_uploads model
+# Create required directories and ensure model folder is empty
+RUN mkdir -p static/videos order_uploads model && rm -f model/*
 
 EXPOSE 8080
 
