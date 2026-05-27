@@ -1281,13 +1281,13 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
         language       = c.get("language", "hindi")
         aspect_ratio   = c.get("aspect_ratio", "9:16")
         output_type    = c.get("output_type", "video")
-        video_duration = c.get("video_duration", "30")
+        video_duration = c.get("video_duration", "5")
         video_quality  = c.get("video_quality", "high")
         custom_script  = c.get("custom_script", "").strip()
 
-        # Derive script word target from duration
-        duration_word_targets = {"5": "8-12", "10": "15-20", "15": "20-30", "30": "50-65", "60": "100-120"}
-        script_word_target = duration_word_targets.get(video_duration, "50-65")
+        # Derive script word target from duration — keep scripts SHORT to control Kling cost
+        duration_word_targets = {"5": "8-12", "6": "10-14", "10": "15-20", "15": "20-30", "30": "50-65", "60": "100-120"}
+        script_word_target = duration_word_targets.get(video_duration, "10-14")
 
         # Derive D-ID stitch setting and ElevenLabs model from quality
         did_stitch   = video_quality in ("high", "ultra")
@@ -1408,9 +1408,9 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
     gender_hint  = "male Indian model" if gender == "male" else "female Indian model"
 
     # Language-specific script instruction — word count driven by video_duration
-    _wt = c.get("video_duration", "30")
-    _word_targets = {"5": "8-12", "10": "15-20", "15": "20-30", "30": "50-65", "60": "100-120"}
-    _wc = _word_targets.get(_wt, "50-65")
+    _wt = c.get("video_duration", "5")
+    _word_targets = {"5": "8-12", "6": "10-14", "10": "15-20", "15": "20-30", "30": "50-65", "60": "100-120"}
+    _wc = _word_targets.get(_wt, "10-14")
     LANG_INSTRUCTIONS = {
         "hindi":    f"Write in Hindi (Devanagari script), {_wc} words, ends with call to action.",
         "english":  f"Write in English, {_wc} words, enthusiastic tone, ends with call to action.",
