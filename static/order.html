@@ -529,6 +529,25 @@
       <div class="error-msg" id="error-msg"></div>
     </div>
 
+    <!-- Model Upload Modal -->
+    <div class="modal-backdrop" id="model-modal" style="display:none">
+      <div class="modal-box">
+        <p class="modal-title">📸 Upload Model Photo</p>
+        <p class="modal-sub">Upload a clear photo or short video of the person you want as the presenter. Our AI will use this as reference.</p>
+        <div class="modal-drop" id="modal-drop">
+          <input type="file" id="modal-model-file" accept="image/*,video/*" />
+          <div class="modal-drop-icon">🧑‍🎤</div>
+          <div class="modal-drop-text"><strong>Click or drag</strong> to upload photo or video<br/><small style="color:#94a3b8">JPG, PNG, MP4 · Max 30MB</small></div>
+        </div>
+        <img class="modal-preview" id="modal-model-preview" alt="Model preview" />
+        <p class="modal-preview-name" id="modal-model-name"></p>
+        <div class="modal-actions">
+          <button class="modal-confirm" id="modal-confirm-btn">✅ Use This Model</button>
+          <button class="modal-cancel" id="modal-cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Script Preview Card -->
     <div class="card" id="script-preview-card" style="display:none;margin-top:16px">
       <p class="card-title">📝 Your Script Preview</p>
@@ -847,23 +866,5 @@
     // Include model file in form submission
     const origSubmit = document.getElementById("submit-btn").onclick;
   </script>
-  <!-- Model Upload Modal -->
-  <div class="modal-backdrop" id="model-modal" style="display:none">
-    <div class="modal-box">
-      <p class="modal-title">📸 Upload Model Photo</p>
-      <p class="modal-sub">Upload a clear photo or short video of the person you want as the presenter. Our AI will use this as reference.</p>
-      <div class="modal-drop" id="modal-drop">
-        <input type="file" id="modal-model-file" accept="image/*,video/*" />
-        <div class="modal-drop-icon">🧑‍🎤</div>
-        <div class="modal-drop-text"><strong>Click or drag</strong> to upload photo or video<br/><small style="color:#94a3b8">JPG, PNG, MP4 · Max 30MB</small></div>
-      </div>
-      <img class="modal-preview" id="modal-model-preview" alt="Model preview" />
-      <p class="modal-preview-name" id="modal-model-name"></p>
-      <div class="modal-actions">
-        <button class="modal-confirm" id="modal-confirm-btn">✅ Use This Model</button>
-        <button class="modal-cancel" id="modal-cancel-btn">Cancel</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
