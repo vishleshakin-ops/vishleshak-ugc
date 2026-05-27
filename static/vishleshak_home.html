@@ -931,14 +931,13 @@ document.querySelectorAll('.sample-card').forEach(card => {
     card.dataset.unmuted = wantsSound ? '1' : '0';
   });
 
-  // Video ended → reset to beginning and show play button again
+  // Video ended → reset to beginning and show play button; keep mute preference
   video.addEventListener('ended', () => {
     video.currentTime = 0;
-    video.muted = true;
     card.classList.remove('playing');
-    card.dataset.unmuted = '0';
-    muteBtn.textContent = '🔇';
-    muteBtn.title = 'Unmute';
+    // Keep dataset.unmuted and button icon as-is — user's choice is remembered
+    // But physically mute until they hover again (hover-to-hear rule)
+    video.muted = true;
   });
 
   // Mouse leave → always mute; mouse enter → restore if user chose unmuted
