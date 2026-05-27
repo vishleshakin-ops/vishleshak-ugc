@@ -1434,15 +1434,31 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
 
 # ── Claude Vision ─────────────────────────────────────────────────────────────
 
+def _ensure_jpeg_b64(image_b64: str) -> tuple[str, str]:
+    """Convert any image format to JPEG and return (new_b64, 'image/jpeg').
+    Falls back to original if conversion fails."""
+    try:
+        from PIL import Image as PilImage
+        import io
+        raw = base64.b64decode(image_b64)
+        img = PilImage.open(io.BytesIO(raw))
+        if img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=92)
+        return base64.b64encode(buf.getvalue()).decode("utf-8"), "image/jpeg"
+    except Exception as e:
+        print(f"[image convert] {e} — using original")
+        return image_b64, "image/jpeg"
+
+
 def generate_script(image_b64: str, media_type: str, customization: dict | None = None) -> tuple:
     """
     Returns (script, avatar_prompt, product_type, ai_settings).
     ai_settings is populated only in auto mode — contains AI-decided gender/skin/scene.
     """
-    # Claude only accepts these media types — fallback to jpeg for anything else
-    _ALLOWED = {"image/jpeg", "image/png", "image/gif", "image/webp"}
-    if media_type not in _ALLOWED:
-        media_type = "image/jpeg"
+    # Always convert to JPEG — Claude rejects HEIC and other phone formats
+    image_b64, media_type = _ensure_jpeg_b64(image_b64)
 
     c            = customization or {}
     auto_mode    = c.get("auto_mode", False)
