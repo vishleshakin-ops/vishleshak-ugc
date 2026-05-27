@@ -137,6 +137,14 @@ def save_to_history(entry: dict):
 @app.on_event("startup")
 async def load_model_on_startup():
     global model_image_bytes
+    # Clear any leftover model photos from previous deployments
+    for fname in os.listdir(MODEL_DIR):
+        fpath = os.path.join(MODEL_DIR, fname)
+        if os.path.isfile(fpath):
+            try:
+                os.remove(fpath)
+            except Exception:
+                pass
     if os.path.exists(MODEL_LOCAL_PATH):
         with open(MODEL_LOCAL_PATH, "rb") as f:
             model_image_bytes = f.read()
