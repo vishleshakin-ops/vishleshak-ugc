@@ -174,7 +174,7 @@ async def process_details(from_phone: str, text: str, process_order_func):
     language_raw = parts[2].strip().lower() if len(parts) > 2 else "hindi"
 
     # Resolve style
-    video_style = "kling" if style_raw in ("1", "kling", "talking", "talking head") else "seedance"
+    video_style = "veo3" if style_raw in ("2", "veo3", "cinematic", "veo") else "kling"
 
     # Resolve language
     language = "hindi" if "hindi" in language_raw else "english"

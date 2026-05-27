@@ -993,9 +993,7 @@ async function loadOrdersAdmin() {
     list.querySelectorAll("[data-approve]").forEach(btn =>
       btn.addEventListener("click", () => approveOrder(btn.dataset.approve))
     );
-    list.querySelectorAll("[data-approve-seedance]").forEach(btn =>
-      btn.addEventListener("click", () => approveSeedance(btn.dataset.approveSeedance))
-    );
+
     list.querySelectorAll("[data-approve-veo3]").forEach(btn =>
       btn.addEventListener("click", () => approveVeo3(btn.dataset.approveVeo3))
     );
@@ -1007,28 +1005,54 @@ async function loadOrdersAdmin() {
   }
 }
 
-function startOrderNotificationPolling() {
+function startOrderNotificationPolling(railwayUrl) {
   // Request browser notification permission
   if ("Notification" in window && Notification.permission === "default") {
     Notification.requestPermission();
   }
-  // Poll every 20 seconds for new orders
+
+  // Track IDs we've already notified about — never notify twice
+  const _notifiedIds = new Set();
+
+  // Seed with orders already on local so we don't notify on page load
+  fetch("/api/orders").then(r => r.json()).then(existing => {
+    existing.forEach(o => { if (o.id) _notifiedIds.add(o.id); });
+  }).catch(() => {});
+
+  // Every 20 seconds: auto-sync from Railway + notify if truly new orders found
   setInterval(async () => {
     try {
-      const resp = await fetch("/api/orders/poll-new");
-      const data = await resp.json();
-      if (data.new_order_ids && data.new_order_ids.length > 0) {
-        loadOrdersBadge();
-        if (_ordersPanelOpen) loadOrdersAdmin();
-        // Browser notification
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification("🛍️ New Order — Vishleshak UGC", {
-            body: `${data.new_order_ids.length} new order(s) waiting for your approval`,
-            icon: "/static/favicon.ico",
-          });
-        }
-        showToast(`🛍️ New order received! Open Orders tab to approve.`);
+      if (!railwayUrl) return;
+      const remoteOrders = await fetch(railwayUrl.replace(/\/$/, "") + "/api/orders").then(r => r.json());
+
+      // Only orders we haven't seen/notified about yet
+      const newOrders = remoteOrders.filter(o => o.id && !_notifiedIds.has(o.id));
+      if (newOrders.length === 0) return;
+
+      // Mark as seen immediately so re-polls don't re-notify
+      newOrders.forEach(o => _notifiedIds.add(o.id));
+
+      // Sync each new order to local
+      for (const order of newOrders) {
+        await fetch("/api/sync-order", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(order)
+        });
       }
+
+      // Refresh orders panel
+      loadOrdersBadge();
+      loadOrdersAdmin();
+
+      // Browser notification — once only
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("🛍️ New Order — Vishleshak UGC", {
+          body: `${newOrders.length} new order(s) waiting for your approval`,
+          icon: "/static/favicon.ico",
+        });
+      }
+      showToast(`🛍️ ${newOrders.length} new order(s) synced from Railway!`);
     } catch(_) {}
   }, 20000);
 }
@@ -1052,7 +1076,6 @@ function renderOrderCard(order) {
   if (order.status === "pending" || order.status === "failed") {
     actions = `<div class="order-actions">
       <button class="approve-btn" data-approve="${order.id}">🎙️ Kling (Lip-sync)</button>
-      <button class="approve-btn seedance-btn" data-approve-seedance="${order.id}" style="background:#7c3aed">🌱 Seedance</button>
       <button class="approve-btn" data-approve-veo3="${order.id}" style="background:#1a73e8">🎬 Veo 3 Fast</button>
       <button class="reject-btn" data-reject="${order.id}">✗ Reject</button>
     </div>`;
@@ -1091,16 +1114,6 @@ async function approveOrder(orderId) {
   }
 }
 
-async function approveSeedance(orderId) {
-  try {
-    const resp = await fetch(`/api/orders/${orderId}/approve-seedance`, {method: "POST"});
-    if (!resp.ok) { const d = await resp.json(); throw new Error(d.detail); }
-    showToast("🌱 Seedance generation started! (~3-5 min)");
-    loadOrdersAdmin();
-  } catch(e) {
-    showToast("Error: " + e.message);
-  }
-}
 
 async function approveVeo3(orderId) {
   try {
@@ -1145,26 +1158,27 @@ async function initAppMode() {
       // ADMIN mode (local): show everything + add Sync button if Railway URL is set
       loadHistory();
       loadOrdersBadge();
-      startOrderNotificationPolling();
+      startOrderNotificationPolling(railwayUrl);
       if (railwayUrl) addSyncButton(railwayUrl);
+      // Auto-open orders panel on load
+      _ordersPanelOpen = true;
+      $("orders-panel").classList.remove("hidden");
+      loadOrdersAdmin();
+      _ordersTimer = setInterval(loadOrdersAdmin, 30000);
     }
   } catch(e) {
     // fallback: treat as admin
     loadHistory();
     loadOrdersBadge();
-    startOrderNotificationPolling();
+    startOrderNotificationPolling("");
   }
 }
 
 function addSyncButton(railwayUrl) {
-  const header = document.querySelector(".orders-panel-header");
-  if (!header) return;
-  const btn = document.createElement("button");
-  btn.className = "approve-btn";
-  btn.style.cssText = "background:linear-gradient(135deg,#7C3AED,#2563EB);font-size:12px;padding:6px 14px;";
-  btn.textContent = "☁️ Sync Railway Orders";
+  const btn = $("sync-railway-btn");
+  if (!btn) return;
+  btn.style.display = "inline-block";
   btn.addEventListener("click", () => syncRailwayOrders(railwayUrl));
-  header.appendChild(btn);
 }
 
 async function syncRailwayOrders(railwayUrl) {

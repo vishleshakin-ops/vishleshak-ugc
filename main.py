@@ -53,6 +53,10 @@ GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 OWNER_WHATSAPP     = os.getenv("OWNER_WHATSAPP", "919953910987")
 CALLMEBOT_API_KEY  = os.getenv("CALLMEBOT_API_KEY", "")
 
+# URLs
+RAILWAY_URL = os.getenv("RAILWAY_URL", "").rstrip("/")
+PUBLIC_URL  = os.getenv("PUBLIC_URL", "").rstrip("/")
+
 # In-memory list of new order IDs for browser polling
 _new_order_ids: list = []
 
@@ -422,9 +426,9 @@ async def download_and_reencode_video(video_url: str, job_id: str, aspect_ratio:
                 "-i", audio_path,
                 "-map", "0:v", "-map", "1:a",
                 "-vf", vf_filter,
-                "-af", "aresample=async=1000,afade=t=in:st=0:d=0.15",
+                "-af", "adelay=200|200,afade=t=in:st=0:d=0.3,aresample=48000",
                 "-c:v", "libx264", "-preset", "slow", "-crf", "18",
-                "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
+                "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
                 "-shortest",
                 output_path,
             ]
@@ -528,6 +532,35 @@ async def generate_script_endpoint(
     }
 
 
+@app.post("/api/order-result")
+async def receive_order_result(request: Request):
+    """Called by local admin server after video generation — updates order status on Railway so customer result page shows the video."""
+    body = await request.json()
+    order_id  = body.get("order_id")
+    status    = body.get("status", "completed")
+    video_url = body.get("video_url", "")
+    image_url = body.get("image_url", "")
+    script    = body.get("script", "")
+    if not order_id:
+        return {"status": "error", "msg": "missing order_id"}
+    orders = load_orders()
+    updated = False
+    for o in orders:
+        if o.get("id") == order_id:
+            o["status"]    = status
+            o["video_url"] = video_url
+            o["image_url"] = image_url
+            if script:
+                o["script"] = script
+            updated = True
+            break
+    if updated:
+        with open(ORDERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(orders, f, ensure_ascii=False, indent=2)
+        return {"status": "updated"}
+    return {"status": "not_found"}
+
+
 @app.post("/api/sync-order")
 async def sync_order(request: Request):
     """Accept an order from Railway and store it locally (admin only)."""
@@ -537,9 +570,41 @@ async def sync_order(request: Request):
         return {"status": "exists"}
     # Mark as pending so admin can approve locally
     order["status"] = "pending"
+
+    # Download product image from Railway if not already local
+    order_id = order.get("id", "")
+    local_img = os.path.join(ORDERS_UPLOAD_DIR, f"{order_id}.jpg")
+    if order_id and not os.path.exists(local_img):
+        railway_base = RAILWAY_URL.rstrip("/")
+        img_url = f"{railway_base}/order_uploads/{order_id}.jpg"
+        try:
+            import urllib.request
+            urllib.request.urlretrieve(img_url, local_img)
+            order["product_image_path"] = local_img
+        except Exception:
+            pass  # Image download failed — thumbnail will be blank, generation still works
+
     orders.insert(0, order)
     with open(ORDERS_FILE, "w", encoding="utf-8") as f:
         json.dump(orders, f, ensure_ascii=False, indent=2)
+
+    # Notify owner via WhatsApp Business API
+    try:
+        msg = (
+            f"🛍️ *New Order — Vishleshak UGC*\n\n"
+            f"👤 *Name:* {order.get('customer_name', '—')}\n"
+            f"📱 *Phone:* {order.get('customer_phone', '—')}\n"
+            f"🎬 *Type:* {order.get('output_type', 'video')} · {order.get('video_duration', '30')}s · {order.get('language', '—')}\n"
+            f"📝 *Notes:* {order.get('notes') or '—'}\n\n"
+            f"🔗 *Dashboard:* http://127.0.0.1:8000"
+        )
+        asyncio.create_task(wa_send_text(OWNER_WHATSAPP, msg))
+    except Exception as e:
+        print(f"[sync-order] WhatsApp notify failed: {e}")
+
+    # Also send email notification
+    asyncio.create_task(_send_order_email(order))
+
     return {"status": "synced"}
 
 @app.post("/api/clear-model")
@@ -614,7 +679,7 @@ async def generate_video(
     image: UploadFile = File(...),
     presenter_source: str = Form("uploaded"),
     output_type: str = Form("video"),
-    video_duration: str = Form("30"),
+    video_duration: str = Form("5"),
     video_quality: str = Form("high"),
     auto_mode: str = Form("true"),
     language: str = Form("hindi"),
@@ -694,7 +759,7 @@ async def submit_order(
     customer_email: str = Form(""),
     language: str = Form("hindi"),
     output_type: str = Form("video"),
-    video_duration: str = Form("30"),
+    video_duration: str = Form("5"),
     presenter_source: str = Form("ai"),
     video_quality: str = Form("high"),
     platform: str = Form("instagram"),
@@ -779,6 +844,33 @@ def _send_order_email_sync(order: dict):
 async def _send_order_email(order: dict):
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, _send_order_email_sync, order)
+
+
+async def _push_result_to_railway(order_id: str, video_url: str, image_url: str, script: str):
+    """After local generation, push the completed result back to Railway so the customer result page updates."""
+    if not RAILWAY_URL:
+        return
+    # Build absolute public URL using ngrok PUBLIC_URL
+    def make_public(url: str) -> str:
+        if not url:
+            return url
+        if url.startswith("http"):
+            return url
+        return f"{PUBLIC_URL}{url}" if PUBLIC_URL else url
+
+    payload = {
+        "order_id": order_id,
+        "status": "completed",
+        "video_url": make_public(video_url),
+        "image_url": make_public(image_url),
+        "script": script,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(f"{RAILWAY_URL}/api/order-result", json=payload)
+            print(f"[Railway sync] {resp.status_code}: {resp.text[:100]}")
+    except Exception as e:
+        print(f"[Railway sync] failed: {e}")
 
 
 async def _send_whatsapp_notification(order: dict):
@@ -884,7 +976,7 @@ async def approve_order_quick(order_id: str, token: str, background_tasks: Backg
     with open(img_path, "rb") as f:
         image_data = f.read()
     job_id = str(uuid.uuid4())
-    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None}
+    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None, "order_id": order_id}
     customization = {
         "presenter_source": order.get("presenter_source", "ai"), "output_type": order.get("output_type", "video"),
         "video_duration": order.get("video_duration", "30"), "video_quality": order.get("video_quality", "high"),
@@ -921,7 +1013,7 @@ async def approve_order(order_id: str, background_tasks: BackgroundTasks):
     with open(img_path, "rb") as f:
         image_data = f.read()
     job_id = str(uuid.uuid4())
-    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None}
+    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None, "order_id": order_id}
     customization = {
         "presenter_source": order.get("presenter_source", "ai"),
         "output_type": order.get("output_type", "video"),
@@ -967,7 +1059,7 @@ async def approve_order_seedance(order_id: str, background_tasks: BackgroundTask
     with open(img_path, "rb") as f:
         image_data = f.read()
     job_id = str(uuid.uuid4())
-    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None}
+    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None, "order_id": order_id}
     customization = {
         "presenter_source": order.get("presenter_source", "ai"),
         "output_type": "video",
@@ -1012,7 +1104,7 @@ async def approve_order_veo3(order_id: str, background_tasks: BackgroundTasks):
     with open(img_path, "rb") as f:
         image_data = f.read()
     job_id = str(uuid.uuid4())
-    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None}
+    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None, "order_id": order_id}
     customization = {
         "presenter_source": order.get("presenter_source", "ai"),
         "output_type": "video",
@@ -1143,7 +1235,7 @@ async def whatsapp_receive(request: Request):
         with open(img_path, "rb") as f:
             image_data = f.read()
         job_id = str(uuid.uuid4())
-        jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None}
+        jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None, "order_id": order_id}
         customization = {
             "presenter_source": "ai",
             "output_type": "video",
@@ -1290,6 +1382,11 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
             "product_type": product_type,
             "language": language,
         })
+
+        # Push result back to Railway so customer result page updates
+        oid = jobs[job_id].get("order_id")
+        if oid:
+            asyncio.create_task(_push_result_to_railway(oid, final_url, "", script))
 
     except Exception as e:
         jobs[job_id].update({"status": "failed", "error": str(e)})
@@ -1501,7 +1598,7 @@ async def poll_task(task_id: str) -> str:
                 params={"taskId": task_id},
                 timeout=10.0,
             )
-            data = resp.json().get("data", {})
+            data = resp.json().get("data") or {}
             state = data.get("state")
             if state == "success":
                 result = json.loads(data["resultJson"])
@@ -1510,6 +1607,36 @@ async def poll_task(task_id: str) -> str:
                 raise Exception(f"kie.ai task failed (id={task_id})")
 
     raise Exception(f"kie.ai task timed out after 10 minutes (id={task_id})")
+
+
+async def poll_veo3_task(task_id: str) -> str:
+    """Poll a kie.ai Veo3 task via /veo/record-info until success. Returns video URL."""
+    async with httpx.AsyncClient() as client:
+        for _ in range(180):  # up to 15 minutes (veo3 can be slow)
+            await asyncio.sleep(5)
+            resp = await client.get(
+                f"{KIE_BASE}/veo/record-info",
+                headers={"Authorization": f"Bearer {KIE_API_KEY}"},
+                params={"taskId": task_id},
+                timeout=10.0,
+            )
+            body = resp.json()
+            data = body.get("data") or {}
+            state = data.get("state") or data.get("status") or ""
+            # kie.ai may return resultUrls directly or inside resultJson
+            if state in ("success", "SUCCESS", "completed"):
+                result_json = data.get("resultJson")
+                if result_json:
+                    result = json.loads(result_json)
+                    return result["resultUrls"][0]
+                urls = data.get("resultUrls") or data.get("videoUrls") or []
+                if urls:
+                    return urls[0]
+                raise Exception(f"Veo3 task succeeded but no URL found: {body}")
+            if state in ("fail", "FAIL", "failed", "error"):
+                raise Exception(f"kie.ai Veo3 task failed (id={task_id}): {data.get('msg','')}")
+
+    raise Exception(f"kie.ai Veo3 task timed out after 15 minutes (id={task_id})")
 
 
 # ── D-ID free pipeline ────────────────────────────────────────────────────────
@@ -1777,6 +1904,9 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
         language       = c.get("language", "hindi")
         aspect_ratio   = c.get("aspect_ratio", "9:16")
         custom_script  = c.get("custom_script", "").strip()
+        # Veo3 default is always 6s (valid values: 4, 6, 8)
+        req_dur = int(c.get("video_duration", 6) or 6)
+        veo3_duration  = min([4, 6, 8], key=lambda v: abs(v - req_dur)) if req_dur in (4, 6, 8) else 6
 
         # Step 1: Script via Claude Vision
         jobs[job_id]["step"] = "analyzing"
@@ -1809,8 +1939,8 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
             f"{avatar_prompt}. Cinematic lifestyle video, smooth natural motion. "
             f"{lang_instruction} saying: \"{script}\""
         )
-        task_id = await create_veo3_via_kie(composite_url, veo3_prompt, aspect_ratio, 8, "720p")
-        veo3_video_url = await poll_task(task_id)
+        task_id = await create_veo3_via_kie(composite_url, veo3_prompt, aspect_ratio, veo3_duration, "720p")
+        veo3_video_url = await poll_veo3_task(task_id)
 
         # Step 4: Re-encode to correct aspect ratio (no audio merge — audio already embedded)
         jobs[job_id]["step"] = "processing_video"
@@ -1825,6 +1955,11 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
             "product_type": product_type,
             "language": language,
         })
+
+        # Push result back to Railway so customer result page updates
+        oid = jobs[job_id].get("order_id")
+        if oid:
+            asyncio.create_task(_push_result_to_railway(oid, final_url, "", script))
 
     except Exception as e:
         jobs[job_id].update({"status": "failed", "error": str(e)})
