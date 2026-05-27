@@ -424,29 +424,7 @@
     }
 
     wireSegmented("presenter-group", btn => { selectedPresenter = btn.dataset.presenter; });
-    wireSegmented("style-group", btn => {
-      selectedStyle = btn.dataset.style;
-      const imageBtn = document.querySelector("#output-group [data-output='image']");
-      const videoBtn = document.querySelector("#output-group [data-output='video']");
-      if (selectedStyle === "kling") {
-        // Talking Ad = always video — disable Image Only
-        imageBtn.disabled = true;
-        imageBtn.style.opacity = "0.4";
-        imageBtn.style.cursor = "not-allowed";
-        imageBtn.title = "Talking Ad requires video output";
-        // Force Video selected
-        document.querySelectorAll("#output-group button").forEach(b => b.classList.remove("active"));
-        videoBtn.classList.add("active");
-        selectedOutput = "video";
-        document.getElementById("duration-field").classList.remove("hidden");
-      } else {
-        // Lifestyle/Fashion — Image Only is allowed
-        imageBtn.disabled = false;
-        imageBtn.style.opacity = "";
-        imageBtn.style.cursor = "";
-        imageBtn.title = "";
-      }
-    });
+    wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; });
     wireSegmented("platform-group", btn => {
       selectedPlatform = btn.dataset.platform;
       selectedRatio = btn.dataset.ratio;
