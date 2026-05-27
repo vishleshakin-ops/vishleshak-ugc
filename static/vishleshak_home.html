@@ -384,6 +384,56 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 }
 .btn-whatsapp:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,211,102,0.4); }
 
+/* CONTACT */
+.contact { padding: 100px 60px; background: #f8f7ff; }
+.contact-inner {
+  max-width: 900px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;
+}
+.contact-left .section-label { text-align: left; }
+.contact-left .section-title { text-align: left; font-size: 36px; color: #0f172a; }
+.contact-left p { color: #64748b; font-size: 15px; line-height: 1.7; margin-top: 16px; }
+.contact-cards { display: flex; flex-direction: column; gap: 14px; }
+.contact-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 20px;
+  background: white;
+  border: 1px solid #e5e0ff;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #0f172a;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(124,58,237,0.06);
+}
+.contact-card:hover {
+  border-color: #7C3AED;
+  box-shadow: 0 6px 24px rgba(124,58,237,0.15);
+  transform: translateY(-2px);
+}
+.contact-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.contact-icon.whatsapp { background: #d1fae5; }
+.contact-icon.email { background: #ede9fe; }
+.contact-card-info strong { display: block; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.contact-card-info span { font-size: 15px; font-weight: 700; color: #0f172a; }
+.social-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; margin-bottom: 14px; margin-top: 8px; }
+.social-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.social-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none; color: white;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.social-btn:hover { opacity: 0.88; transform: translateY(-2px); }
+.social-btn.insta { background: linear-gradient(135deg, #f09433, #dc2743, #bc1888); }
+.social-btn.fb    { background: #1877F2; }
+.social-btn.yt    { background: #FF0000; }
+
 /* FOOTER */
 footer {
   background: #0a0618; padding: 60px;
@@ -413,6 +463,8 @@ footer {
   .why-us-inner { flex-direction: column; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   footer { padding: 40px 24px; flex-direction: column; align-items: flex-start; }
+  .contact { padding: 60px 24px; }
+  .contact-inner { grid-template-columns: 1fr; gap: 28px; }
 }
 </style>
 </head>
@@ -696,7 +748,7 @@ footer {
 </section>
 
 <!-- CTA -->
-<section class="cta" id="contact">
+<section class="cta">
   <div class="cta-box">
     <h2 class="cta-title">Ready to Grow Your Business with AI?</h2>
     <p class="cta-sub">Join 50+ Indian businesses already using Vishleshak AI tools. Get started in minutes on WhatsApp.</p>
@@ -706,6 +758,50 @@ footer {
         Chat on WhatsApp
       </a>
       <a href="https://vishleshak-ugc-production.up.railway.app" target="_blank" class="btn-primary">🎬 Try UGC Videos</a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="contact-inner">
+    <div class="contact-left">
+      <span class="section-label">Get In Touch</span>
+      <h2 class="section-title">Let's Build Something Together</h2>
+      <p>Have questions or want a custom AI video for your brand? Reach out — we respond fast on WhatsApp.</p>
+    </div>
+    <div class="contact-right">
+      <div class="contact-cards">
+        <a href="https://wa.me/919953910987" target="_blank" class="contact-card">
+          <div class="contact-icon whatsapp">💬</div>
+          <div class="contact-card-info">
+            <strong>WhatsApp</strong>
+            <span>+91 99539 10987</span>
+          </div>
+        </a>
+        <a href="mailto:vishleshak.in@gmail.com" class="contact-card">
+          <div class="contact-icon email">✉️</div>
+          <div class="contact-card-info">
+            <strong>Email</strong>
+            <span>vishleshak.in@gmail.com</span>
+          </div>
+        </a>
+      </div>
+      <p class="social-title">Follow Us</p>
+      <div class="social-row">
+        <a href="https://www.instagram.com/vishleshak.in" target="_blank" class="social-btn insta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          Instagram
+        </a>
+        <a href="https://www.facebook.com/vishleshak.in" target="_blank" class="social-btn fb">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Facebook
+        </a>
+        <a href="https://www.youtube.com/@vishleshak" target="_blank" class="social-btn yt">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+          YouTube
+        </a>
+      </div>
     </div>
   </div>
 </section>
