@@ -542,8 +542,8 @@
         <img class="modal-preview" id="modal-model-preview" alt="Model preview" />
         <p class="modal-preview-name" id="modal-model-name"></p>
         <div class="modal-actions">
-          <button class="modal-confirm" id="modal-confirm-btn">✅ Use This Model</button>
-          <button class="modal-cancel" id="modal-cancel-btn">Cancel</button>
+          <button class="modal-confirm" id="modal-confirm-btn" onclick="confirmModel()">✅ Use This Model</button>
+          <button class="modal-cancel" id="modal-cancel-btn" onclick="cancelModel()">Cancel</button>
         </div>
       </div>
     </div>
@@ -817,48 +817,42 @@
     function openModelModal() {
       document.getElementById("model-modal").style.display = "flex";
     }
-    function closeModelModal() {
+
+    function cancelModel() {
       document.getElementById("model-modal").style.display = "none";
-    }
-
-    const modalFileInput = document.getElementById("modal-model-file");
-    const modalPreview   = document.getElementById("modal-model-preview");
-    const modalName      = document.getElementById("modal-model-name");
-
-    modalFileInput.addEventListener("change", () => {
-      const file = modalFileInput.files[0];
-      if (!file) return;
-      if (file.type.startsWith("image/")) {
-        modalPreview.src = URL.createObjectURL(file);
-        modalPreview.style.display = "block";
-      } else {
-        modalPreview.style.display = "none";
-      }
-      modalName.textContent = file.name;
-      modalName.style.display = "block";
-    });
-
-    document.getElementById("modal-confirm-btn").addEventListener("click", () => {
-      const file = modalFileInput.files[0];
-      if (!file) { alert("Please select a photo or video first."); return; }
-      modelFile = file;
-      // Show thumbnail in form
-      const row = document.getElementById("model-thumb-row");
-      const img = document.getElementById("model-thumb-img");
-      document.getElementById("model-thumb-name").textContent = file.name;
-      if (file.type.startsWith("image/")) img.src = URL.createObjectURL(file);
-      row.style.display = "flex";
-      closeModelModal();
-    });
-
-    document.getElementById("modal-cancel-btn").addEventListener("click", () => {
-      // Revert to AI Generated if no model selected
       if (!modelFile) {
         document.querySelectorAll("#presenter-group button").forEach(b => b.classList.remove("active"));
         document.querySelector("#presenter-group [data-presenter='ai']").classList.add("active");
         selectedPresenter = "ai";
       }
-      closeModelModal();
+    }
+
+    function confirmModel() {
+      const fileInput = document.getElementById("modal-model-file");
+      const file = fileInput.files[0];
+      if (!file) { alert("Please select a photo or video first."); return; }
+      modelFile = file;
+      const row = document.getElementById("model-thumb-row");
+      const img = document.getElementById("model-thumb-img");
+      document.getElementById("model-thumb-name").textContent = file.name;
+      if (file.type.startsWith("image/")) img.src = URL.createObjectURL(file);
+      row.style.display = "flex";
+      document.getElementById("model-modal").style.display = "none";
+    }
+
+    document.getElementById("modal-model-file").addEventListener("change", function() {
+      const file = this.files[0];
+      if (!file) return;
+      const prev = document.getElementById("modal-model-preview");
+      const name = document.getElementById("modal-model-name");
+      if (file.type.startsWith("image/")) {
+        prev.src = URL.createObjectURL(file);
+        prev.style.display = "block";
+      } else {
+        prev.style.display = "none";
+      }
+      name.textContent = file.name;
+      name.style.display = "block";
     });
 
     document.getElementById("model-change-btn").addEventListener("click", openModelModal);
