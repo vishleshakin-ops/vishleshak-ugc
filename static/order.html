@@ -214,9 +214,101 @@
       max-width: 100%; max-height: 200px; border-radius: 10px; object-fit: contain;
       display: none; margin: 0 auto;
     }
-    /* Duration (hidden when image selected) */
-    #duration-field { transition: opacity 0.2s; }
+    /* Duration always visible */
     #duration-field.hidden { display: none; }
+
+    /* Model upload modal */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(15,10,40,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+      backdrop-filter: blur(6px);
+      animation: fadeIn 0.18s ease;
+    }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .modal-box {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 28px 24px 24px;
+      width: min(420px, calc(100vw - 32px));
+      box-shadow: 0 24px 80px rgba(124,58,237,0.25);
+      border: 1px solid var(--line);
+      animation: riseUp 0.2s cubic-bezier(0.34,1.3,0.64,1);
+    }
+    @keyframes riseUp { from{opacity:0;transform:translateY(16px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .modal-title {
+      font-size: 1.1rem; font-weight: 800; color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .modal-sub {
+      font-size: 13px; color: var(--muted); margin-bottom: 18px;
+    }
+    .modal-drop {
+      border: 2px dashed var(--line);
+      border-radius: 12px;
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--purple-light);
+      position: relative;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .modal-drop:hover { border-color: var(--purple); background: #ede9fe; }
+    .modal-drop input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .modal-drop-icon { font-size: 32px; margin-bottom: 8px; }
+    .modal-drop-text { font-size: 13px; color: var(--muted); }
+    .modal-drop-text strong { color: var(--purple-dark); }
+    .modal-preview {
+      max-width: 100%; max-height: 180px; border-radius: 10px;
+      object-fit: contain; display: none; margin: 0 auto;
+    }
+    .modal-preview-name {
+      font-size: 12px; color: var(--purple-dark); font-weight: 600;
+      text-align: center; margin-top: 8px; display: none;
+    }
+    .modal-actions {
+      display: flex; gap: 10px; margin-top: 18px;
+    }
+    .modal-confirm {
+      flex: 1; padding: 12px;
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
+      color: white; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.3);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .modal-confirm:hover { opacity: 0.9; transform: translateY(-1px); }
+    .modal-cancel {
+      padding: 12px 20px;
+      background: var(--white); color: var(--muted);
+      border: 1.5px solid var(--line); border-radius: 10px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .modal-cancel:hover { border-color: var(--purple); color: var(--purple); }
+    /* Model thumbnail in form */
+    .model-thumb-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: var(--purple-light);
+      border: 1.5px solid var(--purple);
+      border-radius: 10px;
+      margin-top: 8px;
+      display: none;
+    }
+    .model-thumb-row img {
+      width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+    }
+    .model-thumb-info { flex: 1; }
+    .model-thumb-info strong { display: block; font-size: 13px; color: var(--ink); }
+    .model-thumb-info span { font-size: 11px; color: var(--purple-dark); }
+    .model-thumb-change {
+      font-size: 12px; color: var(--purple); font-weight: 600;
+      background: none; border: none; cursor: pointer; padding: 0;
+    }
     /* Submit button */
     .submit-btn {
       width: 100%;
@@ -350,9 +442,18 @@
         <label>Presenter Type</label>
         <div class="segmented" id="presenter-group">
           <button type="button" class="active" data-presenter="ai">🤖 AI Generated</button>
-          <button type="button" data-presenter="uploaded">📸 Use Our Model</button>
+          <button type="button" data-presenter="uploaded" id="use-model-btn">📸 Use Our Model</button>
         </div>
-        <small class="helper">AI Generated = unique AI face every time · Use Our Model = our trained presenter</small>
+        <small class="helper">AI Generated = unique AI face every time · Use Our Model = upload your model's photo</small>
+        <!-- Model thumbnail shown after upload -->
+        <div class="model-thumb-row" id="model-thumb-row">
+          <img id="model-thumb-img" src="" alt="Model" />
+          <div class="model-thumb-info">
+            <strong id="model-thumb-name">Model photo uploaded</strong>
+            <span>Will be used as presenter reference</span>
+          </div>
+          <button class="model-thumb-change" type="button" id="model-change-btn">Change</button>
+        </div>
       </div>
 
       <div class="field">
@@ -393,14 +494,13 @@
       </div>
 
       <div class="field" id="duration-field">
-        <label>Duration</label>
+        <label>Video Duration</label>
         <div class="segmented" id="duration-group">
-          <button type="button" data-duration="5">⚡ 5s</button>
+          <button type="button" class="active" data-duration="5">⚡ 5s</button>
           <button type="button" data-duration="10">🔥 10s</button>
           <button type="button" data-duration="15">▶ 15s</button>
-          <button type="button" class="active" data-duration="30">🎬 30s</button>
-          <button type="button" data-duration="60">🎥 60s</button>
         </div>
+        <small class="helper">5s = quick reel · 10s = standard · 15s = detailed showcase</small>
       </div>
 
       <div class="field" id="quality-field">
@@ -462,12 +562,13 @@
     let selectedLang = "hindi";
     let selectedStyle = "kling";
     let selectedOutput = "video";
-    let selectedDuration = "30";
+    let selectedDuration = "5";
     let selectedQuality = "high";
     let selectedPresenter = "ai";
     let selectedPlatform = "instagram";
     let selectedRatio = "9:16";
     let productFile = null;
+    let modelFile = null;
 
     // Segmented controls
     function wireSegmented(groupId, onChange) {
@@ -481,7 +582,10 @@
       });
     }
 
-    wireSegmented("presenter-group", btn => { selectedPresenter = btn.dataset.presenter; });
+    wireSegmented("presenter-group", btn => {
+      selectedPresenter = btn.dataset.presenter;
+      if (selectedPresenter === "uploaded") openModelModal();
+    });
     wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; });
     wireSegmented("platform-group", btn => {
       selectedPlatform = btn.dataset.platform;
@@ -490,7 +594,8 @@
     wireSegmented("lang-group", btn => { selectedLang = btn.dataset.lang; });
     wireSegmented("output-group", btn => {
       selectedOutput = btn.dataset.output;
-      document.getElementById("duration-field").classList.toggle("hidden", selectedOutput === "image");
+      // Duration always visible — only hide for image-only if desired
+      // document.getElementById("duration-field").classList.toggle("hidden", selectedOutput === "image");
     });
     wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
     wireSegmented("quality-group", btn => { selectedQuality = btn.dataset.quality; });
@@ -666,6 +771,7 @@
       fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
       fd.append("video_style", selectedStyle);
       fd.append("product_image", productFile);
+      if (modelFile) fd.append("model_reference", modelFile);
 
       try {
         const resp = await fetch("/api/orders", { method: "POST", body: fd });
@@ -687,6 +793,77 @@
       el.textContent = msg;
       el.style.display = "block";
     }
+
+    // ── Model upload modal ────────────────────────────────────────────────────
+    function openModelModal() {
+      document.getElementById("model-modal").style.display = "flex";
+    }
+    function closeModelModal() {
+      document.getElementById("model-modal").style.display = "none";
+    }
+
+    const modalFileInput = document.getElementById("modal-model-file");
+    const modalPreview   = document.getElementById("modal-model-preview");
+    const modalName      = document.getElementById("modal-model-name");
+
+    modalFileInput.addEventListener("change", () => {
+      const file = modalFileInput.files[0];
+      if (!file) return;
+      if (file.type.startsWith("image/")) {
+        modalPreview.src = URL.createObjectURL(file);
+        modalPreview.style.display = "block";
+      } else {
+        modalPreview.style.display = "none";
+      }
+      modalName.textContent = file.name;
+      modalName.style.display = "block";
+    });
+
+    document.getElementById("modal-confirm-btn").addEventListener("click", () => {
+      const file = modalFileInput.files[0];
+      if (!file) { alert("Please select a photo or video first."); return; }
+      modelFile = file;
+      // Show thumbnail in form
+      const row = document.getElementById("model-thumb-row");
+      const img = document.getElementById("model-thumb-img");
+      document.getElementById("model-thumb-name").textContent = file.name;
+      if (file.type.startsWith("image/")) img.src = URL.createObjectURL(file);
+      row.style.display = "flex";
+      closeModelModal();
+    });
+
+    document.getElementById("modal-cancel-btn").addEventListener("click", () => {
+      // Revert to AI Generated if no model selected
+      if (!modelFile) {
+        document.querySelectorAll("#presenter-group button").forEach(b => b.classList.remove("active"));
+        document.querySelector("#presenter-group [data-presenter='ai']").classList.add("active");
+        selectedPresenter = "ai";
+      }
+      closeModelModal();
+    });
+
+    document.getElementById("model-change-btn").addEventListener("click", openModelModal);
+
+    // Include model file in form submission
+    const origSubmit = document.getElementById("submit-btn").onclick;
   </script>
+  <!-- Model Upload Modal -->
+  <div class="modal-backdrop" id="model-modal" style="display:none">
+    <div class="modal-box">
+      <p class="modal-title">📸 Upload Model Photo</p>
+      <p class="modal-sub">Upload a clear photo or short video of the person you want as the presenter. Our AI will use this as reference.</p>
+      <div class="modal-drop" id="modal-drop">
+        <input type="file" id="modal-model-file" accept="image/*,video/*" />
+        <div class="modal-drop-icon">🧑‍🎤</div>
+        <div class="modal-drop-text"><strong>Click or drag</strong> to upload photo or video<br/><small style="color:#94a3b8">JPG, PNG, MP4 · Max 30MB</small></div>
+      </div>
+      <img class="modal-preview" id="modal-model-preview" alt="Model preview" />
+      <p class="modal-preview-name" id="modal-model-name"></p>
+      <div class="modal-actions">
+        <button class="modal-confirm" id="modal-confirm-btn">✅ Use This Model</button>
+        <button class="modal-cancel" id="modal-cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
