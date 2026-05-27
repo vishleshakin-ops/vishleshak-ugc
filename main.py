@@ -1439,6 +1439,11 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
     Returns (script, avatar_prompt, product_type, ai_settings).
     ai_settings is populated only in auto mode — contains AI-decided gender/skin/scene.
     """
+    # Claude only accepts these media types — fallback to jpeg for anything else
+    _ALLOWED = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+    if media_type not in _ALLOWED:
+        media_type = "image/jpeg"
+
     c            = customization or {}
     auto_mode    = c.get("auto_mode", False)
     language     = c.get("language", "hindi")
