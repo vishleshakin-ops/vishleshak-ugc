@@ -9,49 +9,77 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --navy: #0A1628;
-      --navy-soft: #0f1f3d;
-      --gold: #C9A84C;
-      --gold-dark: #a8832e;
-      --gold-light: #fef6e4;
-      --white: #ffffff;
-      --bg: #f0f4f8;
-      --ink: #1a2740;
-      --muted: #64748b;
-      --line: #e2e8f0;
-      --green: #16a34a;
-      --radius: 14px;
+      --purple:      #7C3AED;
+      --purple-dark: #5b21b6;
+      --purple-mid:  #6d28d9;
+      --purple-light:#f5f3ff;
+      --blue:        #2563EB;
+      --white:       #ffffff;
+      --bg:          #f3f0ff;
+      --ink:         #0f172a;
+      --muted:       #64748b;
+      --line:        #e5e0ff;
+      --green:       #16a34a;
+      --radius:      14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: Inter, system-ui, sans-serif;
-      background: var(--navy);
+      background: var(--bg);
       color: var(--ink);
       min-height: 100vh;
     }
     /* Header */
     .header {
-      background: var(--navy);
-      padding: 24px 20px 20px;
+      background: linear-gradient(135deg, #0f0a28 0%, #1e0a4e 50%, #2d1a72 100%);
+      padding: 28px 20px 24px;
       text-align: center;
+      box-shadow: 0 4px 24px rgba(100,40,200,0.25);
     }
-    .header-logo {
-      font-size: 11px;
+    .header-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .header-logo-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: white; font-size: 20px;
+      flex-shrink: 0;
+    }
+    .header-logo-text {
+      text-align: left;
+    }
+    .header-logo-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      display: block;
+    }
+    .header-logo-sub {
+      font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 6px;
+      color: #a78bfa;
+      display: block;
     }
     .header h1 {
-      font-size: 1.7rem;
+      font-size: 1.6rem;
       font-weight: 800;
       color: var(--white);
       margin-bottom: 6px;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .header p {
       font-size: 14px;
-      color: rgba(255,255,255,0.6);
+      color: rgba(255,255,255,0.55);
     }
     /* Page wrapper */
     .page {
@@ -64,7 +92,8 @@
       background: var(--white);
       border-radius: var(--radius);
       padding: 28px 24px;
-      box-shadow: 0 8px 32px rgba(10,22,40,0.18);
+      box-shadow: 0 4px 24px rgba(124,58,237,0.1);
+      border: 1px solid var(--line);
     }
     .card-title {
       font-size: 1.05rem;
@@ -94,15 +123,27 @@
       font-size: 14px;
       color: var(--ink);
       outline: none;
-      transition: border-color 0.15s;
-      background: #fafbfc;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: var(--purple-light);
     }
     .field input:focus,
     .field textarea:focus {
-      border-color: var(--gold);
+      border-color: var(--purple);
       background: var(--white);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
     }
     .field textarea { resize: vertical; min-height: 80px; }
+    /* Phone prefix */
+    .phone-prefix {
+      display: flex; align-items: center;
+      padding: 0 12px;
+      background: var(--purple-light);
+      border: 1.5px solid var(--line);
+      border-right: 0;
+      border-radius: 8px 0 0 8px;
+      font-size: 14px; font-weight: 600;
+      color: var(--ink); white-space: nowrap;
+    }
     /* Dictate */
     .notes-wrap { position: relative; }
     .notes-wrap textarea { padding-right: 44px; }
@@ -112,15 +153,15 @@
       width: 32px; height: 32px;
       border-radius: 50%;
       border: none;
-      background: #f1f5f9;
-      color: #64748b;
+      background: var(--purple-light);
+      color: var(--purple);
       font-size: 16px;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.15s, color 0.15s;
       z-index: 1;
     }
-    .mic-btn:hover { background: #e2e8f0; }
+    .mic-btn:hover { background: #ede9fe; }
     .mic-btn.listening { background: #fee2e2; color: #ef4444; animation: pulse-mic 1s infinite; }
     @keyframes pulse-mic { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,0)} }
     /* Segmented */
@@ -135,18 +176,20 @@
       padding: 9px 12px;
       border: 1.5px solid var(--line);
       border-radius: 9px;
-      background: #fafbfc;
+      background: var(--purple-light);
       font-size: 13px;
       font-weight: 500;
       color: var(--muted);
       cursor: pointer;
       transition: all 0.15s;
     }
+    .segmented button:hover:not(.active) { border-color: rgba(124,58,237,0.4); }
     .segmented button.active {
-      border-color: var(--gold);
-      background: var(--gold-light);
-      color: var(--ink);
+      border-color: var(--purple);
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
+      color: #ffffff;
       font-weight: 600;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.25);
     }
     /* Drop zone */
     .drop-zone {
@@ -156,17 +199,17 @@
       text-align: center;
       cursor: pointer;
       transition: border-color 0.15s, background 0.15s;
-      background: #fafbfc;
+      background: var(--purple-light);
       position: relative;
     }
     .drop-zone:hover,
-    .drop-zone.drag-over { border-color: var(--gold); background: var(--gold-light); }
+    .drop-zone.drag-over { border-color: var(--purple); background: #ede9fe; }
     .drop-zone input[type="file"] {
       position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
     }
     .drop-zone-icon { font-size: 28px; margin-bottom: 8px; }
     .drop-zone-text { font-size: 13px; color: var(--muted); }
-    .drop-zone-text strong { color: var(--gold-dark); }
+    .drop-zone-text strong { color: var(--purple-dark); }
     .preview-img {
       max-width: 100%; max-height: 200px; border-radius: 10px; object-fit: contain;
       display: none; margin: 0 auto;
@@ -178,7 +221,7 @@
     .submit-btn {
       width: 100%;
       padding: 14px;
-      background: var(--gold);
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
       color: var(--white);
       border: none;
       border-radius: 10px;
@@ -186,14 +229,19 @@
       font-weight: 700;
       cursor: pointer;
       margin-top: 8px;
-      transition: background 0.15s;
+      transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.3);
     }
-    .submit-btn:hover { background: var(--gold-dark); }
-    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .submit-btn:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(124,58,237,0.4);
+    }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .spinner {
       width: 16px; height: 16px;
       border: 2px solid rgba(255,255,255,0.4);
@@ -217,38 +265,48 @@
       border-radius: var(--radius);
       padding: 36px 24px;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(10,22,40,0.18);
+      box-shadow: 0 4px 24px rgba(124,58,237,0.1);
+      border: 1px solid var(--line);
       display: none;
     }
     .success-icon { font-size: 48px; margin-bottom: 12px; }
     .success-card h2 { font-size: 1.3rem; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
     .success-card p { color: var(--muted); font-size: 14px; margin-bottom: 4px; }
     .order-id-box {
-      background: #f8fafc; border: 1.5px solid var(--line);
+      background: var(--purple-light); border: 1.5px solid var(--line);
       border-radius: 8px; padding: 10px 16px;
       font-size: 12px; color: var(--muted);
       margin: 14px 0 20px;
       word-break: break-all;
     }
-    .order-id-box strong { display: block; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .order-id-box strong { display: block; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--purple-dark); }
     .track-btn {
       display: inline-block;
       padding: 12px 28px;
-      background: var(--gold);
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
       color: var(--white);
       border-radius: 10px;
       font-size: 14px;
       font-weight: 700;
       text-decoration: none;
-      transition: background 0.15s;
+      transition: opacity 0.15s, transform 0.15s;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.3);
     }
-    .track-btn:hover { background: var(--gold-dark); }
+    .track-btn:hover { opacity: 0.9; transform: translateY(-1px); }
     .muted { color: var(--muted); }
+    /* Helper text below segmented */
+    .helper { color: #7c3aed99; font-size: 11px; margin-top: 5px; display: block; }
   </style>
 </head>
 <body>
   <div class="header">
-    <p class="header-logo">Vishleshak UGC</p>
+    <div class="header-brand">
+      <div class="header-logo-icon">V</div>
+      <div class="header-logo-text">
+        <span class="header-logo-name">Vishleshak</span>
+        <span class="header-logo-sub">AI Studio</span>
+      </div>
+    </div>
     <h1>Order Your AI Video Ad</h1>
     <p>AI-Powered UGC Video Ads for Your Products</p>
   </div>
@@ -266,7 +324,7 @@
       <div class="field">
         <label>WhatsApp Number *</label>
         <div style="display:flex">
-          <span style="display:flex;align-items:center;padding:0 12px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-right:0;border-radius:8px 0 0 8px;font-size:14px;font-weight:600;color:#0f172a;white-space:nowrap">🇮🇳 +91</span>
+          <span class="phone-prefix">🇮🇳 +91</span>
           <input type="tel" id="customer-phone" placeholder="98765 43210" required style="border-radius:0 8px 8px 0 !important;flex:1;min-width:0" />
         </div>
       </div>
@@ -294,7 +352,7 @@
           <button type="button" class="active" data-presenter="ai">🤖 AI Generated</button>
           <button type="button" data-presenter="uploaded">📸 Use Our Model</button>
         </div>
-        <small style="color:#64748b;font-size:11px;margin-top:6px;display:block">AI Generated = unique AI face every time · Use Our Model = our trained presenter</small>
+        <small class="helper">AI Generated = unique AI face every time · Use Our Model = our trained presenter</small>
       </div>
 
       <div class="field">
@@ -314,7 +372,7 @@
           <button type="button" data-platform="youtube" data-ratio="16:9">▶ YouTube</button>
           <button type="button" data-platform="x" data-ratio="16:9">✕ X</button>
         </div>
-        <small style="color:#64748b;font-size:11px;margin-top:6px;display:block">Instagram = vertical 9:16 · Facebook/YouTube/X = horizontal 16:9</small>
+        <small class="helper">Instagram = vertical 9:16 · Facebook/YouTube/X = horizontal 16:9</small>
       </div>
 
       <div class="field">
@@ -323,7 +381,7 @@
           <button type="button" class="active" data-style="kling">🎙️ Talking Ad</button>
           <button type="button" data-style="seedance">🎬 Lifestyle / Fashion</button>
         </div>
-        <small style="color:#64748b;font-size:11px;margin-top:6px;display:block">Talking Ad = lip-synced voiceover · Lifestyle = cinematic motion reel</small>
+        <small class="helper">Talking Ad = lip-synced voiceover · Lifestyle = cinematic motion reel</small>
       </div>
 
       <div class="field">
@@ -352,7 +410,7 @@
           <button type="button" class="active" data-quality="high">✨ High</button>
           <button type="button" data-quality="ultra">💎 Ultra</button>
         </div>
-        <small style="color:#64748b;font-size:11px;margin-top:6px;display:block">Standard = faster · High = recommended · Ultra = best quality, slower</small>
+        <small class="helper">Standard = faster · High = recommended · Ultra = best quality, slower</small>
       </div>
 
       <div class="field">
@@ -375,13 +433,13 @@
     <div class="card" id="script-preview-card" style="display:none;margin-top:16px">
       <p class="card-title">📝 Your Script Preview</p>
       <p style="font-size:13px;color:#64748b;margin-bottom:12px">AI has written this script based on your product. You can edit it before submitting.</p>
-      <textarea id="script-edit-area" style="width:100%;min-height:140px;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:14px;color:#1a2740;background:#fafbfc;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+      <textarea id="script-edit-area" style="width:100%;min-height:140px;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--ink);background:var(--purple-light);resize:vertical;font-family:inherit;line-height:1.6;outline:none;transition:border-color 0.15s,box-shadow 0.15s" onfocus="this.style.borderColor='#7C3AED';this.style.boxShadow='0 0 0 3px rgba(124,58,237,0.1)'" onblur="this.style.borderColor='';this.style.boxShadow=''"></textarea>
       <div style="display:flex;gap:10px;margin-top:12px">
         <button class="submit-btn" id="submit-btn" type="button" style="flex:1">
           <span class="spinner" id="submit-spinner"></span>
           ✅ Confirm & Submit Order
         </button>
-        <button type="button" id="back-btn" style="padding:14px 18px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:14px;font-weight:600;color:#64748b;cursor:pointer">← Edit</button>
+        <button type="button" id="back-btn" style="padding:14px 18px;border:1.5px solid var(--line);border-radius:10px;background:var(--white);font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='#7C3AED';this.style.color='#7C3AED'" onmouseout="this.style.borderColor='';this.style.color=''">← Edit</button>
       </div>
     </div>
 
