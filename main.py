@@ -57,6 +57,23 @@ CALLMEBOT_API_KEY  = os.getenv("CALLMEBOT_API_KEY", "")
 RAILWAY_URL = os.getenv("RAILWAY_URL", "").rstrip("/")
 PUBLIC_URL  = os.getenv("PUBLIC_URL", "").rstrip("/")
 
+# Cloudinary
+CLOUDINARY_CLOUD_NAME  = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+CLOUDINARY_API_KEY     = os.getenv("CLOUDINARY_API_KEY", "")
+CLOUDINARY_API_SECRET  = os.getenv("CLOUDINARY_API_SECRET", "")
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    import cloudinary
+    import cloudinary.uploader
+    cloudinary.config(
+        cloud_name = CLOUDINARY_CLOUD_NAME,
+        api_key    = CLOUDINARY_API_KEY,
+        api_secret = CLOUDINARY_API_SECRET,
+        secure     = True,
+    )
+    _CLOUDINARY_READY = True
+else:
+    _CLOUDINARY_READY = False
+
 # In-memory list of new order IDs for browser polling
 _new_order_ids: list = []
 
@@ -846,6 +863,26 @@ async def _send_order_email(order: dict):
     await loop.run_in_executor(None, _send_order_email_sync, order)
 
 
+async def _upload_to_cloudinary(local_path: str, public_id: str) -> str:
+    """Upload a local video file to Cloudinary. Returns the secure CDN URL."""
+    if not _CLOUDINARY_READY:
+        return ""
+    try:
+        result = await asyncio.to_thread(
+            cloudinary.uploader.upload,
+            local_path,
+            resource_type = "video",
+            public_id     = f"vishleshak-ugc/{public_id}",
+            overwrite     = True,
+        )
+        url = result.get("secure_url", "")
+        print(f"[Cloudinary] Uploaded: {url}")
+        return url
+    except Exception as e:
+        print(f"[Cloudinary] Upload failed: {e}")
+        return ""
+
+
 async def _push_result_to_railway(order_id: str, video_url: str, image_url: str, script: str):
     """After local generation, push the completed result back to Railway so the customer result page updates."""
     if not RAILWAY_URL:
@@ -1383,10 +1420,13 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
             "language": language,
         })
 
-        # Push result back to Railway so customer result page updates
+        # Upload to Cloudinary → push CDN URL to Railway
         oid = jobs[job_id].get("order_id")
         if oid:
-            asyncio.create_task(_push_result_to_railway(oid, final_url, "", script))
+            local_path = os.path.join(os.path.dirname(__file__), "static", "videos", f"{job_id}.mp4")
+            cdn_url = await _upload_to_cloudinary(local_path, job_id)
+            public_video_url = cdn_url or (f"{PUBLIC_URL}{final_url}" if PUBLIC_URL else final_url)
+            asyncio.create_task(_push_result_to_railway(oid, public_video_url, "", script))
 
     except Exception as e:
         jobs[job_id].update({"status": "failed", "error": str(e)})
@@ -1956,10 +1996,13 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
             "language": language,
         })
 
-        # Push result back to Railway so customer result page updates
+        # Upload to Cloudinary → push CDN URL to Railway
         oid = jobs[job_id].get("order_id")
         if oid:
-            asyncio.create_task(_push_result_to_railway(oid, final_url, "", script))
+            local_path = os.path.join(os.path.dirname(__file__), "static", "videos", f"{job_id}.mp4")
+            cdn_url = await _upload_to_cloudinary(local_path, job_id)
+            public_video_url = cdn_url or (f"{PUBLIC_URL}{final_url}" if PUBLIC_URL else final_url)
+            asyncio.create_task(_push_result_to_railway(oid, public_video_url, "", script))
 
     except Exception as e:
         jobs[job_id].update({"status": "failed", "error": str(e)})
