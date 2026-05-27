@@ -198,6 +198,22 @@ async def load_model_on_startup():
 
 # ── Image helpers ─────────────────────────────────────────────────────────────
 
+def _to_jpeg_bytes(image_bytes: bytes) -> bytes:
+    """Convert any image format to JPEG bytes using Pillow. Safe fallback."""
+    try:
+        from PIL import Image as PilImage
+        import io
+        img = PilImage.open(io.BytesIO(image_bytes))
+        if img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=92)
+        return buf.getvalue()
+    except Exception as e:
+        print(f"[to_jpeg] conversion failed: {e} — using original")
+        return image_bytes
+
+
 async def upload_image_to_public(image_bytes: bytes, fname: str, mime: str) -> str:
     """Upload image to imgbb. Returns a permanent public URL."""
     img_b64 = base64.b64encode(image_bytes).decode()
@@ -214,6 +230,10 @@ async def upload_image_to_public(image_bytes: bytes, fname: str, mime: str) -> s
 
 async def upload_image_to_kie(image_bytes: bytes, fname: str, mime: str) -> str:
     """Upload image to kie.ai's own CDN (required for 4o Image API). Returns a temporary URL valid for 3 days."""
+    # Always upload as JPEG — kie.ai rejects HEIC and other exotic formats
+    image_bytes = _to_jpeg_bytes(image_bytes)
+    mime = "image/jpeg"
+    fname = fname.rsplit(".", 1)[0] + ".jpg"
     async with httpx.AsyncClient(timeout=120.0) as client:
         resp = await client.post(
             "https://kieai.redpandaai.co/api/file-stream-upload",
@@ -789,6 +809,8 @@ async def submit_order(
     image_data = await product_image.read()
     if len(image_data) > 15 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Image must be under 15MB")
+    # Convert to JPEG at upload time — handles HEIC, BMP, TIFF, etc.
+    image_data = _to_jpeg_bytes(image_data)
     order_id = str(uuid.uuid4())
     img_path = os.path.join(ORDERS_UPLOAD_DIR, f"{order_id}.jpg")
     with open(img_path, "wb") as f:
