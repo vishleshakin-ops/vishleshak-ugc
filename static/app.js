@@ -1004,6 +1004,9 @@ async function loadOrdersAdmin() {
     list.querySelectorAll("[data-reject]").forEach(btn =>
       btn.addEventListener("click", () => rejectOrder(btn.dataset.reject))
     );
+    list.querySelectorAll("[data-recover]").forEach(btn =>
+      btn.addEventListener("click", () => recoverVeo3(btn.dataset.recover))
+    );
   } catch(e) {
     console.error("Failed to load orders", e);
   }
@@ -1078,10 +1081,20 @@ function renderOrderCard(order) {
 
   let actions = "";
   if (order.status === "pending" || order.status === "failed") {
+    // If a Veo3 task was already submitted (credits spent), show recovery option
+    const kieTaskId = order.kie_task_id || "";
+    const recoverRow = order.video_style === "veo3" || kieTaskId ? `
+      <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+        <input id="recover-task-${order.id}" type="text" placeholder="kie.ai task ID" value="${kieTaskId}"
+          style="flex:1;font-size:11px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc"/>
+        <button class="approve-btn" style="background:#059669;font-size:11px;padding:4px 10px"
+          data-recover="${order.id}">🔁 Recover Veo3</button>
+      </div>` : "";
     actions = `<div class="order-actions">
       <button class="approve-btn" data-approve="${order.id}">🎙️ Kling (Lip-sync)</button>
       <button class="approve-btn" data-approve-veo3="${order.id}" style="background:#1a73e8">🎬 Veo 3 Fast</button>
       <button class="reject-btn" data-reject="${order.id}">✗ Reject</button>
+      ${recoverRow}
     </div>`;
   } else if (order.status === "processing") {
     actions = `<div class="order-actions"><span class="muted" style="font-size:12px">⚙️ ${order.job_step || "starting"}…</span></div>`;
@@ -1167,6 +1180,29 @@ async function rejectOrder(orderId) {
   await fetch(`/api/orders/${orderId}/reject`, {method: "POST", body: new URLSearchParams({reason: ""})});
   showToast("Order rejected.");
   loadOrdersAdmin();
+}
+
+async function recoverVeo3(orderId) {
+  const taskInput = document.getElementById(`recover-task-${orderId}`);
+  const taskId = taskInput ? taskInput.value.trim() : "";
+  if (!taskId) { showToast("⚠️ Enter the kie.ai task ID first"); return; }
+  showToast("🔁 Recovering Veo3 video from kie.ai… this may take a minute");
+  try {
+    const resp = await fetch("/api/recover-veo3", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({order_id: orderId, task_id: taskId}),
+    });
+    const data = await resp.json();
+    if (data.status === "recovered") {
+      showToast("✅ Video recovered! Check View Result.", 5000);
+      loadOrdersAdmin();
+    } else {
+      showToast("❌ Recovery failed: " + (data.msg || "unknown error"), 6000);
+    }
+  } catch(e) {
+    showToast("❌ Recovery error: " + e.message, 6000);
+  }
 }
 
 wireEvents();

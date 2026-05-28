@@ -700,6 +700,58 @@ async def sync_order(request: Request):
 
     return {"status": "synced"}
 
+
+@app.post("/api/recover-veo3")
+async def recover_veo3(request: Request):
+    """Admin endpoint: fetch a completed Veo3 video from kie.ai by task ID,
+    upload to Cloudinary, and push the result to Railway.
+    Body: {order_id, job_id (optional), task_id}
+    """
+    body = await request.json()
+    order_id = body.get("order_id", "").strip()
+    job_id   = body.get("job_id", "").strip()
+    task_id  = body.get("task_id", "").strip()
+    if not order_id or not task_id:
+        return {"status": "error", "msg": "order_id and task_id are required"}
+
+    # Poll kie.ai once to get the video URL
+    try:
+        video_url = await poll_veo3_task(task_id)
+    except Exception as e:
+        return {"status": "error", "msg": f"kie.ai poll failed: {e}"}
+
+    # Download the video locally
+    vid_id = job_id or order_id[:8]
+    local_path = os.path.join(os.path.dirname(__file__), "static", "videos", f"{vid_id}.mp4")
+    try:
+        async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
+            resp = await client.get(video_url)
+            resp.raise_for_status()
+            with open(local_path, "wb") as f:
+                f.write(resp.content)
+    except Exception as e:
+        return {"status": "error", "msg": f"Video download failed: {e}"}
+
+    # Upload to Cloudinary
+    cdn_url = await _upload_to_cloudinary(local_path, vid_id)
+    public_url = cdn_url or video_url
+
+    # Push to Railway result page
+    await _push_result_to_railway(order_id, public_url, "", "")
+
+    # Update local orders.json
+    orders = load_orders()
+    for o in orders:
+        if o.get("id") == order_id:
+            o["status"] = "completed"
+            o["video_url"] = public_url
+            break
+    with open(ORDERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(orders, f, ensure_ascii=False, indent=2)
+
+    return {"status": "recovered", "video_url": public_url}
+
+
 @app.post("/api/clear-model")
 async def clear_model():
     global model_image_bytes, model_image_url
@@ -2262,6 +2314,17 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
             f"elegant movement. No text, no subtitles, no captions, no watermark."
         )
         task_id = await create_veo3_via_kie(composite_url, veo3_prompt, aspect_ratio, veo3_duration, "720p")
+        jobs[job_id]["kie_task_id"] = task_id  # store so admin can recover if poll fails
+        # Also persist task_id to orders.json so it survives server restart
+        oid = jobs[job_id].get("order_id")
+        if oid:
+            _orders = load_orders()
+            for _o in _orders:
+                if _o.get("id") == oid:
+                    _o["kie_task_id"] = task_id
+                    break
+            with open(ORDERS_FILE, "w", encoding="utf-8") as _f:
+                json.dump(_orders, _f, ensure_ascii=False, indent=2)
         veo3_video_url = await poll_veo3_task(task_id)
 
         # Step 4: Re-encode to correct aspect ratio (no audio merge — audio already embedded)
