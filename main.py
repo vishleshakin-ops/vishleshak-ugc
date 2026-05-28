@@ -162,17 +162,11 @@ def save_to_history(entry: dict):
 @app.on_event("startup")
 async def load_model_on_startup():
     global model_image_bytes
-    # Clear any leftover model photos from previous deployments
-    for fname in os.listdir(MODEL_DIR):
-        fpath = os.path.join(MODEL_DIR, fname)
-        if os.path.isfile(fpath):
-            try:
-                os.remove(fpath)
-            except Exception:
-                pass
+    # Load model photo from disk if it exists — do NOT delete it on restart
     if os.path.exists(MODEL_LOCAL_PATH):
         with open(MODEL_LOCAL_PATH, "rb") as f:
             model_image_bytes = f.read()
+        print(f"[startup] Model photo loaded from disk ({len(model_image_bytes)//1024} KB)")
 
     # Rebuild history from existing MP4 files that aren't already tracked
     history = load_history()
@@ -364,16 +358,27 @@ async def generate_model_with_product(
     product_kie_url = await upload_image_to_kie(product_bytes, f"product.{ext}", product_mime)
     files_url = [product_kie_url]
 
-    # Read model from local disk — never download catbox.moe URLs
-    if presenter_source != "ai" and model_image_bytes:
-        local_model_bytes = model_image_bytes
-    elif presenter_source != "ai" and os.path.exists(MODEL_LOCAL_PATH):
-        with open(MODEL_LOCAL_PATH, "rb") as f:
-            local_model_bytes = f.read()
-    elif presenter_source != "ai":
-        raise Exception("Model image not found locally. Please re-upload the model photo.")
-
+    # Read model photo — priority: order-specific → global admin model → AI fallback
+    local_model_bytes = None
     if presenter_source != "ai":
+        order_model_path = c.get("order_model_path", "")
+        if order_model_path and os.path.exists(order_model_path):
+            # Customer uploaded their own photo
+            with open(order_model_path, "rb") as f:
+                local_model_bytes = f.read()
+            print(f"[composite] Using customer model photo: {order_model_path}")
+        elif model_image_bytes:
+            # Use the admin's uploaded model
+            local_model_bytes = model_image_bytes
+        elif os.path.exists(MODEL_LOCAL_PATH):
+            with open(MODEL_LOCAL_PATH, "rb") as f:
+                local_model_bytes = f.read()
+        else:
+            # No model photo anywhere — fall back to AI mode
+            print(f"[composite] No model photo found — falling back to AI mode")
+            presenter_source = "ai"
+
+    if presenter_source != "ai" and local_model_bytes:
         model_kie_url = await upload_image_to_kie(local_model_bytes, "model.jpg", "image/jpeg")
         files_url = [model_kie_url, product_kie_url]
 
@@ -610,9 +615,9 @@ async def sync_order(request: Request):
 
     # Download product image from Railway if not already local
     order_id = order.get("id", "")
+    railway_base = RAILWAY_URL.rstrip("/")
     local_img = os.path.join(ORDERS_UPLOAD_DIR, f"{order_id}.jpg")
     if order_id and not os.path.exists(local_img):
-        railway_base = RAILWAY_URL.rstrip("/")
         img_url = f"{railway_base}/order_uploads/{order_id}.jpg"
         try:
             import urllib.request
@@ -620,6 +625,18 @@ async def sync_order(request: Request):
             order["product_image_path"] = local_img
         except Exception:
             pass  # Image download failed — thumbnail will be blank, generation still works
+
+    # Download customer model photo from Railway if they uploaded one
+    local_model = os.path.join(ORDERS_UPLOAD_DIR, f"{order_id}_model.jpg")
+    if order_id and not os.path.exists(local_model):
+        model_url = f"{railway_base}/order_uploads/{order_id}_model.jpg"
+        try:
+            import urllib.request
+            urllib.request.urlretrieve(model_url, local_model)
+            order["model_image_path"] = local_model
+            print(f"[sync-order] Customer model photo downloaded for {order_id}")
+        except Exception:
+            pass  # No model photo — will use global model or AI
 
     orders.insert(0, order)
     with open(ORDERS_FILE, "w", encoding="utf-8") as f:
@@ -805,6 +822,7 @@ async def submit_order(
     custom_script: str = Form(""),
     video_style: str = Form("kling"),
     product_image: UploadFile = File(...),
+    model_reference: UploadFile = File(None),
 ):
     image_data = await product_image.read()
     if len(image_data) > 15 * 1024 * 1024:
@@ -815,6 +833,17 @@ async def submit_order(
     img_path = os.path.join(ORDERS_UPLOAD_DIR, f"{order_id}.jpg")
     with open(img_path, "wb") as f:
         f.write(image_data)
+
+    # Save customer model photo if provided
+    model_img_path = None
+    if model_reference and model_reference.filename:
+        model_data = await model_reference.read()
+        if model_data:
+            model_data = _to_jpeg_bytes(model_data)
+            model_img_path = os.path.join(ORDERS_UPLOAD_DIR, f"{order_id}_model.jpg")
+            with open(model_img_path, "wb") as f:
+                f.write(model_data)
+
     order = {
         "id": order_id,
         "created_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -833,6 +862,7 @@ async def submit_order(
         "custom_script": custom_script,
         "video_style": video_style,
         "product_image_path": img_path,
+        "model_image_path": model_img_path,
         "product_mime": product_image.content_type or "image/jpeg",
         "job_id": None,
         "video_url": None,
@@ -1073,6 +1103,7 @@ async def approve_order(order_id: str, background_tasks: BackgroundTasks):
         image_data = f.read()
     job_id = str(uuid.uuid4())
     jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None, "order_id": order_id}
+    order_model_path = order.get("model_image_path") or ""
     customization = {
         "presenter_source": order.get("presenter_source", "ai"),
         "output_type": order.get("output_type", "video"),
@@ -1088,6 +1119,7 @@ async def approve_order(order_id: str, background_tasks: BackgroundTasks):
         "custom_instructions": order.get("notes", ""),
         "aspect_ratio": order.get("aspect_ratio", "9:16"),
         "custom_script": order.get("custom_script", ""),
+        "order_model_path": order_model_path,
     }
 
     order["status"] = "processing"
@@ -1179,6 +1211,7 @@ async def approve_order_veo3(order_id: str, background_tasks: BackgroundTasks):
         "custom_instructions": order.get("notes", ""),
         "aspect_ratio": order.get("aspect_ratio", "9:16"),
         "custom_script": order.get("custom_script", ""),
+        "order_model_path": order.get("model_image_path") or "",
     }
     order["status"] = "processing"
     order["job_id"] = job_id
@@ -1229,7 +1262,6 @@ from whatsapp_bot import handle_whatsapp_message, VERIFY_TOKEN as WA_VERIFY_TOKE
 async def notify_wa_on_complete(job_id: str, order_id: str, wa_from: str, product_name: str):
     """Poll job status and send the finished video to the WhatsApp customer."""
     import asyncio as _asyncio
-    public_base = os.getenv("PUBLIC_URL", "").rstrip("/")
     for _ in range(120):          # poll up to 20 minutes (120 × 10s)
         await _asyncio.sleep(10)
         job = jobs.get(job_id, {})
@@ -1241,13 +1273,17 @@ async def notify_wa_on_complete(job_id: str, order_id: str, wa_from: str, produc
             if ord_:
                 ord_["status"] = "completed"
                 save_order(ord_)
-            # Send video to customer
-            video_path = os.path.join(os.path.dirname(__file__), "static", "videos", f"{job_id}.mp4")
-            if public_base and os.path.exists(video_path):
-                video_url = f"{public_base}/static/videos/{job_id}.mp4"
+            # Prefer Cloudinary URL (permanent) → Railway result page fallback
+            cdn_video_url = ord_.get("video_url", "") if ord_ else ""
+            if cdn_video_url and cdn_video_url.startswith("http"):
                 await wa_send_video(
-                    wa_from, video_url,
+                    wa_from, cdn_video_url,
                     caption=f"🎬 Your video ad for *{product_name}* is ready!\n\nPost it on Instagram/Facebook to boost your sales! 🚀\n\n📞 Order more: wa.me/919953910987"
+                )
+            elif RAILWAY_URL:
+                result_link = f"{RAILWAY_URL}/order/result/{order_id}"
+                await wa_send_text(wa_from,
+                    f"✅ Your video ad for *{product_name}* is ready!\n\nDownload here: {result_link}\n\n📞 Order more: wa.me/919953910987"
                 )
             else:
                 await wa_send_text(wa_from,

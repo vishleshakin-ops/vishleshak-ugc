@@ -1,5 +1,8 @@
 const $ = (id) => document.getElementById(id);
 
+// Set when app initialises — used by renderOrderCard to build public customer links
+let _railwayUrl = "";
+
 const state = {
   productFile: null,
   productPreviewUrl: "",
@@ -220,6 +223,7 @@ async function uploadModel(file) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.detail || "Model upload failed.");
     updateModelStatus(true, data.image_url || "/api/model-image");
+    showToast("✅ Model photo uploaded! Ready to generate videos.", 4000);
   } catch (error) {
     showError(error.message || "Model upload failed.");
   } finally {
@@ -639,7 +643,7 @@ function setPlatformTarget(btn) {
 }
 
 // ── Toast notification ────────────────────────────────────────────────────────
-function showToast(msg) {
+function showToast(msg, duration = 3500) {
   let toast = document.getElementById("toast-msg");
   if (!toast) {
     toast = document.createElement("div");
@@ -649,7 +653,7 @@ function showToast(msg) {
   toast.textContent = msg;
   toast.className = "toast visible";
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => toast.classList.remove("visible"), 3500);
+  toast._t = setTimeout(() => toast.classList.remove("visible"), duration);
 }
 
 // ── Result-view platform share buttons ────────────────────────────────────────
@@ -1082,7 +1086,9 @@ function renderOrderCard(order) {
   } else if (order.status === "processing") {
     actions = `<div class="order-actions"><span class="muted" style="font-size:12px">⚙️ ${order.job_step || "starting"}…</span></div>`;
   } else if (order.status === "completed") {
-    const resultUrl = `${location.origin}/order/result/${order.id}`;
+    // Use Railway URL for customer-facing links (works externally); fallback to local origin
+    const resultBase = _railwayUrl ? _railwayUrl.replace(/\/$/, "") : location.origin;
+    const resultUrl = `${resultBase}/order/result/${order.id}`;
     const waMsg = encodeURIComponent(`Hi ${order.customer_name}! Your UGC ${order.output_type} is ready. Download here: ${resultUrl}`);
     const waLink = `https://wa.me/${(order.customer_phone||"").replace(/\D/g,"")}?text=${waMsg}`;
     actions = `<div class="order-actions">
@@ -1103,7 +1109,31 @@ function renderOrderCard(order) {
   </div>`;
 }
 
+async function checkModelReady() {
+  /** Returns true if model photo is uploaded, false (+ shows alert) if not. */
+  try {
+    const status = await fetch("/api/model-status").then(r => r.json());
+    if (!status.configured) {
+      showToast("⚠️ No model photo uploaded! Go to the Model section and upload your presenter photo first.", 6000);
+      // Scroll to & briefly highlight the model upload card
+      const modelSection = document.querySelector(".model-card");
+      if (modelSection) {
+        modelSection.scrollIntoView({behavior: "smooth", block: "center"});
+        modelSection.style.outline = "3px solid #ef4444";
+        modelSection.style.borderRadius = "12px";
+        setTimeout(() => { modelSection.style.outline = ""; }, 3000);
+      }
+      return false;
+    }
+    return true;
+  } catch(e) {
+    // If endpoint fails just let it through — don't block on network error
+    return true;
+  }
+}
+
 async function approveOrder(orderId) {
+  if (!(await checkModelReady())) return;
   try {
     const resp = await fetch(`/api/orders/${orderId}/approve`, {method: "POST"});
     if (!resp.ok) { const d = await resp.json(); throw new Error(d.detail); }
@@ -1116,6 +1146,7 @@ async function approveOrder(orderId) {
 
 
 async function approveVeo3(orderId) {
+  if (!(await checkModelReady())) return;
   try {
     const resp = await fetch(`/api/orders/${orderId}/approve-veo3`, {method: "POST"});
     if (!resp.ok) { const d = await resp.json(); throw new Error(d.detail); }
@@ -1143,6 +1174,7 @@ async function initAppMode() {
     const cfg = await fetch("/api/config").then(r => r.json());
     const isClient = cfg.mode === "client";
     const railwayUrl = cfg.railway_url || "";
+    _railwayUrl = railwayUrl;   // store globally for renderOrderCard
 
     if (isClient) {
       // CLIENT mode (Railway): hide history, orders, generate UI — show order form link
