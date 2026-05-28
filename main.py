@@ -1291,6 +1291,7 @@ async def serve_order_result_page(order_id: str):
 # ── WhatsApp Webhook ──────────────────────────────────────────────────────────
 
 from whatsapp_bot import handle_whatsapp_message, VERIFY_TOKEN as WA_VERIFY_TOKEN, send_text as wa_send_text, send_video as wa_send_video
+from retell_webhook import handle_retell_webhook
 
 
 async def notify_wa_on_complete(job_id: str, order_id: str, wa_from: str, product_name: str):
@@ -2229,6 +2230,33 @@ async def process_job_seedance(job_id: str, image_data: bytes, content_type: str
 
     except Exception as e:
         jobs[job_id].update({"status": "failed", "error": str(e)})
+
+
+# ── Retell AI Webhook ─────────────────────────────────────────────────────────
+
+@app.get("/api/retell-webhook")
+async def retell_webhook_ping():
+    """Health-check — Retell or browser can GET this to confirm the endpoint is live."""
+    return {"status": "ok", "service": "Retell webhook — Dr. Akshay Midha Dental Clinic"}
+
+
+@app.post("/api/retell-webhook")
+async def retell_webhook_receive(request: Request):
+    """
+    Retell calls this endpoint after every call ends.
+    Paste this URL in your Retell dashboard → Agent → Webhook Settings.
+    """
+    body = await request.json()
+    print(f"[Retell] Webhook received: {str(body)[:300]}")
+    try:
+        result = await handle_retell_webhook(body)
+        return result
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"[Retell] Error: {e}")
+        # Always return 200 so Retell doesn't retry aggressively
+        return {"status": "error", "detail": str(e)}
 
 
 if __name__ == "__main__":
