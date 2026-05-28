@@ -1403,27 +1403,33 @@ async def whatsapp_receive(request: Request):
     if text.lower() in RESET_WORDS:
         _router_sessions[from_phone] = None
         restaurant_sessions.pop(from_phone, None)
-        await wa_send_text(from_phone, COMBINED_WELCOME)
+        try:
+            await wa_send_text(from_phone, COMBINED_WELCOME)
+        except Exception as e:
+            print(f"[Router] Failed to send combined welcome: {e}")
         return {"status": "ok"}
 
     current_bot = _router_sessions.get(from_phone)
 
     # ── No bot chosen yet — show combined welcome or handle choice ──
     if current_bot is None:
-        if text == "1":
-            _router_sessions[from_phone] = "restaurant"
-            restaurant_sessions[from_phone] = {"state": "main_menu", "cart": [], "booking": {}}
-            await restaurant_send_text(from_phone, RESTAURANT_WELCOME)
-        elif text == "2":
-            _router_sessions[from_phone] = "ugc"
-            await wa_send_text(from_phone,
-                "🎬 *Welcome to Vishleshak UGC Video Ads!*\n\n"
-                "Send me a photo of your product and I'll create a professional AI video ad for you.\n\n"
-                "📱 Formats supported: jewellery, clothing, food, electronics & more.\n"
-                "💰 Starting at just ₹499/video"
-            )
-        else:
-            await wa_send_text(from_phone, COMBINED_WELCOME)
+        try:
+            if text == "1":
+                _router_sessions[from_phone] = "restaurant"
+                restaurant_sessions[from_phone] = {"state": "main_menu", "cart": [], "booking": {}}
+                await restaurant_send_text(from_phone, RESTAURANT_WELCOME)
+            elif text == "2":
+                _router_sessions[from_phone] = "ugc"
+                await wa_send_text(from_phone,
+                    "🎬 *Welcome to Vishleshak UGC Video Ads!*\n\n"
+                    "Send me a photo of your product and I'll create a professional AI video ad for you.\n\n"
+                    "📱 Formats supported: jewellery, clothing, food, electronics & more.\n"
+                    "💰 Starting at just ₹499/video"
+                )
+            else:
+                await wa_send_text(from_phone, COMBINED_WELCOME)
+        except Exception as e:
+            print(f"[Router] Failed to send welcome: {e}")
         return {"status": "ok"}
 
     # ── Route to restaurant bot ─────────────────────────────────────
