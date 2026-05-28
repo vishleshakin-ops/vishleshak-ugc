@@ -1109,13 +1109,19 @@ function renderOrderCard(order) {
   </div>`;
 }
 
-async function checkModelReady() {
-  /** Returns true if model photo is uploaded, false (+ shows alert) if not. */
+async function checkModelReady(orderId) {
+  /** Returns true if a model photo is available (global OR order-specific). */
   try {
+    // First check if this specific order has its own customer model photo
+    if (orderId) {
+      const order = await fetch(`/api/orders/${orderId}`).then(r => r.json()).catch(() => ({}));
+      if (order.model_image_path) return true;          // customer uploaded their own photo
+      if (order.presenter_source === "ai") return true; // AI mode — no photo needed
+    }
+    // Fall back to checking global admin model
     const status = await fetch("/api/model-status").then(r => r.json());
     if (!status.configured) {
-      showToast("⚠️ No model photo uploaded! Go to the Model section and upload your presenter photo first.", 6000);
-      // Scroll to & briefly highlight the model upload card
+      showToast("⚠️ No model photo uploaded! Upload your presenter photo first, or the customer must select 'Use Our Model' on the order form.", 7000);
       const modelSection = document.querySelector(".model-card");
       if (modelSection) {
         modelSection.scrollIntoView({behavior: "smooth", block: "center"});
@@ -1127,13 +1133,12 @@ async function checkModelReady() {
     }
     return true;
   } catch(e) {
-    // If endpoint fails just let it through — don't block on network error
-    return true;
+    return true; // Don't block on network error
   }
 }
 
 async function approveOrder(orderId) {
-  if (!(await checkModelReady())) return;
+  if (!(await checkModelReady(orderId))) return;
   try {
     const resp = await fetch(`/api/orders/${orderId}/approve`, {method: "POST"});
     if (!resp.ok) { const d = await resp.json(); throw new Error(d.detail); }
@@ -1146,7 +1151,7 @@ async function approveOrder(orderId) {
 
 
 async function approveVeo3(orderId) {
-  if (!(await checkModelReady())) return;
+  if (!(await checkModelReady(orderId))) return;
   try {
     const resp = await fetch(`/api/orders/${orderId}/approve-veo3`, {method: "POST"});
     if (!resp.ok) { const d = await resp.json(); throw new Error(d.detail); }

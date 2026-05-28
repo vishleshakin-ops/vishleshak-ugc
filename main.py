@@ -1233,7 +1233,7 @@ async def approve_order_veo3(order_id: str, background_tasks: BackgroundTasks):
     customization = {
         "presenter_source": order.get("presenter_source", "ai"),
         "output_type": "video",
-        "video_duration": "8",
+        "video_duration": "6",
         "video_quality": "standard",
         "auto_mode": True,
         "language": order.get("language", "hindi"),
@@ -1766,7 +1766,7 @@ async def poll_task(task_id: str) -> str:
 async def poll_veo3_task(task_id: str) -> str:
     """Poll a kie.ai Veo3 task via /veo/record-info until success. Returns video URL."""
     async with httpx.AsyncClient() as client:
-        for _ in range(180):  # up to 15 minutes (veo3 can be slow)
+        for _ in range(360):  # up to 30 minutes (veo3 can take 20-25 min)
             await asyncio.sleep(5)
             resp = await client.get(
                 f"{KIE_BASE}/veo/record-info",
@@ -1790,7 +1790,7 @@ async def poll_veo3_task(task_id: str) -> str:
             if state in ("fail", "FAIL", "failed", "error"):
                 raise Exception(f"kie.ai Veo3 task failed (id={task_id}): {data.get('msg','')}")
 
-    raise Exception(f"kie.ai Veo3 task timed out after 15 minutes (id={task_id})")
+    raise Exception(f"kie.ai Veo3 task timed out after 30 minutes (id={task_id})")
 
 
 # ── D-ID free pipeline ────────────────────────────────────────────────────────
@@ -2058,9 +2058,8 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
         language       = c.get("language", "hindi")
         aspect_ratio   = c.get("aspect_ratio", "9:16")
         custom_script  = c.get("custom_script", "").strip()
-        # Veo3 default is always 6s (valid values: 4, 6, 8)
-        req_dur = int(c.get("video_duration", 6) or 6)
-        veo3_duration  = min([4, 6, 8], key=lambda v: abs(v - req_dur)) if req_dur in (4, 6, 8) else 6
+        # Veo3 always 6s fixed (valid values: 4, 6, 8)
+        veo3_duration = 6
 
         # Step 1: Script via Claude Vision
         jobs[job_id]["step"] = "analyzing"
@@ -2086,12 +2085,11 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
             avatar_url, image_data, content_type, product_type, avatar_prompt, c
         )
 
-        # Step 3: Veo 3 Fast — visual + voiceover in one prompt
+        # Step 3: Veo 3 Fast — visual motion only, no text/subtitles burned in
         jobs[job_id]["step"] = "generating_video"
-        lang_instruction = "Hindi voiceover" if language == "hindi" else "English voiceover"
         veo3_prompt = (
-            f"{avatar_prompt}. Cinematic lifestyle video, smooth natural motion. "
-            f"{lang_instruction} saying: \"{script}\""
+            f"{avatar_prompt}. Cinematic lifestyle video, smooth natural motion, "
+            f"elegant movement. No text, no subtitles, no captions, no watermark."
         )
         task_id = await create_veo3_via_kie(composite_url, veo3_prompt, aspect_ratio, veo3_duration, "720p")
         veo3_video_url = await poll_veo3_task(task_id)
