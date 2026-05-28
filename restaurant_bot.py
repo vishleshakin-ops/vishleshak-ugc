@@ -218,11 +218,34 @@ SIMPLE_MENU = {
     "1": {
         "title": "🥤 Beverages",
         "sections": {
-            "Mocktails": {"Mojito": 70, "Blue Lagoon": 75, "Passion Fruit": 75, "Raspberry Mojito": 80},
-            "Thick Shakes": {"Chocolate": 100, "Nutella": 110, "Kitkat": 100, "Black Forest": 110},
-            "Milk Shakes": {"Vanilla": 79, "Mango": 79, "Strawberry": 79, "Butter Scotch": 79},
-            "Coffee": {"Cold Coffee": 80, "Caramel Cold Coffee": 90, "Hot Coffee": 40, "Black Coffee": 25},
-            "Tea & Iced Tea": {"Masala Tea": 30, "Green Tea": 30, "Peach Iced Tea": 75, "Lemon Iced Tea": 75},
+            "Mocktails": {
+                "Mojito": 70, "Blue Lagoon": 75,
+                "Passion Fruit": 75, "Raspberry Mojito": 80,
+                "Water Melon": 80, "Green Apple Mojito": 80,
+            },
+            "Thick Shakes": {
+                "Chocolate": 100, "Nutella": 110,
+                "Kitkat": 100, "Black Forest": 110,
+                "Choco Brownie": 100, "Protein Smoothie": 129,
+            },
+            "Milk Shakes": {
+                "Vanilla": 79, "Mango": 79,
+                "Strawberry": 79, "Butter Scotch": 79,
+                "Berry Berry": 79, "Banana Strawberry": 89,
+            },
+            "Coffee": {
+                "Cold Coffee": 80, "Caramel Cold Coffee": 90,
+                "Irish Cold Coffee": 90, "Hazelnut Cold Coffee": 90,
+                "Hot Coffee": 40, "Black Coffee": 25,
+            },
+            "Tea & Iced Tea": {
+                "Masala Tea": 30, "Green Tea": 30, "Assam Tea": 30,
+                "Peach Iced Tea": 75, "Lemon Iced Tea": 75, "Strawberry Iced Tea": 75,
+            },
+            "Fruit Beer": {
+                "Raspberry Beer": 85, "Watermelon Beer": 65,
+                "Strawberry Beer": 85, "Berries Beer": 85,
+            },
         }
     },
     "2": {
@@ -231,6 +254,8 @@ SIMPLE_MENU = {
             "Waffles (Single / Double)": {
                 "Classic": "90 / 170", "Chocolate": "100 / 190",
                 "Nutella": "110 / 200", "Strawberry": "100 / 190",
+                "Blueberry": "100 / 190", "Oreo Waffle": "100 / 190",
+                "Choco-Brownie": "120 / 230", "Banana Honey": "110 / 200",
                 "BTT Special": "130 / 240", "Waffle Platter (Any 4)": 250,
             },
             "Brownies": {
@@ -246,15 +271,21 @@ SIMPLE_MENU = {
             "Momos (Half / Full)": {
                 "Veg Steam": "40 / 70", "Paneer Steam": "50 / 80",
                 "Veg Fried": "45 / 80", "Paneer Fried": "60 / 110",
-                "Veg Kurkure": "60 / 90", "Afghani Paneer": "70 / 130",
+                "Veg Kurkure": "60 / 90", "Paneer Kurkure": "70 / 130",
+                "Afghani Veg": "60 / 110", "Afghani Paneer": "70 / 130",
+                "Chilli Momos": 120,
             },
             "Noodles (Half / Full)": {
                 "Veg Noodles": "60 / 90", "Hakka Noodles": "80 / 120",
-                "Chilli Garlic": "70 / 100", "Paneer Noodles": "80 / 120",
+                "Chilli Garlic": "70 / 100", "Garlic Noodles": "70 / 100",
+                "Paneer Noodles": "80 / 120", "Butter Noodles": "80 / 110",
+                "Chilli Oil Noodles": 130,
             },
-            "Snacks": {
-                "Honey Chilli Potato": 80, "Chilli Paneer": 100,
-                "Veg Manchurian": 70, "Kurkure Spring Roll": 100,
+            "Chinese Snacks (Half / Full)": {
+                "Veg Manchurian Gravy": "70 / 140", "Veg Manchurian Dry": "80 / 150",
+                "Chilli Paneer": "100 / 190", "Chilli Mushroom": "80 / 150",
+                "Honey Chilli Potato": "80 / 120", "Chilli Potato": "60 / 100",
+                "Kurkure Spring Roll": 100, "American Chopsey": 140,
             },
         }
     },
@@ -263,15 +294,23 @@ SIMPLE_MENU = {
         "sections": {
             "Rice (Half / Full)": {
                 "Veg Fried Rice": "60 / 100", "Schezwan Fried Rice": "70 / 110",
-                "Paneer Fried Rice": "80 / 120", "Veg Singapore Rice": "80 / 120",
+                "Chilli Garlic Fried Rice": "70 / 110", "Paneer Fried Rice": "80 / 120",
+                "Veg Singapore Fried Rice": "80 / 120", "Lemon Rice": 90, "Curd Rice": 90,
             },
             "Dosa": {
-                "Masala Dosa": 100, "Paneer Dosa": 140,
-                "Schezwan Dosa": 110, "Family Dosa": 160,
+                "Paper Dosa": 80, "Masala Dosa": 100,
+                "Onion Masala Dosa": 110, "Mysore Masala Dosa": 110,
+                "Schezwan Dosa": 110, "Cheese Masala Dosa": 130,
+                "Paneer Dosa": 140, "Family Dosa": 160,
+            },
+            "Uttapam": {
+                "Onion Uttapam": 100, "Tomato Uttapam": 100,
+                "Mix Vegetable Uttapam": 120, "Paneer Uttapam": 140,
             },
             "South Indian Snacks": {
-                "Sambhar Idli": 60, "Fried Idli": 70,
-                "Chilli Idli": 90, "Dahi Vada": 80,
+                "Sambhar Vada": 70, "Sambhar Idli": 60,
+                "Fried Idli": 70, "Chilli Idli": 90,
+                "Dahi Vada": 80, "Upma": 80,
             },
         }
     },
@@ -279,16 +318,32 @@ SIMPLE_MENU = {
         "title": "🍔 Continental",
         "sections": {
             "Burgers": {
-                "Aloo Tikki Burger": 50, "Veg Chilli Lava Burger": 75,
-                "Crispy Paneer Burger": 95, "Paneer Maharaja Burger": 130,
+                "Aloo Tikki Burger": 50, "Veg Surprise Burger": 75,
+                "Veg Chilli Lava Burger": 75, "Crispy Paneer Surprise Burger": 95,
+                "Crispy Paneer Chilli Lava Burger": 95,
+                "Veg Cheese Shot Burger": 100, "Paneer Maharaja Burger": 130,
             },
             "Pasta": {
                 "Red Sauce Pasta": 100, "White Sauce Pasta": 110,
-                "Cheese Sauce Pasta": 130, "Mac N Cheese": 150,
+                "Mix Sauce Pasta": 110, "Cheese Sauce Pasta": 130,
+                "Mac N Cheese Pasta": 150,
             },
-            "Fries & Wraps": {
-                "Classic Fries": 70, "Peri-Peri Fries": 90,
-                "Cheese Loaded Fries": 90, "Paneer Tikka Wrap": 95,
+            "Grilled Sandwiches (2pcs / 4pcs)": {
+                "Veggie Sandwich": "70 / 130",
+                "Paneer Tikka Sandwich": "85 / 150",
+                "Paneer Makhni Sandwich": "85 / 150",
+                "Paneer Chilli Lava Sandwich": "85 / 150",
+            },
+            "Fries": {
+                "Classic Fries (Salted)": 70, "Peri-Peri Fries (Dry)": 90,
+                "Peri-Peri Fries (Gravy)": 95, "Cheese Loaded Fries": 90,
+                "Peri-Peri Cheesy Fries": 100,
+            },
+            "Grilled Wraps": {
+                "Jalapeno Wrap": 85, "Fajita Wrap": 85,
+                "Crispy Paneer Wrap": 110, "Chilly Patty Wrap": 80,
+                "Paneer Makhni Wrap": 95, "Paneer Tikka Wrap": 95,
+                "Paneer Chilli Lava Wrap": 95,
             },
         }
     },
