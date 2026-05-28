@@ -13,7 +13,10 @@ POST /api/retell-webhook
 import os
 import asyncio
 import httpx
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# India Standard Time = UTC+5:30
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 WHATSAPP_TOKEN  = os.getenv("WHATSAPP_TOKEN", "")
@@ -121,8 +124,9 @@ async def handle_retell_webhook(body: dict):
 
     print(f"[Retell] Event: {event} | call_id: {call.get('call_id', '?')}")
 
-    # Only act on call_ended (or call_analyzed — Retell fires both)
-    if event not in ("call_ended", "call_analyzed"):
+    # Only act on call_analyzed — it fires after extraction is complete (has all data).
+    # call_ended fires too early (no extraction data yet) → would send duplicate/empty message.
+    if event != "call_analyzed":
         print(f"[Retell] Ignored event: {event}")
         return {"status": "ignored", "event": event}
 
@@ -261,33 +265,33 @@ _TIME_FORMATS = [
 
 
 def _parse_appt_datetime(appt_date: str, appt_time: str):
-    """Best-effort parse of date+time strings into a datetime. Returns None on failure."""
+    """Best-effort parse of date+time strings into an IST-aware datetime."""
     if not appt_date or not appt_time:
         return None
-    now = datetime.now()
-    # Try combining
+    now_ist = datetime.now(IST)
     combined = f"{appt_date.strip()} {appt_time.strip()}"
     for df in _DATE_FORMATS:
         for tf in _TIME_FORMATS:
             fmt = f"{df} {tf}"
             try:
                 dt = datetime.strptime(combined, fmt)
-                # If year is missing, assume next occurrence
+                # If year is missing (parsed as 1900), use current/next year
                 if dt.year == 1900:
-                    dt = dt.replace(year=now.year)
-                    if dt < now:
-                        dt = dt.replace(year=now.year + 1)
-                return dt
+                    dt = dt.replace(year=now_ist.year)
+                    if dt.replace(tzinfo=IST) < now_ist:
+                        dt = dt.replace(year=now_ist.year + 1)
+                # Attach IST timezone
+                return dt.replace(tzinfo=IST)
             except ValueError:
                 continue
     return None
 
 
 def _compute_reminder_delay(appt_date: str, appt_time: str) -> float | None:
-    """Return seconds until 24 hrs before the appointment. None if can't parse."""
+    """Return seconds until 24 hrs before the appointment (IST). None if can't parse."""
     appt_dt = _parse_appt_datetime(appt_date, appt_time)
     if not appt_dt:
         return None
     reminder_at = appt_dt - timedelta(hours=24)
-    delay = (reminder_at - datetime.now()).total_seconds()
+    delay = (reminder_at - datetime.now(IST)).total_seconds()
     return delay if delay > 0 else None
