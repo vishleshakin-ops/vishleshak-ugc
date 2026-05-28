@@ -1,16 +1,24 @@
 """
 WhatsApp Bot for Vishleshak UGC Tool
 =====================================
-Customers send a product photo → bot auto-creates order → processes video → sends it back.
+Step-by-step conversation flow:
 
-Conversation flow:
-  Step 1: Customer sends a photo
-          Bot: "Got your photo! Please reply with details in this format:
-                Product name, Style (1=Talking Head / 2=Cinematic), Language (Hindi/English)
-                Example: Gold necklace, 2, Hindi"
-  Step 2: Customer replies with details
-          Bot: "Creating your video ad now! ⏳ Ready in ~10 minutes."
-  Step 3: Video done → Bot sends the MP4 back
+  1. Customer sends a product photo
+     Bot: "Got your photo! What is your product name?"
+
+  2. Customer types product name
+     Bot: "Choose style: 1=Talking Head / 2=Cinematic"
+
+  3. Customer types 1 or 2
+     Bot: "Choose duration: 1=5s ₹499 / 2=10s ₹999 / 3=15s ₹1499"
+
+  4. Customer types 1/2/3
+     Bot: "Choose language: 1=Hindi / 2=English"
+
+  5. Customer types 1 or 2
+     Bot: "✅ Order confirmed! [summary] — We'll start shortly."
+
+  6. Admin approves → video generated → sent back on WhatsApp
 """
 
 import os
@@ -26,7 +34,16 @@ VERIFY_TOKEN      = os.getenv("WA_VERIFY_TOKEN", "vishleshak_ugc_2024")
 
 WA_API_BASE = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}"
 
-# In-memory session store: phone → {"step": 1|2, "image_path": "...", "image_bytes": b"..."}
+# In-memory session store per phone number
+# session = {
+#   "step": "await_name" | "await_style" | "await_duration" | "await_language",
+#   "image_bytes": b"...",
+#   "image_mime": "image/jpeg",
+#   "product_name": "Gold necklace",
+#   "video_style": "kling" | "seedance",
+#   "video_duration": "5" | "10" | "15",
+#   "language": "hindi" | "english",
+# }
 sessions: dict = {}
 
 
@@ -73,7 +90,6 @@ async def send_video(to: str, video_url: str, caption: str = ""):
 async def download_wa_media(media_id: str) -> bytes:
     """Download media from WhatsApp using media ID."""
     async with httpx.AsyncClient(timeout=60.0) as client:
-        # Step 1: get the URL
         r = await client.get(
             f"https://graph.facebook.com/v19.0/{media_id}",
             headers={"Authorization": f"Bearer {WHATSAPP_TOKEN}"},
@@ -81,136 +97,202 @@ async def download_wa_media(media_id: str) -> bytes:
         url = r.json().get("url", "")
         if not url:
             raise Exception(f"Could not get media URL: {r.text}")
-        # Step 2: download the file
         r2 = await client.get(url, headers={"Authorization": f"Bearer {WHATSAPP_TOKEN}"})
         return r2.content
 
 
-# ── Message handler ───────────────────────────────────────────────────────────
+# ── Step prompts ──────────────────────────────────────────────────────────────
+
+ASK_NAME = (
+    "📸 *Got your product photo!*\n\n"
+    "What is the *name of your product*?\n"
+    "_(e.g. Gold necklace, Chocolate cake, Running shoes)_"
+)
+
+ASK_STYLE = (
+    "🎬 *Choose your video style:*\n\n"
+    "1️⃣ *Talking Head* — AI presenter speaks about your product\n"
+    "2️⃣ *Cinematic* — Elegant lifestyle motion video\n\n"
+    "Reply *1* or *2*"
+)
+
+ASK_DURATION = (
+    "⏱ *Choose video duration:*\n\n"
+    "1️⃣  5 seconds — ₹499\n"
+    "2️⃣ 10 seconds — ₹999\n"
+    "3️⃣ 15 seconds — ₹1499\n\n"
+    "Reply *1*, *2* or *3*"
+)
+
+ASK_LANGUAGE = (
+    "🗣 *Choose language:*\n\n"
+    "1️⃣ Hindi\n"
+    "2️⃣ English\n\n"
+    "Reply *1* or *2*"
+)
+
+
+# ── Main handler ──────────────────────────────────────────────────────────────
 
 async def handle_whatsapp_message(body: dict, process_order_func):
     """
-    Main entry point — called from the POST /webhook route in main.py.
-    process_order_func: the approve_order coroutine from main.py
+    Main entry point — called from POST /webhook in main.py.
+    process_order_func is the _process_wa_order wrapper from main.py.
     """
     try:
-        entry   = body.get("entry", [{}])[0]
-        changes = entry.get("changes", [{}])[0]
-        value   = changes.get("value", {})
+        entry    = body.get("entry", [{}])[0]
+        changes  = entry.get("changes", [{}])[0]
+        value    = changes.get("value", {})
         messages = value.get("messages", [])
 
         if not messages:
-            return  # status update, not a message
+            return
 
-        msg  = messages[0]
+        msg        = messages[0]
         from_phone = msg.get("from", "")
         msg_type   = msg.get("type", "")
+        text       = msg.get("text", {}).get("body", "").strip() if msg_type == "text" else ""
 
-        print(f"[WA] Message from {from_phone}, type={msg_type}")
+        print(f"[WA-UGC] {from_phone}: type={msg_type} text='{text[:60]}'")
 
-        # ── Image received ────────────────────────────────────────────────────
+        session = sessions.get(from_phone, {})
+        step    = session.get("step", "")
+
+        # ── New product photo received ────────────────────────────────────────
         if msg_type == "image":
-            media_id   = msg["image"]["id"]
-            caption    = msg["image"].get("caption", "").strip()
-
-            await send_text(from_phone,
-                "📸 Got your product photo!\n\n"
-                "Please reply with your details in this format:\n"
-                "*Product name, Style, Language*\n\n"
-                "Style options:\n"
-                "1️⃣ Talking Head (AI presenter speaks about product)\n"
-                "2️⃣ Cinematic (elegant lifestyle motion video)\n\n"
-                "Example:\n"
-                "_Gold necklace, 2, Hindi_\n\n"
-                "⏱ Your video will be ready in ~10 minutes!"
-            )
-
-            # Download and save image
+            media_id    = msg["image"]["id"]
             image_bytes = await download_wa_media(media_id)
             sessions[from_phone] = {
-                "step": 2,
+                "step":        "await_name",
                 "image_bytes": image_bytes,
-                "image_mime": "image/jpeg",
-                "caption": caption,
+                "image_mime":  "image/jpeg",
             }
+            await send_text(from_phone, ASK_NAME)
+            return
 
-            # If caption already has details, process immediately
-            if caption and ("," in caption or len(caption.split()) >= 2):
-                await process_details(from_phone, caption, process_order_func)
+        # ── Text replies ──────────────────────────────────────────────────────
+        if msg_type != "text":
+            return
 
-        # ── Text reply ────────────────────────────────────────────────────────
-        elif msg_type == "text":
-            text = msg["text"]["body"].strip()
-            session = sessions.get(from_phone, {})
+        # No active session
+        if not step:
+            await send_text(from_phone,
+                "👋 Welcome to *Vishleshak UGC Video Ads!*\n\n"
+                "Send me a 📸 *photo of your product* and I'll create a professional AI video ad for you.\n\n"
+                "💰 Starting at just ₹499/video"
+            )
+            return
 
-            if session.get("step") == 2:
-                await process_details(from_phone, text, process_order_func)
+        # Step 1 — waiting for product name
+        if step == "await_name":
+            if not text:
+                await send_text(from_phone, "Please type your product name. 😊")
+                return
+            session["product_name"] = text
+            session["step"] = "await_style"
+            sessions[from_phone] = session
+            await send_text(from_phone, ASK_STYLE)
+            return
+
+        # Step 2 — waiting for style choice
+        if step == "await_style":
+            if text == "1":
+                session["video_style"] = "kling"
+            elif text == "2":
+                session["video_style"] = "seedance"
             else:
-                # No active session — welcome message
-                await send_text(from_phone,
-                    "👋 Welcome to *Vishleshak UGC Video Ads*!\n\n"
-                    "Send me a photo of your product and I'll create a professional AI video ad for you.\n\n"
-                    "📱 Formats supported: jewellery, clothing, food, electronics & more.\n"
-                    "💰 Starting at just ₹999/video"
-                )
+                await send_text(from_phone, "Please reply *1* for Talking Head or *2* for Cinematic. 🎬")
+                return
+            session["step"] = "await_duration"
+            sessions[from_phone] = session
+            await send_text(from_phone, ASK_DURATION)
+            return
+
+        # Step 3 — waiting for duration choice
+        if step == "await_duration":
+            duration_map = {"1": "5", "2": "10", "3": "15"}
+            if text in duration_map:
+                session["video_duration"] = duration_map[text]
+            else:
+                await send_text(from_phone, "Please reply *1*, *2* or *3* for the duration. ⏱")
+                return
+            session["step"] = "await_language"
+            sessions[from_phone] = session
+            await send_text(from_phone, ASK_LANGUAGE)
+            return
+
+        # Step 4 — waiting for language choice
+        if step == "await_language":
+            if text == "1":
+                session["language"] = "hindi"
+            elif text == "2":
+                session["language"] = "english"
+            else:
+                await send_text(from_phone, "Please reply *1* for Hindi or *2* for English. 🗣")
+                return
+
+            # All info collected — place the order
+            sessions.pop(from_phone, None)
+            await place_order(from_phone, session, process_order_func)
+            return
+
+        # Fallback
+        await send_text(from_phone,
+            "Please send a 📸 *photo of your product* to get started!"
+        )
 
     except Exception as e:
-        print(f"[WA] Error handling message: {e}")
+        print(f"[WA-UGC] Error: {e}")
         import traceback
         traceback.print_exc()
 
 
-async def process_details(from_phone: str, text: str, process_order_func):
-    """Parse customer's text reply and create+process the order."""
-    session = sessions.get(from_phone, {})
-    if not session or "image_bytes" not in session:
-        await send_text(from_phone, "Please send your product photo first! 📸")
-        return
+# ── Place order ───────────────────────────────────────────────────────────────
 
-    # Parse: "product name, style, language"
-    parts = [p.strip() for p in text.split(",")]
-    product_name = parts[0] if parts else "Product"
-    style_raw    = parts[1].strip() if len(parts) > 1 else "2"
-    language_raw = parts[2].strip().lower() if len(parts) > 2 else "hindi"
+async def place_order(from_phone: str, session: dict, process_order_func):
+    """Save the order to orders.json and confirm to customer."""
+    product_name   = session.get("product_name", "Product")
+    video_style    = session.get("video_style", "seedance")
+    video_duration = session.get("video_duration", "5")
+    language       = session.get("language", "hindi")
+    image_bytes    = session.get("image_bytes", b"")
 
-    # Resolve style
-    video_style = "veo3" if style_raw in ("2", "veo3", "cinematic", "veo") else "kling"
+    style_name    = "Talking Head" if video_style == "kling" else "Cinematic"
+    duration_price = {"5": "₹499", "10": "₹999", "15": "₹1499"}
+    price_str = duration_price.get(video_duration, "₹499")
 
-    # Resolve language
-    language = "hindi" if "hindi" in language_raw else "english"
-
-    # Create order
     order_id   = str(uuid.uuid4())
     image_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "order_uploads",
         f"{order_id}.jpg"
     )
+    os.makedirs(os.path.dirname(image_path), exist_ok=True)
     with open(image_path, "wb") as f:
-        f.write(session["image_bytes"])
+        f.write(image_bytes)
 
     order = {
-        "id":                order_id,
-        "status":            "pending",
-        "customer_name":     from_phone,
-        "customer_phone":    from_phone,
-        "language":          language,
-        "output_type":       "video",
-        "video_duration":    "5",
-        "video_quality":     "standard",
-        "presenter_source":  "ai",
-        "video_style":       video_style,
-        "platform":          "instagram",
-        "aspect_ratio":      "9:16",
-        "notes":             f"WhatsApp order for: {product_name}",
-        "custom_script":     "",
+        "id":                 order_id,
+        "status":             "pending",
+        "customer_name":      from_phone,
+        "customer_phone":     from_phone,
+        "language":           language,
+        "output_type":        "video",
+        "video_duration":     video_duration,
+        "video_quality":      "standard",
+        "presenter_source":   "ai",
+        "video_style":        video_style,
+        "platform":           "instagram",
+        "aspect_ratio":       "9:16",
+        "notes":              f"WhatsApp order for: {product_name}",
+        "custom_script":      "",
         "product_image_path": image_path,
-        "job_id":            None,
-        "created_at":        datetime.utcnow().isoformat(),
-        "wa_from":           from_phone,
+        "job_id":             None,
+        "created_at":         datetime.utcnow().isoformat(),
+        "wa_from":            from_phone,
     }
 
-    # Save order
+    # Save to orders.json
     orders_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "orders.json")
     try:
         with open(orders_file, "r", encoding="utf-8") as f:
@@ -221,19 +303,17 @@ async def process_details(from_phone: str, text: str, process_order_func):
     with open(orders_file, "w", encoding="utf-8") as f:
         json.dump(all_orders, f, ensure_ascii=False, indent=2)
 
-    style_name = "Talking Head" if video_style == "kling" else "Cinematic"
+    # Confirm to customer
     await send_text(from_phone,
-        f"✅ *Order received!*\n\n"
+        f"✅ *Order confirmed!*\n\n"
         f"📦 Product: {product_name}\n"
         f"🎬 Style: {style_name}\n"
+        f"⏱ Duration: {video_duration} seconds ({price_str})\n"
         f"🗣 Language: {language.title()}\n\n"
         f"Our team will review your order and start creating your video shortly.\n"
-        f"You'll receive the video here on WhatsApp once it's ready! ⏳"
+        f"You'll receive the video here on WhatsApp once it's ready! ⏳\n\n"
+        f"For queries: wa.me/919953910987"
     )
-
-    # Clear session
-    sessions.pop(from_phone, None)
-    # Order is saved as "pending" — admin approves from dashboard, video is sent back via WhatsApp when done
 
 
 async def process_and_notify(order_id: str, from_phone: str, product_name: str, process_order_func):
@@ -242,45 +322,32 @@ async def process_and_notify(order_id: str, from_phone: str, product_name: str, 
         print(f"[WA] Processing order {order_id} for {from_phone}")
         await process_order_func(order_id)
 
-        # Find the video file
-        videos_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "videos")
-
-        # Check orders.json for job_id
         orders_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "orders.json")
         with open(orders_file, "r", encoding="utf-8") as f:
             all_orders = json.load(f)
-        order = next((o for o in all_orders if o["id"] == order_id), {})
+        order  = next((o for o in all_orders if o["id"] == order_id), {})
         job_id = order.get("job_id", order_id)
 
-        video_path = os.path.join(videos_dir, f"{job_id}.mp4")
+        public_base = os.getenv("PUBLIC_URL", "").rstrip("/")
+        video_path  = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "static", "videos", f"{job_id}.mp4"
+        )
 
-        if os.path.exists(video_path):
-            # Upload to imgbb to get public URL for WhatsApp
-            with open(video_path, "rb") as f:
-                video_bytes = f.read()
-
-            # Use the server's public URL (via ngrok)
-            public_base = os.getenv("PUBLIC_URL", "").rstrip("/")
-            if public_base:
-                video_url = f"{public_base}/static/videos/{job_id}.mp4"
-                await send_video(from_phone, video_url,
-                    caption=f"🎬 Your UGC video ad for *{product_name}* is ready!\n\n"
-                            f"Post this on Instagram/Facebook to boost sales! 🚀\n\n"
-                            f"📞 Order more: wa.me/919953910987"
+        if os.path.exists(video_path) and public_base:
+            video_url = f"{public_base}/static/videos/{job_id}.mp4"
+            await send_video(from_phone, video_url,
+                caption=(
+                    f"🎬 Your video ad for *{product_name}* is ready!\n\n"
+                    f"Post it on Instagram/Facebook to boost sales! 🚀\n\n"
+                    f"📞 Order more: wa.me/919953910987"
                 )
-            else:
-                await send_text(from_phone,
-                    f"✅ Your video for *{product_name}* is ready!\n\n"
-                    f"Please contact us to receive the video file:\n"
-                    f"📞 wa.me/919953910987"
-                )
+            )
         else:
             await send_text(from_phone,
-                f"✅ Your video ad for *{product_name}* has been created!\n\n"
-                f"Please contact us to receive your video:\n"
+                f"✅ Your video ad for *{product_name}* is ready!\n\n"
+                f"Please contact us to receive the file:\n"
                 f"📞 +91 99539 10987"
             )
-
     except Exception as e:
         print(f"[WA] Error processing order {order_id}: {e}")
         await send_text(from_phone,
