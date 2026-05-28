@@ -44,7 +44,7 @@ sessions: dict = {}
 
 # ── Restaurant Info ────────────────────────────────────────────────────────────
 RESTAURANT_NAME    = "BTT - Bite Tongue Tingling"
-RESTAURANT_PHONE   = "7428136136"
+RESTAURANT_PHONE   = "9953910987"
 RESTAURANT_ADDRESS = "P9A, Opposite Street Number 18, Pratap Nagar, New Delhi - 110007"
 RESTAURANT_HOURS   = "11:00 AM – 11:00 PM (All days)"
 ZOMATO_LINK        = "https://zomato.com"  # update with actual Zomato link
@@ -579,11 +579,10 @@ async def handle_restaurant_message(body: dict):
                         "Browse a category (1–5) and tap item numbers to add them." + _BACK
                     )
                 else:
-                    sessions[from_phone] = {**session, "state": "order_confirm"}
+                    sessions[from_phone] = {**session, "state": "order_name"}
                     await send_text(from_phone,
-                        f"🧾 *Your Order Summary:*\n\n"
-                        f"{format_cart(cart)}\n\n"
-                        "Reply *yes* to confirm or *edit* to add more items." + _BACK
+                        "Almost done! 😊\n\n"
+                        "What's your *name* for the order?" + _BACK
                     )
 
             elif text in ("1", "2", "3", "4", "5") and not in_cat:
@@ -652,6 +651,16 @@ async def handle_restaurant_message(body: dict):
                     "or type *done* to checkout, *hi* for main menu."
                 )
 
+        # ── Order name collection ───────────────────────────────────────
+        elif state == "order_name":
+            sessions[from_phone] = {**session, "state": "order_confirm", "order_name": text}
+            cart = session.get("cart", [])
+            await send_text(from_phone,
+                f"🧾 *Order Summary for {text}:*\n\n"
+                f"{format_cart(cart)}\n\n"
+                "Reply *yes* to confirm or *edit* to add more items." + _BACK
+            )
+
         # ── Ordering (text fallback) ─────────────────────────────────────
         elif state == "ordering":
             # Redirect to menu_browse — number-based is the primary flow now
@@ -665,14 +674,16 @@ async def handle_restaurant_message(body: dict):
         elif state == "order_confirm":
             if text.lower() in ("yes", "confirm", "ok", "okay", "place order", "proceed"):
                 cart = session.get("cart", [])
-                total = cart_total(cart)
+                name = session.get("order_name", "")
 
                 # Notify owner
-                asyncio.create_task(notify_owner_order(from_phone, cart))
+                asyncio.create_task(notify_owner_order(from_phone, cart, customer_name=name))
 
                 # Confirm to customer
+                greeting = f"Hi *{name}*, your" if name else "Your"
                 await send_text(from_phone,
                     f"✅ *Order Placed Successfully!*\n\n"
+                    f"👤 *Name:* {name}\n\n"
                     f"{format_cart(cart)}\n\n"
                     f"📍 *Pick up / Dine in at:*\n{RESTAURANT_ADDRESS}\n\n"
                     f"📞 *For queries:* {RESTAURANT_PHONE}\n\n"
