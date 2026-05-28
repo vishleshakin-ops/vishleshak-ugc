@@ -1859,29 +1859,52 @@ async def poll_task(task_id: str) -> str:
 
 async def poll_veo3_task(task_id: str) -> str:
     """Poll a kie.ai Veo3 task via /veo/record-info until success. Returns video URL."""
+    SUCCESS_STATES = {"success", "succeed", "succeeded", "finish", "finished", "complete", "completed", "done"}
+    FAIL_STATES    = {"fail", "failed", "error", "cancelled", "canceled"}
+
     async with httpx.AsyncClient() as client:
-        for _ in range(360):  # up to 30 minutes (veo3 can take 20-25 min)
+        for i in range(360):  # up to 30 minutes (veo3 can take 20-25 min)
             await asyncio.sleep(5)
-            resp = await client.get(
-                f"{KIE_BASE}/veo/record-info",
-                headers={"Authorization": f"Bearer {KIE_API_KEY}"},
-                params={"taskId": task_id},
-                timeout=10.0,
-            )
-            body = resp.json()
-            data = body.get("data") or {}
-            state = data.get("state") or data.get("status") or ""
-            # kie.ai may return resultUrls directly or inside resultJson
-            if state in ("success", "SUCCESS", "completed"):
-                result_json = data.get("resultJson")
-                if result_json:
-                    result = json.loads(result_json)
-                    return result["resultUrls"][0]
-                urls = data.get("resultUrls") or data.get("videoUrls") or []
-                if urls:
-                    return urls[0]
-                raise Exception(f"Veo3 task succeeded but no URL found: {body}")
-            if state in ("fail", "FAIL", "failed", "error"):
+            try:
+                resp = await client.get(
+                    f"{KIE_BASE}/veo/record-info",
+                    headers={"Authorization": f"Bearer {KIE_API_KEY}"},
+                    params={"taskId": task_id},
+                    timeout=15.0,
+                )
+                body = resp.json()
+            except Exception as e:
+                print(f"[Veo3 poll #{i}] Request error: {e} — retrying")
+                continue
+
+            data  = body.get("data") or {}
+            state = (data.get("state") or data.get("status") or "").lower().strip()
+
+            # Log every 12 polls (~1 min) so we can see progress
+            if i % 12 == 0:
+                print(f"[Veo3 poll #{i}] taskId={task_id} state={state!r} keys={list(data.keys())}")
+
+            # Check for video URL regardless of state — if kie.ai has it, we take it
+            result_json_str = data.get("resultJson")
+            if result_json_str:
+                try:
+                    result = json.loads(result_json_str)
+                    urls = result.get("resultUrls") or result.get("videoUrls") or []
+                    if urls:
+                        print(f"[Veo3 poll #{i}] Got URL from resultJson (state={state!r})")
+                        return urls[0]
+                except Exception:
+                    pass
+
+            direct_urls = data.get("resultUrls") or data.get("videoUrls") or []
+            if direct_urls:
+                print(f"[Veo3 poll #{i}] Got URL from direct field (state={state!r})")
+                return direct_urls[0]
+
+            if state in SUCCESS_STATES:
+                raise Exception(f"Veo3 state={state} but no URL found: {body}")
+
+            if state in FAIL_STATES:
                 raise Exception(f"kie.ai Veo3 task failed (id={task_id}): {data.get('msg','')}")
 
     raise Exception(f"kie.ai Veo3 task timed out after 30 minutes (id={task_id})")
