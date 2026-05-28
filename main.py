@@ -1292,10 +1292,19 @@ async def serve_order_result_page(order_id: str):
 
 from whatsapp_bot import handle_whatsapp_message, VERIFY_TOKEN as WA_VERIFY_TOKEN, send_text as wa_send_text, send_video as wa_send_video
 from retell_webhook import handle_retell_webhook
-from restaurant_bot import handle_restaurant_message
+from restaurant_bot import handle_restaurant_message, send_text as restaurant_send_text, sessions as restaurant_sessions, WELCOME_MSG as RESTAURANT_WELCOME
 
-# Set RESTAURANT_MODE=true in .env to route WhatsApp messages to BTT restaurant bot
-RESTAURANT_MODE = os.getenv("RESTAURANT_MODE", "false").lower() == "true"
+# Router: tracks which bot each phone number is currently using
+# Values: None (not chosen) | "restaurant" | "ugc"
+_router_sessions: dict = {}
+
+COMBINED_WELCOME = (
+    "👋 *Welcome to Vishleshak AI!*\n\n"
+    "What are you looking for today?\n\n"
+    "1️⃣  🍽️ *BTT Restaurant* — Menu, Orders & Table Booking\n"
+    "2️⃣  🎬 *UGC Video Ads* — AI video ads for your business\n\n"
+    "_Reply with 1 or 2 to get started!_"
+)
 
 
 async def notify_wa_on_complete(job_id: str, order_id: str, wa_from: str, product_name: str):
@@ -1355,14 +1364,58 @@ async def whatsapp_verify(request: Request):
 
 @app.post("/webhook")
 async def whatsapp_receive(request: Request):
-    """Receive incoming WhatsApp messages."""
+    """Receive incoming WhatsApp messages — routes to restaurant or UGC bot."""
     body = await request.json()
-    print(f"[WA] Webhook received (mode={'restaurant' if RESTAURANT_MODE else 'ugc'}): {str(body)[:200]}")
 
-    # ── Restaurant bot mode ───────────────────────────────────────────
-    if RESTAURANT_MODE:
+    # Extract sender + text for routing
+    try:
+        messages  = body.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("messages", [])
+        if not messages:
+            return {"status": "ok"}
+        msg        = messages[0]
+        from_phone = msg.get("from", "")
+        msg_type   = msg.get("type", "")
+        text       = msg.get("text", {}).get("body", "").strip() if msg_type == "text" else ""
+    except Exception:
+        return {"status": "ok"}
+
+    print(f"[Router] {from_phone}: '{text[:60]}'")
+
+    RESET_WORDS = ("hi", "hello", "hey", "start", "help", "hlo", "hii", "menu")
+
+    # ── Reset to main menu ──────────────────────────────────────────
+    if text.lower() in RESET_WORDS:
+        _router_sessions[from_phone] = None
+        restaurant_sessions.pop(from_phone, None)
+        await wa_send_text(from_phone, COMBINED_WELCOME)
+        return {"status": "ok"}
+
+    current_bot = _router_sessions.get(from_phone)
+
+    # ── No bot chosen yet — show combined welcome or handle choice ──
+    if current_bot is None:
+        if text == "1":
+            _router_sessions[from_phone] = "restaurant"
+            restaurant_sessions[from_phone] = {"state": "main_menu", "cart": [], "booking": {}}
+            await restaurant_send_text(from_phone, RESTAURANT_WELCOME)
+        elif text == "2":
+            _router_sessions[from_phone] = "ugc"
+            await wa_send_text(from_phone,
+                "🎬 *Welcome to Vishleshak UGC Video Ads!*\n\n"
+                "Send me a photo of your product and I'll create a professional AI video ad for you.\n\n"
+                "📱 Formats supported: jewellery, clothing, food, electronics & more.\n"
+                "💰 Starting at just ₹499/video"
+            )
+        else:
+            await wa_send_text(from_phone, COMBINED_WELCOME)
+        return {"status": "ok"}
+
+    # ── Route to restaurant bot ─────────────────────────────────────
+    if current_bot == "restaurant":
         await handle_restaurant_message(body)
         return {"status": "ok"}
+
+    # ── Route to UGC bot ────────────────────────────────────────────
 
     async def _process_wa_order(order_id: str):
         """Wrapper to process a WhatsApp order using existing pipeline."""
