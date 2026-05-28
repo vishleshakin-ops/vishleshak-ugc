@@ -468,19 +468,24 @@ async def download_and_reencode_video(video_url: str, job_id: str, aspect_ratio:
                 "-i", audio_path,
                 "-map", "0:v", "-map", "1:a",
                 "-vf", vf_filter,
-                "-af", "adelay=200|200,afade=t=in:st=0:d=0.3,aresample=48000",
+                # aresample=async=1000 bridges inter-chunk gaps from edge-tts
+                # first_pts=0 anchors audio at t=0 (no initial delay)
+                # afade masks any remaining click at start
+                "-af", "aresample=async=1000:first_pts=0,afade=t=in:st=0:d=0.15",
                 "-c:v", "libx264", "-preset", "slow", "-crf", "18",
-                "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+                "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
                 "-shortest",
                 output_path,
             ]
         else:
+            # Kling: audio is already embedded — still fix any gaps in re-encode
             cmd = [
                 ffmpeg_exe, "-y",
                 "-i", video_path,
                 "-vf", vf_filter,
+                "-af", "aresample=async=1000:first_pts=0",
                 "-c:v", "libx264", "-preset", "slow", "-crf", "18",
-                "-c:a", "aac", "-b:a", "128k",
+                "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
                 output_path,
             ]
         result = await asyncio.to_thread(
