@@ -459,19 +459,24 @@ async def download_and_reencode_video(video_url: str, job_id: str, aspect_ratio:
             f.write(video_bytes)
 
         if audio_bytes:
-            audio_path = os.path.join(tmpdir, "voice.mp3")
-            with open(audio_path, "wb") as f:
+            mp3_path = os.path.join(tmpdir, "voice.mp3")
+            wav_path = os.path.join(tmpdir, "voice.wav")
+            with open(mp3_path, "wb") as f:
                 f.write(audio_bytes)
+            # Convert MP3 → WAV to eliminate MP3 encoder delay (causes 1s audio dropout)
+            await asyncio.to_thread(subprocess.run, [
+                ffmpeg_exe, "-y", "-i", mp3_path,
+                "-ar", "44100", "-ac", "1",
+                wav_path,
+            ], capture_output=True, timeout=30)
+            audio_path = wav_path if os.path.exists(wav_path) else mp3_path
             cmd = [
                 ffmpeg_exe, "-y",
                 "-i", video_path,
                 "-i", audio_path,
                 "-map", "0:v", "-map", "1:a",
                 "-vf", vf_filter,
-                # aresample=async=1000 bridges inter-chunk gaps from edge-tts
-                # first_pts=0 anchors audio at t=0 (no initial delay)
-                # afade masks any remaining click at start
-                "-af", "aresample=async=1000:first_pts=0,afade=t=in:st=0:d=0.15",
+                "-af", "afade=t=in:st=0:d=0.1",
                 "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                 "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
                 "-shortest",
@@ -1691,21 +1696,32 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             "Look at this product image carefully and reply with ONLY valid JSON, no markdown:\n"
             f"{json_schema}\n\n"
             f"script: {script_lang_instr}\n\n"
-            "avatar_prompt: Exactly how the model uses this product physically. Under 20 words.\n"
-            "  - Food/drink → picks up, bites/sips, reacts with joy\n"
-            "  - Sports → holds and plays actively\n"
-            "  - Clothing → wears it, poses, shows off\n"
-            "  - Jewelry → wears it, touches gently, admires\n"
-            "  - Electronics → holds it, uses it, reacts\n"
-            "  - Other → uses it naturally\n\n"
-            "product_type: one of 'food','sports','clothing','jewelry','electronics','other'\n\n"
+            "avatar_prompt: Describe exactly how the model interacts with this product. Under 20 words. "
+            "Focus on natural, realistic body movement — avoid floating objects or impossible physics.\n"
+            "  - Jewellery (necklace/earrings/bangles/ring/maang tikka) → wearing it, turns head slowly to show, touches gently with fingertips, admires elegantly\n"
+            "  - Clothing (dress/saree/lehenga/kurti/top/jeans) → wearing it, twirls once showing fabric, strikes confident pose, walks gracefully on ramp\n"
+            "  - Bags (handbag/purse/tote/clutch/backpack) → carries on shoulder, opens and peeks inside with smile, poses holding it at side\n"
+            "  - Footwear (sandals/heels/sneakers/flats/chappals) → walks elegantly showing footwear, crosses legs to show shoes, poses looking down then at camera\n"
+            "  - Accessories (belt/watch/sunglasses/scarf/cap/hair clip) → wears it confidently, adjusts with both hands, poses and smiles\n"
+            "  - Skincare/Beauty (cream/serum/moisturiser/sunscreen/face wash) → applies small amount on cheek or hand, gently massages in, glows and smiles\n"
+            "  - Makeup (lipstick/kajal/foundation/blush/eyeshadow) → applies product, looks in imaginary mirror, smiles confidently at camera\n"
+            "  - Food/snacks (chips/biscuits/sweets/namkeen) → gestures toward product with open hand, picks one piece and holds it up, smiles warmly\n"
+            "  - Beverages (juice/tea/coffee/shake/cold drink) → holds cup/glass with both hands, brings close to lips, closes eyes enjoying aroma or taste\n"
+            "  - Electronics (phone/earphones/tablet/smartwatch/gadget) → holds naturally, uses it confidently, reacts with excitement or satisfaction\n"
+            "  - Home decor (candle/frame/plant/cushion/showpiece) → places product carefully, steps back, tilts head admiring it with a warm smile\n"
+            "  - Fitness (yoga mat/dumbbells/protein/gym gear) → holds product with energy, demonstrates use briefly, looks strong and motivated\n"
+            "  - Kids products (toy/kids clothing/shoes/bag) → holds up playfully, shows with joy and big smile, waves product at camera\n"
+            "  - Stationery/books (notebook/pen/planner) → opens and flips pages, holds up cover facing camera, nods thoughtfully\n"
+            "  - Organic/natural products (honey/seeds/oils/herbal) → holds up bottle/jar, opens and smells with delight, nods approvingly\n"
+            "  - Other → holds product naturally at chest level, looks at it then at camera, smiles confidently\n\n"
+            "product_type: best matching category from: 'food','beverage','clothing','jewelry','footwear','bag','accessory','skincare','makeup','electronics','home_decor','fitness','kids','stationery','organic','other'\n\n"
             "auto_gender: Study the product image carefully. Who is this product MADE FOR? Choose exactly one: 'female', 'male', 'girl_kid', 'boy_kid'.\n"
             "  Think like a smart Indian marketer — look at the product size, design, colors, style, branding, and intended user. Do not guess randomly.\n\n"
             "auto_skin_tone: Choose the skin tone that best matches the target audience and product aesthetic "
             "('fair' for premium bridal/luxury, 'wheatish' for everyday Indian mainstream, 'dusky' for sporty/outdoor/bold, 'dark' for high-fashion/statement pieces).\n\n"
             "auto_scene: Best realistic background for this product "
-            "('studio' for jewellery/electronics/premium products, 'beach' for sunscreen/swimwear/summer, 'ramp' for fashion/clothing, "
-            "'cafe' for food/beverages/lifestyle, 'garden' for skincare/natural/organic products, 'outdoor' for sports/adventure)."
+            "('studio' for jewellery/electronics/premium/makeup products, 'beach' for sunscreen/swimwear/summer, 'ramp' for fashion/clothing/footwear, "
+            "'cafe' for food/beverages/lifestyle, 'garden' for skincare/natural/organic/kids products, 'outdoor' for sports/fitness/adventure)."
             f"{notes_instruction}"
         )
     else:
@@ -1719,14 +1735,25 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             f"You are a UGC creator for Instagram Reels. The presenter is a {gender_hint}.\n"
             f"Look at this product image and reply with ONLY valid JSON, no markdown:\n{json_schema}\n\n"
             f"script: {script_lang_instr}\n\n"
-            "avatar_prompt: Exactly how the model uses this product physically. Under 20 words.\n"
-            "  - Food/drink → picks up, bites/sips, reacts with joy\n"
-            "  - Sports → holds and plays actively\n"
-            "  - Clothing → wears it, poses, shows off\n"
-            "  - Jewelry → wears it, touches gently, admires\n"
-            "  - Electronics → holds it, uses it, reacts\n"
-            "  - Other → uses it naturally\n\n"
-            "product_type: one of 'food','sports','clothing','jewelry','electronics','other'."
+            "avatar_prompt: Describe exactly how the model interacts with this product. Under 20 words. "
+            "Focus on natural, realistic body movement — avoid floating objects or impossible physics.\n"
+            "  - Jewellery (necklace/earrings/bangles/ring/maang tikka) → wearing it, turns head slowly to show, touches gently with fingertips, admires elegantly\n"
+            "  - Clothing (dress/saree/lehenga/kurti/top/jeans) → wearing it, twirls once showing fabric, strikes confident pose, walks gracefully on ramp\n"
+            "  - Bags (handbag/purse/tote/clutch/backpack) → carries on shoulder, opens and peeks inside with smile, poses holding it at side\n"
+            "  - Footwear (sandals/heels/sneakers/flats/chappals) → walks elegantly showing footwear, crosses legs to show shoes, poses looking down then at camera\n"
+            "  - Accessories (belt/watch/sunglasses/scarf/cap/hair clip) → wears it confidently, adjusts with both hands, poses and smiles\n"
+            "  - Skincare/Beauty (cream/serum/moisturiser/sunscreen/face wash) → applies small amount on cheek or hand, gently massages in, glows and smiles\n"
+            "  - Makeup (lipstick/kajal/foundation/blush/eyeshadow) → applies product, looks in imaginary mirror, smiles confidently at camera\n"
+            "  - Food/snacks (chips/biscuits/sweets/namkeen) → gestures toward product with open hand, picks one piece and holds it up, smiles warmly\n"
+            "  - Beverages (juice/tea/coffee/shake/cold drink) → holds cup/glass with both hands, brings close to lips, closes eyes enjoying aroma or taste\n"
+            "  - Electronics (phone/earphones/tablet/smartwatch/gadget) → holds naturally, uses it confidently, reacts with excitement or satisfaction\n"
+            "  - Home decor (candle/frame/plant/cushion/showpiece) → places product carefully, steps back, tilts head admiring it with a warm smile\n"
+            "  - Fitness (yoga mat/dumbbells/protein/gym gear) → holds product with energy, demonstrates use briefly, looks strong and motivated\n"
+            "  - Kids products (toy/kids clothing/shoes/bag) → holds up playfully, shows with joy and big smile, waves product at camera\n"
+            "  - Stationery/books (notebook/pen/planner) → opens and flips pages, holds up cover facing camera, nods thoughtfully\n"
+            "  - Organic/natural products (honey/seeds/oils/herbal) → holds up bottle/jar, opens and smells with delight, nods approvingly\n"
+            "  - Other → holds product naturally at chest level, looks at it then at camera, smiles confidently\n\n"
+            "product_type: best matching category from: 'food','beverage','clothing','jewelry','footwear','bag','accessory','skincare','makeup','electronics','home_decor','fitness','kids','stationery','organic','other'."
             + extra
         )
 
@@ -1743,12 +1770,22 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
     )
 
     FALLBACK_PROMPTS = {
-        "food":        "picking up food, taking a big bite, chewing happily, smiling with delight",
-        "sports":      "holding sports equipment, swinging actively, looking energetic and confident",
-        "clothing":    "wearing the clothing, posing and showing it off with a big smile",
-        "jewelry":     "wearing jewelry naturally, touching it gently, admiring it, looking elegant",
-        "electronics": "holding device, using it, reacting with excitement",
-        "other":       "holding product, using it naturally, smiling at camera",
+        "jewelry":     "wearing jewelry, turns head slowly to show, touches gently with fingertips, smiles elegantly",
+        "clothing":    "wearing outfit, twirls once showing fabric, strikes confident pose, smiles at camera",
+        "bag":         "carries bag on shoulder, opens and peeks inside with smile, poses confidently",
+        "footwear":    "walks elegantly showing footwear, crosses legs to show shoes, smiles at camera",
+        "accessory":   "wears accessory confidently, adjusts with both hands, poses and smiles",
+        "skincare":    "applies product on cheek with fingertip, gently massages in, glows and smiles",
+        "makeup":      "applies makeup product, looks in imaginary mirror, smiles confidently at camera",
+        "food":        "gestures toward food with open hand, picks one piece and holds it up, smiles warmly",
+        "beverage":    "holds cup with both hands, brings close to lips, closes eyes enjoying the aroma",
+        "electronics": "holds device naturally, uses it confidently, reacts with excitement",
+        "home_decor":  "places product carefully, steps back, tilts head admiring it with warm smile",
+        "fitness":     "holds product with energy, demonstrates use briefly, looks strong and motivated",
+        "kids":        "holds product up playfully, shows with joy and big smile, waves at camera",
+        "stationery":  "opens and flips pages, holds up cover facing camera, nods thoughtfully",
+        "organic":     "holds bottle or jar up, opens and smells with delight, nods approvingly",
+        "other":       "holds product naturally at chest level, looks at it then at camera, smiles confidently",
     }
 
     raw = message.content[0].text.strip()
