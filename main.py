@@ -1292,6 +1292,10 @@ async def serve_order_result_page(order_id: str):
 
 from whatsapp_bot import handle_whatsapp_message, VERIFY_TOKEN as WA_VERIFY_TOKEN, send_text as wa_send_text, send_video as wa_send_video
 from retell_webhook import handle_retell_webhook
+from restaurant_bot import handle_restaurant_message
+
+# Set RESTAURANT_MODE=true in .env to route WhatsApp messages to BTT restaurant bot
+RESTAURANT_MODE = os.getenv("RESTAURANT_MODE", "false").lower() == "true"
 
 
 async def notify_wa_on_complete(job_id: str, order_id: str, wa_from: str, product_name: str):
@@ -1353,7 +1357,12 @@ async def whatsapp_verify(request: Request):
 async def whatsapp_receive(request: Request):
     """Receive incoming WhatsApp messages."""
     body = await request.json()
-    print(f"[WA] Webhook received: {str(body)[:300]}")
+    print(f"[WA] Webhook received (mode={'restaurant' if RESTAURANT_MODE else 'ugc'}): {str(body)[:200]}")
+
+    # ── Restaurant bot mode ───────────────────────────────────────────
+    if RESTAURANT_MODE:
+        await handle_restaurant_message(body)
+        return {"status": "ok"}
 
     async def _process_wa_order(order_id: str):
         """Wrapper to process a WhatsApp order using existing pipeline."""
