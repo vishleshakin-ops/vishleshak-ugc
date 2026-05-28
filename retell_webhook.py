@@ -154,11 +154,24 @@ async def handle_retell_webhook(body: dict):
                      or custom.get("reason")
                      or custom.get("concern")
                      or "Dental Consultation").strip()
-    booking_ok    = custom.get("booking_confirmed", False)
 
-    # Normalise booking_ok — could be bool or string "true"
+    # "Call Successful" is the field name in this Retell config → sent as call_successful
+    booking_ok = (custom.get("call_successful")
+                  or custom.get("booking_confirmed")
+                  or custom.get("call_success")
+                  or custom.get("successful")
+                  or False)
+
+    # Normalise — could be bool True/False or string "true"/"false"
     if isinstance(booking_ok, str):
-        booking_ok = booking_ok.lower() in ("true", "yes", "1", "confirmed")
+        booking_ok = booking_ok.lower() in ("true", "yes", "1", "confirmed", "successful")
+
+    # Fallback: if extraction didn't fire yet (call_ended before analysis),
+    # check call_summary text for booking keywords
+    if not booking_ok and summary:
+        keywords = ("booked", "confirmed", "appointment booked", "successfully booked",
+                    "appointment confirmed", "scheduled")
+        booking_ok = any(kw in summary.lower() for kw in keywords)
 
     print(f"[Retell] Booking={booking_ok} | Patient={patient_name} | "
           f"Date={appt_date} | Time={appt_time} | Type={appt_type}")
