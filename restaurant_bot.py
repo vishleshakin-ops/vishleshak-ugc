@@ -833,8 +833,11 @@ async def handle_restaurant_message(body: dict):
         print(f"[BTT] Error: {e}")
         import traceback
         traceback.print_exc()
-        await send_text(from_phone,
-            f"Sorry, something went wrong! 😅\n"
-            f"Please call us directly: 📞 {RESTAURANT_PHONE}\n"
-            f"Or type *hi* to restart."
-        )
+        try:
+            await send_text(from_phone,
+                f"Sorry, something went wrong! 😅\n"
+                f"Please call us directly: 📞 {RESTAURANT_PHONE}\n"
+                f"Or type *hi* to restart."
+            )
+        except Exception:
+            pass

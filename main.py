@@ -1428,7 +1428,16 @@ async def whatsapp_receive(request: Request):
 
     # ── Route to restaurant bot ─────────────────────────────────────
     if current_bot == "restaurant":
-        await handle_restaurant_message(body)
+        try:
+            await handle_restaurant_message(body)
+        except Exception as e:
+            import traceback
+            print(f"[Router] Restaurant bot crashed: {e}")
+            traceback.print_exc()
+            try:
+                await restaurant_send_text(from_phone, f"Sorry, something went wrong! 😅 Please type *hi* to restart.")
+            except Exception:
+                pass
         return {"status": "ok"}
 
     # ── Route to UGC bot ────────────────────────────────────────────
