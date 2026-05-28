@@ -26,7 +26,9 @@ import json
 import asyncio
 import httpx
 import anthropic
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 WHATSAPP_TOKEN  = os.getenv("WHATSAPP_TOKEN", "")
@@ -434,7 +436,7 @@ async def notify_owner_order(from_phone: str, cart: list, customer_name: str = "
         f"🛎️ *New Order — {RESTAURANT_NAME}*\n\n"
         f"{name_part}"
         f"📱 *Phone:* {from_phone}\n"
-        f"🕐 *Time:* {datetime.now().strftime('%d %b %Y, %I:%M %p')}\n\n"
+        f"🕐 *Time:* {datetime.now(IST).strftime('%d %b %Y, %I:%M %p IST')}\n\n"
         f"📋 *Order:*\n{items_text}\n\n"
         f"💰 *Total: ₹{total}*"
     )

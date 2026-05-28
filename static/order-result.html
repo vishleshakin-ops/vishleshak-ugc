@@ -266,10 +266,16 @@
         <div class="status-row">
           <div class="status-icon">❗</div>
           <div>
-            <div class="status-title">Not found</div>
+            <div class="status-title">Order not found</div>
             <div class="status-sub">${msg}</div>
           </div>
-        </div>`;
+        </div>
+        <div style="margin-top:18px;padding:14px;background:#f8fafc;border-radius:10px;font-size:13px;color:#475569;line-height:1.8">
+          Your video may still be processing. Please contact us:<br/>
+          📞 <strong>+91 99539 10987</strong><br/>
+          💬 WhatsApp us and share your Order ID
+        </div>
+        <div style="margin-top:12px" class="order-id-row">Order ID: ${orderId}</div>`;
     }
 
     // Start polling

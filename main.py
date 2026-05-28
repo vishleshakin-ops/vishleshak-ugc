@@ -594,13 +594,28 @@ async def receive_order_result(request: Request):
             o["image_url"] = image_url
             if script:
                 o["script"] = script
+            if body.get("job_id"):
+                o["job_id"] = body.get("job_id")
             updated = True
             break
-    if updated:
-        with open(ORDERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(orders, f, ensure_ascii=False, indent=2)
-        return {"status": "updated"}
-    return {"status": "not_found"}
+
+    if not updated:
+        # Order was lost on Railway redeploy — create a minimal record so result page works
+        orders.insert(0, {
+            "id":         order_id,
+            "status":     status,
+            "video_url":  video_url,
+            "image_url":  image_url,
+            "script":     script,
+            "job_id":     body.get("job_id", ""),
+            "customer_name":  body.get("customer_name", ""),
+            "customer_phone": body.get("customer_phone", ""),
+            "created_at": datetime.utcnow().isoformat(),
+        })
+
+    with open(ORDERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(orders, f, ensure_ascii=False, indent=2)
+    return {"status": "updated" if updated else "created"}
 
 
 @app.delete("/api/orders/{order_id}/model-photo")
@@ -1295,8 +1310,9 @@ from retell_webhook import handle_retell_webhook
 from restaurant_bot import handle_restaurant_message, send_text as restaurant_send_text, sessions as restaurant_sessions, WELCOME_MSG as RESTAURANT_WELCOME
 
 # Router: tracks which bot each phone number is currently using
-# Values: None (not chosen) | "restaurant" | "ugc"
+# Values: None (not chosen yet) | "restaurant" | "ugc"
 _router_sessions: dict = {}
+# RESTAURANT_MODE env var is no longer needed — router handles both bots automatically
 
 COMBINED_WELCOME = (
     "👋 *Welcome to Vishleshak AI!*\n\n"
@@ -1381,7 +1397,7 @@ async def whatsapp_receive(request: Request):
 
     print(f"[Router] {from_phone}: '{text[:60]}'")
 
-    RESET_WORDS = ("hi", "hello", "hey", "start", "help", "hlo", "hii", "menu")
+    RESET_WORDS = ("hi", "hello", "hey", "start", "help", "hlo", "hii")
 
     # ── Reset to main menu ──────────────────────────────────────────
     if text.lower() in RESET_WORDS:
