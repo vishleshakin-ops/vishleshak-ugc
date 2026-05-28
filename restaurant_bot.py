@@ -458,14 +458,16 @@ def cart_total(cart: list) -> int:
 
 # ── Owner notifications ────────────────────────────────────────────────────────
 
-async def notify_owner_order(from_phone: str, cart: list, customer_name: str = ""):
+async def notify_owner_order(from_phone: str, cart: list, customer_name: str = "", location: str = ""):
     total = cart_total(cart)
     name_part = f"👤 *Customer:* {customer_name}\n" if customer_name else ""
+    loc_part  = f"📍 *Location:* {location}\n" if location else ""
     items_text = "\n".join([f"  • {i['name']} × {i['qty']} = ₹{i['subtotal']}" for i in cart])
     msg = (
         f"🛎️ *New Order — {RESTAURANT_NAME}*\n\n"
         f"{name_part}"
         f"📱 *Phone:* {from_phone}\n"
+        f"{loc_part}"
         f"🕐 *Time:* {datetime.now(IST).strftime('%d %b %Y, %I:%M %p IST')}\n\n"
         f"📋 *Order:*\n{items_text}\n\n"
         f"💰 *Total: ₹{total}*"
@@ -507,6 +509,35 @@ async def handle_restaurant_message(body: dict):
 
         if msg_type == "text":
             text = msg["text"]["body"].strip()
+        elif msg_type == "location":
+            # Handle location share during order_location state
+            session = sessions.get(from_phone, {"state": None, "cart": [], "booking": {}})
+            if session.get("state") == "order_location":
+                loc  = msg["location"]
+                lat  = loc.get("latitude")
+                lng  = loc.get("longitude")
+                name = loc.get("name", "")
+                addr = loc.get("address", "")
+                maps = f"https://maps.google.com/?q={lat},{lng}"
+                cart      = session.get("cart", [])
+                cust_name = session.get("order_name", "")
+                loc_str   = f"{name} — {addr}\n📍 {maps}" if (name or addr) else f"📍 {maps}"
+                asyncio.create_task(notify_owner_order(from_phone, cart,
+                                                       customer_name=cust_name,
+                                                       location=loc_str))
+                await send_text(from_phone,
+                    f"✅ *Order Placed Successfully!*\n\n"
+                    f"👤 *Name:* {cust_name}\n\n"
+                    f"{format_cart(cart)}\n\n"
+                    f"📍 *Delivery to your shared location*\n\n"
+                    f"📞 *For queries:* {RESTAURANT_PHONE}\n\n"
+                    f"Thank you for ordering from *{RESTAURANT_NAME}*! 🙏\n"
+                    f"_Type *hi* to start a new order_"
+                )
+                sessions.pop(from_phone, None)
+            else:
+                await send_text(from_phone, "📍 Thanks! For orders, type *hi* to start.")
+            return
         elif msg_type == "image":
             await send_text(from_phone, "📸 Thanks for the photo! For orders and bookings, please type your request. 😊")
             return
@@ -661,6 +692,28 @@ async def handle_restaurant_message(body: dict):
                 "Reply *yes* to confirm or *edit* to add more items." + _BACK
             )
 
+        # ── Waiting for location ────────────────────────────────────────
+        elif state == "order_location":
+            if text.lower() == "skip":
+                cart = session.get("cart", [])
+                name = session.get("order_name", "")
+                asyncio.create_task(notify_owner_order(from_phone, cart, customer_name=name))
+                await send_text(from_phone,
+                    f"✅ *Order Placed Successfully!*\n\n"
+                    f"👤 *Name:* {name}\n\n"
+                    f"{format_cart(cart)}\n\n"
+                    f"📍 *Pick up / Dine in at:*\n{RESTAURANT_ADDRESS}\n\n"
+                    f"📞 *For queries:* {RESTAURANT_PHONE}\n\n"
+                    f"Thank you for ordering from *{RESTAURANT_NAME}*! 🙏\n"
+                    f"_Type *hi* to start a new order_"
+                )
+                sessions.pop(from_phone, None)
+            else:
+                await send_text(from_phone,
+                    "📍 Please share your location using the 📎 attachment icon → *Location*\n\n"
+                    "_Type *skip* for pick up / dine in_"
+                )
+
         # ── Ordering (text fallback) ─────────────────────────────────────
         elif state == "ordering":
             # Redirect to menu_browse — number-based is the primary flow now
@@ -673,14 +726,19 @@ async def handle_restaurant_message(body: dict):
         # ── Order confirmation ──────────────────────────────────────────
         elif state == "order_confirm":
             if text.lower() in ("yes", "confirm", "ok", "okay", "place order", "proceed"):
+                # Ask for delivery location
+                sessions[from_phone] = {**session, "state": "order_location"}
+                await send_text(from_phone,
+                    "📍 *Share your delivery location!*\n\n"
+                    "Tap the 📎 attachment icon → *Location* → *Send your current location*\n\n"
+                    "_Type *skip* if you'll pick up or dine in_"
+                )
+
+            elif text.lower() == "skip":
+                # Place order without location (dine-in / pickup)
                 cart = session.get("cart", [])
                 name = session.get("order_name", "")
-
-                # Notify owner
                 asyncio.create_task(notify_owner_order(from_phone, cart, customer_name=name))
-
-                # Confirm to customer
-                greeting = f"Hi *{name}*, your" if name else "Your"
                 await send_text(from_phone,
                     f"✅ *Order Placed Successfully!*\n\n"
                     f"👤 *Name:* {name}\n\n"
