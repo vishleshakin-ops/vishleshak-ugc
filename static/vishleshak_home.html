@@ -586,6 +586,147 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 .social-btn.fb    { background: #1877F2; }
 .social-btn.yt    { background: #FF0000; }
 
+/* DEMO SECTION */
+.demo-section {
+  padding: 100px 60px;
+  background: linear-gradient(160deg, #0f0a28 0%, #1a0e42 60%, #0d1f3c 100%);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.demo-section::before {
+  content: '';
+  position: absolute;
+  top: -120px; left: 50%;
+  transform: translateX(-50%);
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.demo-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  max-width: 860px;
+  margin: 48px auto 0;
+}
+.demo-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  padding: 40px 32px;
+  text-align: left;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+.demo-card:hover {
+  border-color: rgba(124,58,237,0.5);
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(124,58,237,0.2);
+}
+.demo-card-icon {
+  width: 60px; height: 60px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+.demo-card-icon.green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+.demo-card-icon.purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+.demo-card-title {
+  font-size: 20px; font-weight: 800;
+  color: white; margin-bottom: 10px;
+}
+.demo-card-desc {
+  font-size: 14px; color: rgba(255,255,255,0.55);
+  line-height: 1.7; margin-bottom: 24px;
+}
+.demo-card-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.06);
+  border-radius: 100px; padding: 4px 12px;
+  margin-bottom: 20px;
+}
+.demo-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 15px; font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  width: 100%;
+  justify-content: center;
+}
+.demo-btn.wa {
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  color: white;
+  box-shadow: 0 6px 20px rgba(37,211,102,0.35);
+}
+.demo-btn.wa:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(37,211,102,0.45);
+}
+.demo-btn.call {
+  background: linear-gradient(135deg, #7C3AED, #2563EB);
+  color: white;
+  box-shadow: 0 6px 20px rgba(124,58,237,0.35);
+}
+.demo-btn.call:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(124,58,237,0.45);
+}
+
+/* Retell widget overlay */
+#retell-modal {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.7);
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#retell-modal.open { display: flex; }
+.retell-modal-box {
+  background: #1e1535;
+  border: 1px solid rgba(124,58,237,0.4);
+  border-radius: 24px;
+  padding: 36px 32px;
+  max-width: 420px; width: 92%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+.retell-modal-close {
+  position: absolute; top: 16px; right: 18px;
+  background: rgba(255,255,255,0.1); border: none;
+  color: white; width: 32px; height: 32px;
+  border-radius: 50%; cursor: pointer; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.retell-modal-close:hover { background: rgba(255,255,255,0.2); }
+.retell-modal-title {
+  font-size: 20px; font-weight: 800; color: white; margin-bottom: 8px;
+}
+.retell-modal-sub {
+  font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 28px; line-height: 1.6;
+}
+#retell-widget-container {
+  min-height: 80px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .demo-section { padding: 60px 24px; }
+  .demo-cards { grid-template-columns: 1fr; gap: 18px; }
+}
+
 /* FOOTER */
 footer {
   background: #0a0618; padding: 60px;
@@ -635,6 +776,7 @@ footer {
     <a href="#">Home</a>
     <a href="#services">Services</a>
     <a href="#samples">Samples</a>
+    <a href="#demo">Live Demo</a>
     <a href="#testimonials">Testimonials</a>
     <a href="#why-us">Why Us</a>
     <a href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank" class="ugc-btn">🎬 UGC Videos</a>
@@ -796,6 +938,55 @@ footer {
     </div>
   </div>
 </section>
+
+<!-- LIVE DEMOS -->
+<section class="demo-section" id="demo">
+  <p class="section-label" style="color:rgba(255,255,255,0.5)">Live Demos</p>
+  <h2 class="section-title" style="color:white">Try Our AI Solutions</h2>
+  <p class="section-sub" style="color:rgba(255,255,255,0.5)">Chat with our restaurant bot on WhatsApp or speak to our AI dental receptionist — live, right now.</p>
+
+  <div class="demo-cards">
+
+    <!-- WhatsApp Restaurant Bot -->
+    <div class="demo-card">
+      <div class="demo-card-icon green">🍽️</div>
+      <div class="demo-card-tag">🟢 Live on WhatsApp</div>
+      <div class="demo-card-title">Restaurant Chatbot</div>
+      <div class="demo-card-desc">Browse the menu, place an order, and share your location — all inside WhatsApp. Zero app download, zero friction for your customers.</div>
+      <a class="demo-btn wa" href="https://wa.me/919953910987?text=hi" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.862L0 24l6.306-1.511A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.032-1.382l-.361-.214-3.741.897.939-3.636-.235-.374A9.795 9.795 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182c5.421 0 9.818 4.398 9.818 9.818 0 5.421-4.397 9.818-9.818 9.818z"/></svg>
+        Chat on WhatsApp →
+      </a>
+    </div>
+
+    <!-- AI Dental Receptionist -->
+    <div class="demo-card">
+      <div class="demo-card-icon purple">🦷</div>
+      <div class="demo-card-tag">🟣 AI Voice Call</div>
+      <div class="demo-card-title">AI Dental Receptionist</div>
+      <div class="demo-card-desc">Speak directly to our AI receptionist that books appointments, answers clinic questions, and handles patient queries — 24/7, no hold music.</div>
+      <button class="demo-btn call" id="open-retell-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.9 2.18 2 2 0 012.91 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+        Call AI Receptionist →
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<!-- RETELL MODAL -->
+<div id="retell-modal">
+  <div class="retell-modal-box">
+    <button class="retell-modal-close" id="close-retell-btn">✕</button>
+    <div style="font-size:48px;margin-bottom:12px">🦷</div>
+    <div class="retell-modal-title">AI Dental Receptionist</div>
+    <div class="retell-modal-sub">Click the button below to start a free voice call with our AI receptionist. Works directly in your browser — no app needed.</div>
+    <div id="retell-widget-container">
+      <!-- Retell web call widget loads here -->
+      <div id="retell-web-agent"></div>
+    </div>
+  </div>
+</div>
 
 <!-- TESTIMONIALS -->
 <section class="testimonials" id="testimonials">
@@ -1005,6 +1196,7 @@ footer {
     { id: 'hero',         href: '#'             },
     { id: 'services',     href: '#services'     },
     { id: 'samples',      href: '#samples'      },
+    { id: 'demo',         href: '#demo'         },
     { id: 'testimonials', href: '#testimonials' },
     { id: 'why-us',       href: '#why-us'       },
     { id: 'contact',      href: '#contact'      },
@@ -1069,6 +1261,79 @@ document.querySelectorAll('.sample-card').forEach(card => {
     card.classList.remove('playing');
   });
 });
+
+// ── Retell AI Dental Receptionist Widget ──────────────────────────────────────
+(function() {
+  // ★ FILL IN your Retell agent_id from https://app.retellai.com → Agents
+  const RETELL_AGENT_ID = "agent_YOUR_RETELL_AGENT_ID_HERE";
+
+  const openBtn  = document.getElementById('open-retell-btn');
+  const modal    = document.getElementById('retell-modal');
+  const closeBtn = document.getElementById('close-retell-btn');
+  const container = document.getElementById('retell-web-agent');
+
+  if (!openBtn || !modal) return;
+
+  let retellLoaded = false;
+
+  function loadRetellWidget() {
+    if (retellLoaded) return;
+    retellLoaded = true;
+
+    // Load Retell SDK
+    const script = document.createElement('script');
+    script.src = 'https://cdn.retellai.com/sdk/web-client.js';
+    script.onload = function() {
+      if (window.RetellWebClient) {
+        const client = new RetellWebClient();
+        // Render the built-in call button widget
+        client.renderButton(container, {
+          agentId: RETELL_AGENT_ID,
+          btnText: "Start AI Call",
+          theme: "dark",
+        });
+      } else {
+        // Fallback: plain start-call button
+        container.innerHTML = `
+          <div style="text-align:center">
+            <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:16px">
+              To use this demo, add your Retell Agent ID in the website code.
+            </p>
+            <a href="https://app.retellai.com" target="_blank"
+               style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#7C3AED,#2563EB);color:white;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px">
+              Open Retell Dashboard →
+            </a>
+          </div>`;
+      }
+    };
+    script.onerror = function() {
+      container.innerHTML = `
+        <div style="text-align:center">
+          <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:16px">Could not load call widget. Please try again.</p>
+          <button onclick="document.getElementById('retell-modal').classList.remove('open')"
+            style="padding:10px 20px;background:rgba(255,255,255,0.1);color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px">Close</button>
+        </div>`;
+    };
+    document.head.appendChild(script);
+  }
+
+  openBtn.addEventListener('click', function() {
+    modal.classList.add('open');
+    loadRetellWidget();
+  });
+
+  closeBtn.addEventListener('click', function() {
+    modal.classList.remove('open');
+  });
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.classList.remove('open');
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') modal.classList.remove('open');
+  });
+})();
 </script>
 </body>
 </html>
