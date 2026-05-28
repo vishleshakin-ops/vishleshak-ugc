@@ -140,23 +140,25 @@ async def handle_retell_webhook(body: dict):
     summary      = analysis.get("call_summary", "")
     custom       = analysis.get("custom_analysis_data", {}) or {}
 
-    # Flexible field names — Retell uses whatever you defined in your extraction config
-    patient_name  = (custom.get("patient_name")
-                     or custom.get("name")
-                     or custom.get("caller_name")
+    # Normalise all keys to lowercase for case-insensitive matching
+    custom_lower = {k.lower(): v for k, v in custom.items()}
+
+    patient_name  = (custom_lower.get("patient_name")
+                     or custom_lower.get("name")
+                     or custom_lower.get("caller_name")
                      or "").strip()
-    appt_date     = (custom.get("appointment_date")
-                     or custom.get("date")
-                     or custom.get("booking_date")
+    appt_date     = (custom_lower.get("appointment_date")
+                     or custom_lower.get("date")
+                     or custom_lower.get("booking_date")
                      or "").strip()
-    appt_time     = (custom.get("appointment_time")
-                     or custom.get("time")
-                     or custom.get("booking_time")
+    appt_time     = (custom_lower.get("appointment_time")
+                     or custom_lower.get("time")
+                     or custom_lower.get("booking_time")
                      or "").strip()
-    appt_type     = (custom.get("appointment_type")
-                     or custom.get("treatment")
-                     or custom.get("reason")
-                     or custom.get("concern")
+    appt_type     = (custom_lower.get("appointment_type")
+                     or custom_lower.get("treatment")
+                     or custom_lower.get("reason")
+                     or custom_lower.get("concern")
                      or "Dental Consultation").strip()
 
     # "Call Successful" is the field name in this Retell config → sent as call_successful
