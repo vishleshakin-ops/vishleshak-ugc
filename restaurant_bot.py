@@ -22,6 +22,7 @@ Conversation states per phone number:
 """
 
 import os
+import re
 import json
 import asyncio
 import httpx
@@ -221,42 +222,24 @@ SIMPLE_MENU = {
             "Mocktails": {
                 "Mojito": 70, "Blue Lagoon": 75,
                 "Passion Fruit": 75, "Raspberry Mojito": 80,
-                "Water Melon": 80, "Green Apple Mojito": 80,
             },
-            "Thick Shakes": {
-                "Chocolate": 100, "Nutella": 110,
-                "Kitkat": 100, "Black Forest": 110,
-                "Choco Brownie": 100, "Protein Smoothie": 129,
-            },
-            "Milk Shakes": {
-                "Vanilla": 79, "Mango": 79,
-                "Strawberry": 79, "Butter Scotch": 79,
-                "Berry Berry": 79, "Banana Strawberry": 89,
-            },
-            "Coffee": {
+            "Shakes & Coffee": {
+                "Chocolate Thick Shake": 100, "Nutella Thick Shake": 110,
                 "Cold Coffee": 80, "Caramel Cold Coffee": 90,
-                "Irish Cold Coffee": 90, "Hazelnut Cold Coffee": 90,
-                "Hot Coffee": 40, "Black Coffee": 25,
             },
-            "Tea & Iced Tea": {
-                "Masala Tea": 30, "Green Tea": 30, "Assam Tea": 30,
-                "Peach Iced Tea": 75, "Lemon Iced Tea": 75, "Strawberry Iced Tea": 75,
-            },
-            "Fruit Beer": {
+            "Tea & Beer": {
+                "Masala Tea": 30, "Peach Iced Tea": 75,
                 "Raspberry Beer": 85, "Watermelon Beer": 65,
-                "Strawberry Beer": 85, "Berries Beer": 85,
             },
         }
     },
     "2": {
         "title": "🧇 Desserts",
         "sections": {
-            "Waffles (Single / Double)": {
-                "Classic": "90 / 170", "Chocolate": "100 / 190",
-                "Nutella": "110 / 200", "Strawberry": "100 / 190",
-                "Blueberry": "100 / 190", "Oreo Waffle": "100 / 190",
-                "Choco-Brownie": "120 / 230", "Banana Honey": "110 / 200",
-                "BTT Special": "130 / 240", "Waffle Platter (Any 4)": 250,
+            "Waffles": {
+                "Classic Waffle": 90, "Chocolate Waffle": 100,
+                "Nutella Waffle": 110, "BTT Special Waffle": 130,
+                "Waffle Platter (Any 4)": 250,
             },
             "Brownies": {
                 "Hot Brownie with Icecream": 100,
@@ -268,49 +251,35 @@ SIMPLE_MENU = {
     "3": {
         "title": "🍜 Chinese",
         "sections": {
-            "Momos (Half / Full)": {
-                "Veg Steam": "40 / 70", "Paneer Steam": "50 / 80",
-                "Veg Fried": "45 / 80", "Paneer Fried": "60 / 110",
-                "Veg Kurkure": "60 / 90", "Paneer Kurkure": "70 / 130",
-                "Afghani Veg": "60 / 110", "Afghani Paneer": "70 / 130",
+            "Momos": {
+                "Veg Steam Momos": 70, "Paneer Steam Momos": 80,
+                "Veg Fried Momos": 80, "Paneer Fried Momos": 110,
                 "Chilli Momos": 120,
             },
-            "Noodles (Half / Full)": {
-                "Veg Noodles": "60 / 90", "Hakka Noodles": "80 / 120",
-                "Chilli Garlic": "70 / 100", "Garlic Noodles": "70 / 100",
-                "Paneer Noodles": "80 / 120", "Butter Noodles": "80 / 110",
-                "Chilli Oil Noodles": 130,
+            "Noodles": {
+                "Veg Noodles": 90, "Hakka Noodles": 120,
+                "Chilli Garlic Noodles": 100, "Paneer Noodles": 120,
             },
-            "Chinese Snacks (Half / Full)": {
-                "Veg Manchurian Gravy": "70 / 140", "Veg Manchurian Dry": "80 / 150",
-                "Chilli Paneer": "100 / 190", "Chilli Mushroom": "80 / 150",
-                "Honey Chilli Potato": "80 / 120", "Chilli Potato": "60 / 100",
-                "Kurkure Spring Roll": 100, "American Chopsey": 140,
+            "Chinese Snacks": {
+                "Veg Manchurian Gravy": 140, "Chilli Paneer": 190,
+                "Honey Chilli Potato": 120, "Kurkure Spring Roll": 100,
             },
         }
     },
     "4": {
         "title": "🍚 Rice & South Indian",
         "sections": {
-            "Rice (Half / Full)": {
-                "Veg Fried Rice": "60 / 100", "Schezwan Fried Rice": "70 / 110",
-                "Chilli Garlic Fried Rice": "70 / 110", "Paneer Fried Rice": "80 / 120",
-                "Veg Singapore Fried Rice": "80 / 120", "Lemon Rice": 90, "Curd Rice": 90,
+            "Rice": {
+                "Veg Fried Rice": 100, "Schezwan Fried Rice": 110,
+                "Paneer Fried Rice": 120, "Lemon Rice": 90,
             },
             "Dosa": {
-                "Paper Dosa": 80, "Masala Dosa": 100,
-                "Onion Masala Dosa": 110, "Mysore Masala Dosa": 110,
-                "Schezwan Dosa": 110, "Cheese Masala Dosa": 130,
-                "Paneer Dosa": 140, "Family Dosa": 160,
-            },
-            "Uttapam": {
-                "Onion Uttapam": 100, "Tomato Uttapam": 100,
-                "Mix Vegetable Uttapam": 120, "Paneer Uttapam": 140,
+                "Masala Dosa": 100, "Mysore Masala Dosa": 110,
+                "Schezwan Dosa": 110, "Paneer Dosa": 140,
             },
             "South Indian Snacks": {
-                "Sambhar Vada": 70, "Sambhar Idli": 60,
-                "Fried Idli": 70, "Chilli Idli": 90,
-                "Dahi Vada": 80, "Upma": 80,
+                "Sambhar Idli": 60, "Sambhar Vada": 70,
+                "Chilli Idli": 90, "Dahi Vada": 80,
             },
         }
     },
@@ -318,52 +287,71 @@ SIMPLE_MENU = {
         "title": "🍔 Continental",
         "sections": {
             "Burgers": {
-                "Aloo Tikki Burger": 50, "Veg Surprise Burger": 75,
-                "Veg Chilli Lava Burger": 75, "Crispy Paneer Surprise Burger": 95,
-                "Crispy Paneer Chilli Lava Burger": 95,
-                "Veg Cheese Shot Burger": 100, "Paneer Maharaja Burger": 130,
+                "Aloo Tikki Burger": 50, "Veg Chilli Lava Burger": 75,
+                "Crispy Paneer Burger": 95, "Paneer Maharaja Burger": 130,
             },
-            "Pasta": {
+            "Pasta & Fries": {
                 "Red Sauce Pasta": 100, "White Sauce Pasta": 110,
-                "Mix Sauce Pasta": 110, "Cheese Sauce Pasta": 130,
-                "Mac N Cheese Pasta": 150,
+                "Cheese Loaded Fries": 90, "Peri-Peri Fries": 90,
             },
-            "Grilled Sandwiches (2pcs / 4pcs)": {
-                "Veggie Sandwich": "70 / 130",
-                "Paneer Tikka Sandwich": "85 / 150",
-                "Paneer Makhni Sandwich": "85 / 150",
-                "Paneer Chilli Lava Sandwich": "85 / 150",
-            },
-            "Fries": {
-                "Classic Fries (Salted)": 70, "Peri-Peri Fries (Dry)": 90,
-                "Peri-Peri Fries (Gravy)": 95, "Cheese Loaded Fries": 90,
-                "Peri-Peri Cheesy Fries": 100,
-            },
-            "Grilled Wraps": {
-                "Jalapeno Wrap": 85, "Fajita Wrap": 85,
-                "Crispy Paneer Wrap": 110, "Chilly Patty Wrap": 80,
-                "Paneer Makhni Wrap": 95, "Paneer Tikka Wrap": 95,
-                "Paneer Chilli Lava Wrap": 95,
+            "Wraps & Sandwiches": {
+                "Paneer Tikka Wrap": 95, "Crispy Paneer Wrap": 110,
+                "Paneer Tikka Sandwich": 85, "Veggie Sandwich": 70,
             },
         }
     },
 }
 
 
-def format_category_menu(cat_num: str) -> str:
+def _dual_suffix(section_name: str) -> tuple[str, str]:
+    """Extract (s1, s2) from section titles like 'Momos (Half / Full)'."""
+    m = re.search(r'\(([^/]+)/\s*([^)]+)\)', section_name)
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    return "Small", "Large"
+
+
+def get_numbered_menu(cat_num: str) -> tuple[str, dict]:
+    """
+    Returns (menu_text, items_dict).
+    items_dict maps str(number) → {"name": ..., "price": int}.
+    Dual-price items (Half/Full, Single/Double, 2pcs/4pcs) become TWO numbered entries.
+    """
     if cat_num not in SIMPLE_MENU:
-        return ""
+        return "", {}
+
     cat = SIMPLE_MENU[cat_num]
     lines = [f"*{cat['title']}*\n"]
+    items_dict: dict = {}
+    counter = 1
+
     for section_name, items in cat["sections"].items():
-        lines.append(f"📌 *{section_name}*")
-        for item, price in items.items():
-            price_str = f"₹{price}" if isinstance(price, int) else f"₹{price}"
-            lines.append(f"  • {item} — {price_str}")
+        # Strip "(Half / Full)", "(Single / Double)", "(2pcs / 4pcs)" etc. from header
+        clean_header = re.sub(r'\s*\([^)]*\/[^)]*\)', '', section_name).strip()
+        lines.append(f"📌 *{clean_header}*")
+        s1, s2 = _dual_suffix(section_name)
+        for item_name, price in items.items():
+            if isinstance(price, str) and " / " in price:
+                # Only show the full/large size (second price), no size label
+                p2 = int(price.split("/")[1].strip())
+                items_dict[str(counter)] = {"name": item_name, "price": p2}
+                lines.append(f"  *{counter}.* {item_name} — ₹{p2}")
+                counter += 1
+            else:
+                items_dict[str(counter)] = {"name": item_name, "price": int(price)}
+                lines.append(f"  *{counter}.* {item_name} — ₹{price}")
+                counter += 1
         lines.append("")
-    lines.append("_To order, just type what you want! E.g: '2 nutella waffles and 1 cold coffee'_")
-    lines.append("_Type *back* to see all categories_")
-    return "\n".join(lines)
+
+    lines.append("💡 *Order by number:* type `1 3` or `2x2 5` (2x = qty 2)")
+    lines.append("Type *back* for categories | *done* to checkout")
+    return "\n".join(lines), items_dict
+
+
+def format_category_menu(cat_num: str) -> str:
+    """Backward-compat wrapper — returns only the text."""
+    text, _ = get_numbered_menu(cat_num)
+    return text
 
 
 # ── WhatsApp helpers ───────────────────────────────────────────────────────────
@@ -401,7 +389,8 @@ MENU_CATEGORY_MSG = (
     "3️⃣  🍜 Chinese\n"
     "4️⃣  🍚 Rice & South Indian\n"
     "5️⃣  🍔 Continental\n\n"
-    "_Reply with a number to see that section's menu_"
+    "_Reply with a number (1–5) to see that section_\n"
+    "_Then order by item number — type *done* to checkout_"
 )
 
 
@@ -530,10 +519,12 @@ async def handle_restaurant_message(body: dict):
         state   = session.get("state")
 
         # ── Reset keywords ──────────────────────────────────────────────
-        if text.lower() in ("hi", "hello", "hey", "start", "menu", "help", "hlo", "hii"):
+        if text.lower() in ("hi", "hello", "hey", "start", "help", "hlo", "hii"):
             sessions[from_phone] = {"state": "main_menu", "cart": [], "booking": {}}
             await send_text(from_phone, WELCOME_MSG)
             return
+
+        _BACK = "\n\n_Type *hi* to go back to main menu_"
 
         # ── Main menu ───────────────────────────────────────────────────
         if state in (None, "main_menu"):
@@ -542,13 +533,12 @@ async def handle_restaurant_message(body: dict):
                 await send_text(from_phone, MENU_CATEGORY_MSG)
 
             elif text == "2" or any(w in text.lower() for w in ("order", "want to order", "place order")):
-                sessions[from_phone] = {**session, "state": "ordering", "cart": []}
+                sessions[from_phone] = {**session, "state": "menu_browse", "cart": [],
+                                         "in_category": False, "menu_items": {}}
                 await send_text(from_phone,
                     "🛒 *Place Your Order*\n\n"
-                    "Just tell me what you'd like!\n\n"
-                    "Example:\n"
-                    "_'2 nutella waffles, 1 cold coffee and veg momos half'_\n\n"
-                    "Type *menu* anytime to browse, or *done* when finished."
+                    "Browse a category, then tap item numbers to add to cart!\n\n"
+                    + MENU_CATEGORY_MSG
                 )
 
             elif text == "3" or any(w in text.lower() for w in ("book", "table", "reservation", "reserve")):
@@ -564,75 +554,112 @@ async def handle_restaurant_message(body: dict):
                     f"📌 *Address:*\n{RESTAURANT_ADDRESS}\n\n"
                     f"🕐 *Hours:* {RESTAURANT_HOURS}\n\n"
                     f"📞 *Call us:* {RESTAURANT_PHONE}\n"
-                    f"🛵 *Home Delivery* available on Zomato!\n\n"
-                    f"_Reply *hi* to go back to main menu_"
+                    f"🛵 *Home Delivery* available on Zomato!" + _BACK
                 )
             else:
                 # Unknown input — show welcome again
                 await send_text(from_phone, WELCOME_MSG)
 
-        # ── Menu browsing ───────────────────────────────────────────────
+        # ── Menu browsing (number-based ordering) ───────────────────────
         elif state == "menu_browse":
-            if text in ("1", "2", "3", "4", "5"):
-                menu_text = format_category_menu(text)
-                await send_text(from_phone, menu_text)
-            elif text.lower() in ("back", "categories", "all"):
-                await send_text(from_phone, MENU_CATEGORY_MSG)
-            elif text.lower() == "order" or any(w in text.lower() for w in ("want to order", "place order")):
-                sessions[from_phone] = {**session, "state": "ordering", "cart": []}
-                await send_text(from_phone,
-                    "🛒 Great! What would you like to order?\n\n"
-                    "_Type your items e.g: '1 chocolate waffle and 2 cold coffees'_\n\n"
-                    "Type *done* when your order is complete."
-                )
-            else:
-                await send_text(from_phone,
-                    "Please reply with a number (1-5) to see that menu section.\n"
-                    "Or type *order* to place an order, *hi* for main menu."
-                )
+            in_cat     = session.get("in_category", False)
+            menu_items = session.get("menu_items", {})
+            cart       = session.get("cart", [])
+            tl         = text.lower()
 
-        # ── Ordering ────────────────────────────────────────────────────
-        elif state == "ordering":
-            if text.lower() in ("done", "that's all", "thats all", "confirm", "submit"):
-                cart = session.get("cart", [])
+            # Always-available commands
+            if tl in ("back", "categories", "all", "0", "menu"):
+                sessions[from_phone] = {**session, "in_category": False, "menu_items": {}}
+                await send_text(from_phone, MENU_CATEGORY_MSG)
+
+            elif tl in ("done", "checkout", "confirm order", "order done"):
                 if not cart:
                     await send_text(from_phone,
-                        "Your cart is empty! Tell me what you'd like to order.\n"
-                        "E.g: _'1 nutella waffle and cold coffee'_"
+                        "🛒 Your cart is empty!\n\n"
+                        "Browse a category (1–5) and tap item numbers to add them." + _BACK
                     )
                 else:
                     sessions[from_phone] = {**session, "state": "order_confirm"}
                     await send_text(from_phone,
                         f"🧾 *Your Order Summary:*\n\n"
                         f"{format_cart(cart)}\n\n"
-                        f"Reply *yes* to confirm or *edit* to change your order."
+                        "Reply *yes* to confirm or *edit* to add more items." + _BACK
                     )
 
-            elif text.lower() in ("clear", "restart", "start over"):
-                sessions[from_phone] = {**session, "cart": []}
-                await send_text(from_phone, "🗑️ Cart cleared! What would you like to order?")
+            elif text in ("1", "2", "3", "4", "5") and not in_cat:
+                # Category selection
+                menu_text, items_dict = get_numbered_menu(text)
+                sessions[from_phone] = {**session, "in_category": True, "menu_items": items_dict}
+                cart_hint = (f"\n\n🛒 *Cart so far: ₹{cart_total(cart)}* — type *done* to checkout"
+                             if cart else "")
+                await send_text(from_phone, menu_text + cart_hint)
+
+            elif in_cat:
+                # ── Try to parse as item numbers like "1 3 5" or "2x2 5" ──
+                _NUM = re.compile(r'^(\d+)(?:[xX](\d+))?$')
+                tokens = text.strip().split()
+                parsed = []
+                all_nums = bool(tokens)
+                for tok in tokens:
+                    m = _NUM.match(tok)
+                    if m:
+                        parsed.append((m.group(1), int(m.group(2)) if m.group(2) else 1))
+                    else:
+                        all_nums = False
+                        break
+
+                if all_nums and parsed:
+                    added, not_found = [], []
+                    for item_num, qty in parsed:
+                        if item_num in menu_items:
+                            it = menu_items[item_num]
+                            cart.append({
+                                "name": it["name"], "qty": qty,
+                                "unit_price": it["price"],
+                                "subtotal": it["price"] * qty,
+                            })
+                            added.append(f"  ✅ {it['name']} × {qty} = ₹{it['price'] * qty}")
+                        else:
+                            not_found.append(item_num)
+
+                    sessions[from_phone] = {**session, "cart": cart}
+                    parts = []
+                    if added:
+                        parts.append("Added to cart:\n" + "\n".join(added))
+                        parts.append(f"\n🛒 *Cart Total: ₹{cart_total(cart)}*")
+                    if not_found:
+                        parts.append(f"\n⚠️ Item(s) {', '.join(not_found)} not found — check the numbers above.")
+                    parts.append("\nAdd more items or type *done* to checkout | *back* for categories")
+                    await send_text(from_phone, "\n".join(parts))
+
+                elif text in ("1", "2", "3", "4", "5"):
+                    # Switch category while already viewing one
+                    menu_text, items_dict = get_numbered_menu(text)
+                    sessions[from_phone] = {**session, "in_category": True, "menu_items": items_dict}
+                    cart_hint = (f"\n\n🛒 *Cart so far: ₹{cart_total(cart)}* — type *done* to checkout"
+                                 if cart else "")
+                    await send_text(from_phone, menu_text + cart_hint)
+
+                else:
+                    await send_text(from_phone,
+                        "Type item numbers to add (e.g. *1 3* or *2x2 5*)\n"
+                        "*back* — categories | *done* — checkout | *hi* — main menu"
+                    )
 
             else:
-                # Parse order with Claude
-                await send_text(from_phone, "⏳ Adding items to your cart...")
-                items = await parse_order_with_claude(text)
+                await send_text(from_phone,
+                    "Reply with a number (1–5) to browse a category,\n"
+                    "or type *done* to checkout, *hi* for main menu."
+                )
 
-                if not items:
-                    await send_text(from_phone,
-                        "Sorry, I couldn't find those items on our menu. 😅\n\n"
-                        "Type *menu* to browse, or try again with the exact item name.\n"
-                        "E.g: _'Nutella Waffle', 'Cold Coffee', 'Veg Momos Half'_"
-                    )
-                else:
-                    cart = session.get("cart", [])
-                    cart.extend(items)
-                    sessions[from_phone] = {**session, "cart": cart}
-                    added = "\n".join([f"  ✅ {i['name']} × {i['qty']} = ₹{i['subtotal']}" for i in items])
-                    await send_text(from_phone,
-                        f"Added to cart:\n{added}\n\n"
-                        f"*Cart Total so far: ₹{cart_total(cart)}*\n\n"
-                        f"Add more items, or type *done* to confirm your order."
-                    )
+        # ── Ordering (text fallback) ─────────────────────────────────────
+        elif state == "ordering":
+            # Redirect to menu_browse — number-based is the primary flow now
+            sessions[from_phone] = {**session, "state": "menu_browse",
+                                     "in_category": False, "menu_items": {}}
+            await send_text(from_phone,
+                "🛒 *Browse & Order by Number*\n\n" + MENU_CATEGORY_MSG
+            )
 
         # ── Order confirmation ──────────────────────────────────────────
         elif state == "order_confirm":
@@ -655,16 +682,17 @@ async def handle_restaurant_message(body: dict):
                 sessions.pop(from_phone, None)
 
             elif text.lower() in ("edit", "change", "modify", "no"):
-                sessions[from_phone] = {**session, "state": "ordering"}
+                sessions[from_phone] = {**session, "state": "menu_browse",
+                                         "in_category": False, "menu_items": {}}
                 await send_text(from_phone,
-                    f"No problem! Your current cart:\n{format_cart(session.get('cart', []))}\n\n"
-                    "Type *clear* to start fresh, or add/change items."
+                    f"No problem! Current cart:\n{format_cart(session.get('cart', []))}\n\n"
+                    "Browse more items below 👇\n\n" + MENU_CATEGORY_MSG
                 )
             else:
                 cart = session.get("cart", [])
                 await send_text(from_phone,
-                    f"Please reply *yes* to confirm or *edit* to change.\n\n"
-                    f"{format_cart(cart)}"
+                    f"Please reply *yes* to confirm or *edit* to add more.\n\n"
+                    f"{format_cart(cart)}" + _BACK
                 )
 
         # ── Table booking flow ──────────────────────────────────────────
@@ -673,7 +701,7 @@ async def handle_restaurant_message(body: dict):
             await send_text(from_phone,
                 f"Great, *{text}*! 😊\n\n"
                 f"What *date* would you like to book?\n"
-                f"_(e.g. Tomorrow, 30 May, Saturday)_"
+                f"_(e.g. Tomorrow, 30 May, Saturday)_" + _BACK
             )
 
         elif state == "booking_date":
@@ -682,20 +710,20 @@ async def handle_restaurant_message(body: dict):
             await send_text(from_phone,
                 f"Perfect! What *time* would you prefer?\n"
                 f"_(e.g. 7:30 PM, 8 PM)_\n\n"
-                f"⏰ We're open: {RESTAURANT_HOURS}"
+                f"⏰ We're open: {RESTAURANT_HOURS}" + _BACK
             )
 
         elif state == "booking_time":
             booking = {**session.get("booking", {}), "time": text}
             sessions[from_phone] = {**session, "state": "booking_people", "booking": booking}
-            await send_text(from_phone, "How many people will be joining? 👥")
+            await send_text(from_phone, "How many people will be joining? 👥" + _BACK)
 
         elif state == "booking_people":
             booking = {**session.get("booking", {}), "people": text}
             sessions[from_phone] = {**session, "state": "booking_phone", "booking": booking}
             await send_text(from_phone,
                 "What's your *contact number* for confirmation?\n"
-                "_(We'll call to confirm your booking)_"
+                "_(We'll call to confirm your booking)_" + _BACK
             )
 
         elif state == "booking_phone":
@@ -708,7 +736,7 @@ async def handle_restaurant_message(body: dict):
                 f"🕐 *Time:* {booking.get('time')}\n"
                 f"👥 *People:* {booking.get('people')}\n"
                 f"📞 *Contact:* {text}\n\n"
-                f"Reply *yes* to confirm or *edit* to change."
+                f"Reply *yes* to confirm or *edit* to change." + _BACK
             )
 
         elif state == "booking_confirm":
@@ -728,9 +756,9 @@ async def handle_restaurant_message(body: dict):
 
             elif text.lower() in ("edit", "change", "no"):
                 sessions[from_phone] = {**session, "state": "booking_name", "booking": {}}
-                await send_text(from_phone, "Let's start over. What's your *name*?")
+                await send_text(from_phone, "Let's start over. What's your *name*?" + _BACK)
             else:
-                await send_text(from_phone, "Please reply *yes* to confirm or *edit* to change.")
+                await send_text(from_phone, "Please reply *yes* to confirm or *edit* to change." + _BACK)
 
     except Exception as e:
         print(f"[BTT] Error: {e}")
