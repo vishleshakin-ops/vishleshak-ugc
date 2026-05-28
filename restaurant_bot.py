@@ -350,20 +350,6 @@ MENU_CATEGORY_MSG = (
 )
 
 
-def format_category_menu(cat_num: str) -> str:
-    if cat_num not in MENU_CATEGORIES:
-        return ""
-    title, subcats = MENU_CATEGORIES[cat_num]
-    lines = [f"*{title}*\n"]
-    for subcat in subcats:
-        if subcat not in MENU:
-            continue
-        lines.append(f"*{CATEGORY_DISPLAY_NAMES.get(subcat, subcat)}*")
-        for item, price in MENU[subcat].items():
-            lines.append(f"  • {item} — ₹{price}")
-        lines.append("")
-    lines.append("_To order, just type what you'd like! E.g: '2 nutella waffles and 1 cold coffee'_")
-    return "\n".join(lines)
 
 
 # ── Order parsing with Claude ──────────────────────────────────────────────────
