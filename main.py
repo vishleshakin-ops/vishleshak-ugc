@@ -603,6 +603,20 @@ async def receive_order_result(request: Request):
     return {"status": "not_found"}
 
 
+@app.delete("/api/orders/{order_id}/model-photo")
+async def delete_model_photo(order_id: str):
+    """Called by local server after generation — removes customer model photo for privacy."""
+    path = os.path.join(ORDERS_UPLOAD_DIR, f"{order_id}_model.jpg")
+    if os.path.exists(path):
+        try:
+            os.remove(path)
+            print(f"[privacy] Deleted Railway model photo for order {order_id[:8]}")
+            return {"status": "deleted"}
+        except Exception as e:
+            return {"status": "error", "msg": str(e)}
+    return {"status": "not_found"}
+
+
 @app.post("/api/sync-order")
 async def sync_order(request: Request):
     """Accept an order from Railway and store it locally (admin only)."""
@@ -933,6 +947,26 @@ async def _upload_to_cloudinary(local_path: str, public_id: str) -> str:
     except Exception as e:
         print(f"[Cloudinary] Upload failed: {e}")
         return ""
+
+
+async def _delete_model_photos(order_id: str):
+    """Delete customer model photo from local disk and Railway after generation — privacy cleanup."""
+    # Delete local copy
+    local_model = os.path.join(ORDERS_UPLOAD_DIR, f"{order_id}_model.jpg")
+    if os.path.exists(local_model):
+        try:
+            os.remove(local_model)
+            print(f"[cleanup] Deleted local model photo for order {order_id[:8]}")
+        except Exception as e:
+            print(f"[cleanup] Failed to delete local model photo: {e}")
+
+    # Tell Railway to delete its copy too
+    if RAILWAY_URL:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                await client.delete(f"{RAILWAY_URL}/api/orders/{order_id}/model-photo")
+        except Exception:
+            pass  # Best-effort — not critical if it fails
 
 
 async def _push_result_to_railway(order_id: str, video_url: str, image_url: str, script: str):
@@ -1485,6 +1519,7 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
             cdn_url = await _upload_to_cloudinary(local_path, job_id)
             public_video_url = cdn_url or (f"{PUBLIC_URL}{final_url}" if PUBLIC_URL else final_url)
             asyncio.create_task(_push_result_to_railway(oid, public_video_url, "", script))
+            asyncio.create_task(_delete_model_photos(oid))
 
     except Exception as e:
         jobs[job_id].update({"status": "failed", "error": str(e)})
@@ -2082,6 +2117,7 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
             cdn_url = await _upload_to_cloudinary(local_path, job_id)
             public_video_url = cdn_url or (f"{PUBLIC_URL}{final_url}" if PUBLIC_URL else final_url)
             asyncio.create_task(_push_result_to_railway(oid, public_video_url, "", script))
+            asyncio.create_task(_delete_model_photos(oid))
 
     except Exception as e:
         jobs[job_id].update({"status": "failed", "error": str(e)})
