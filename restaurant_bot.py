@@ -211,28 +211,102 @@ FLAT_MENU = {}
 for category, items in MENU.items():
     FLAT_MENU.update(items)
 
-# ── Category display groups ────────────────────────────────────────────────────
-MENU_CATEGORIES = {
-    "1": ("🥤 Beverages", ["mocktails", "fruit_beer", "thick_shakes", "milk_shakes", "tea", "iced_tea", "coffee", "extras"]),
-    "2": ("🧇 Desserts", ["waffles_single", "waffles_double", "brownies"]),
-    "3": ("🍜 Chinese", ["chinese_snacks_half", "chinese_snacks_full", "noodles_half", "noodles_full", "momos"]),
-    "4": ("🍚 Rice & Dosa", ["rice", "dosa", "uttapam", "rawa_dosa", "south_indian_snacks"]),
-    "5": ("🍔 Continental", ["burgers", "pasta", "sandwiches", "fries", "wraps"]),
+# ── Simplified menu for WhatsApp display (popular items only) ─────────────────
+SIMPLE_MENU = {
+    "1": {
+        "title": "🥤 Beverages",
+        "sections": {
+            "Mocktails": {"Mojito": 70, "Blue Lagoon": 75, "Passion Fruit": 75, "Raspberry Mojito": 80},
+            "Thick Shakes": {"Chocolate": 100, "Nutella": 110, "Kitkat": 100, "Black Forest": 110},
+            "Milk Shakes": {"Vanilla": 79, "Mango": 79, "Strawberry": 79, "Butter Scotch": 79},
+            "Coffee": {"Cold Coffee": 80, "Caramel Cold Coffee": 90, "Hot Coffee": 40, "Black Coffee": 25},
+            "Tea & Iced Tea": {"Masala Tea": 30, "Green Tea": 30, "Peach Iced Tea": 75, "Lemon Iced Tea": 75},
+        }
+    },
+    "2": {
+        "title": "🧇 Desserts",
+        "sections": {
+            "Waffles (Single / Double)": {
+                "Classic": "90 / 170", "Chocolate": "100 / 190",
+                "Nutella": "110 / 200", "Strawberry": "100 / 190",
+                "BTT Special": "130 / 240", "Waffle Platter (Any 4)": 250,
+            },
+            "Brownies": {
+                "Hot Brownie with Icecream": 100,
+                "Hot Brownie Fudge": 110,
+                "Hot Chocolate Brownie": 80,
+            },
+        }
+    },
+    "3": {
+        "title": "🍜 Chinese",
+        "sections": {
+            "Momos (Half / Full)": {
+                "Veg Steam": "40 / 70", "Paneer Steam": "50 / 80",
+                "Veg Fried": "45 / 80", "Paneer Fried": "60 / 110",
+                "Veg Kurkure": "60 / 90", "Afghani Paneer": "70 / 130",
+            },
+            "Noodles (Half / Full)": {
+                "Veg Noodles": "60 / 90", "Hakka Noodles": "80 / 120",
+                "Chilli Garlic": "70 / 100", "Paneer Noodles": "80 / 120",
+            },
+            "Snacks": {
+                "Honey Chilli Potato": 80, "Chilli Paneer": 100,
+                "Veg Manchurian": 70, "Kurkure Spring Roll": 100,
+            },
+        }
+    },
+    "4": {
+        "title": "🍚 Rice & South Indian",
+        "sections": {
+            "Rice (Half / Full)": {
+                "Veg Fried Rice": "60 / 100", "Schezwan Fried Rice": "70 / 110",
+                "Paneer Fried Rice": "80 / 120", "Veg Singapore Rice": "80 / 120",
+            },
+            "Dosa": {
+                "Masala Dosa": 100, "Paneer Dosa": 140,
+                "Schezwan Dosa": 110, "Family Dosa": 160,
+            },
+            "South Indian Snacks": {
+                "Sambhar Idli": 60, "Fried Idli": 70,
+                "Chilli Idli": 90, "Dahi Vada": 80,
+            },
+        }
+    },
+    "5": {
+        "title": "🍔 Continental",
+        "sections": {
+            "Burgers": {
+                "Aloo Tikki Burger": 50, "Veg Chilli Lava Burger": 75,
+                "Crispy Paneer Burger": 95, "Paneer Maharaja Burger": 130,
+            },
+            "Pasta": {
+                "Red Sauce Pasta": 100, "White Sauce Pasta": 110,
+                "Cheese Sauce Pasta": 130, "Mac N Cheese": 150,
+            },
+            "Fries & Wraps": {
+                "Classic Fries": 70, "Peri-Peri Fries": 90,
+                "Cheese Loaded Fries": 90, "Paneer Tikka Wrap": 95,
+            },
+        }
+    },
 }
 
-CATEGORY_DISPLAY_NAMES = {
-    "mocktails": "Mocktails", "fruit_beer": "Fruit Beer",
-    "thick_shakes": "Thick Shakes", "milk_shakes": "Milk Shakes",
-    "tea": "Tea", "iced_tea": "Iced Tea", "coffee": "Coffee", "extras": "Extras",
-    "waffles_single": "Waffles (Single)", "waffles_double": "Waffles (Double)",
-    "brownies": "Brownies",
-    "chinese_snacks_half": "Chinese Snacks (Half)", "chinese_snacks_full": "Chinese Snacks (Full)",
-    "noodles_half": "Noodles (Half)", "noodles_full": "Noodles (Full)", "momos": "Momos",
-    "rice": "Rice", "dosa": "Dosa", "uttapam": "Uttapam",
-    "rawa_dosa": "Rawa Dosa", "south_indian_snacks": "South Indian Snacks",
-    "burgers": "Burgers", "pasta": "Pasta", "sandwiches": "Grilled Sandwiches",
-    "fries": "Fries", "wraps": "Grilled Wraps",
-}
+
+def format_category_menu(cat_num: str) -> str:
+    if cat_num not in SIMPLE_MENU:
+        return ""
+    cat = SIMPLE_MENU[cat_num]
+    lines = [f"*{cat['title']}*\n"]
+    for section_name, items in cat["sections"].items():
+        lines.append(f"📌 *{section_name}*")
+        for item, price in items.items():
+            price_str = f"₹{price}" if isinstance(price, int) else f"₹{price}"
+            lines.append(f"  • {item} — {price_str}")
+        lines.append("")
+    lines.append("_To order, just type what you want! E.g: '2 nutella waffles and 1 cold coffee'_")
+    lines.append("_Type *back* to see all categories_")
+    return "\n".join(lines)
 
 
 # ── WhatsApp helpers ───────────────────────────────────────────────────────────
@@ -264,12 +338,12 @@ WELCOME_MSG = (
 )
 
 MENU_CATEGORY_MSG = (
-    "📋 *Our Menu Categories:*\n\n"
-    "1️⃣  🥤 Beverages (Mocktails, Shakes, Coffee, Tea)\n"
-    "2️⃣  🧇 Desserts (Waffles, Brownies)\n"
-    "3️⃣  🍜 Chinese (Noodles, Momos, Snacks)\n"
-    "4️⃣  🍚 Rice & South Indian (Dosa, Uttapam, Rice)\n"
-    "5️⃣  🍔 Continental (Burgers, Pasta, Fries, Wraps)\n\n"
+    "📋 *BTT Menu — Choose a Category:*\n\n"
+    "1️⃣  🥤 Beverages\n"
+    "2️⃣  🧇 Desserts\n"
+    "3️⃣  🍜 Chinese\n"
+    "4️⃣  🍚 Rice & South Indian\n"
+    "5️⃣  🍔 Continental\n\n"
     "_Reply with a number to see that section's menu_"
 )
 
@@ -459,9 +533,8 @@ async def handle_restaurant_message(body: dict):
             if text in ("1", "2", "3", "4", "5"):
                 menu_text = format_category_menu(text)
                 await send_text(from_phone, menu_text)
-                await send_text(from_phone,
-                    "📋 View another category (1-5), type *order* to place an order, or *hi* for main menu."
-                )
+            elif text.lower() in ("back", "categories", "all"):
+                await send_text(from_phone, MENU_CATEGORY_MSG)
             elif text.lower() == "order" or any(w in text.lower() for w in ("want to order", "place order")):
                 sessions[from_phone] = {**session, "state": "ordering", "cart": []}
                 await send_text(from_phone,
