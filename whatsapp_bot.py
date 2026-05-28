@@ -4,10 +4,9 @@ WhatsApp Bot for Vishleshak UGC Tool
 Step-by-step conversation flow matching the order form:
 
   1. Customer sends a product photo
-     Bot: "Got your photo! What is your product name?"
+     Bot: auto-detects product name with Claude Vision, then asks style
 
-  2. Customer types product name
-     Bot: "Choose style:
+  2. Bot: "Choose style:
            1 = Talking Ad — AI presenter speaks (5s, ₹499)
            2 = Cinematic  — Veo3 lifestyle video (6s, ₹599)"
 
@@ -23,8 +22,10 @@ Step-by-step conversation flow matching the order form:
 import os
 import uuid
 import json
+import base64
 import asyncio
 import httpx
+import anthropic
 from datetime import datetime
 
 WHATSAPP_TOKEN    = os.getenv("WHATSAPP_TOKEN", "")
@@ -100,13 +101,42 @@ async def download_wa_media(media_id: str) -> bytes:
         return r2.content
 
 
-# ── Step prompts ──────────────────────────────────────────────────────────────
+# ── Product detection ─────────────────────────────────────────────────────────
 
-ASK_NAME = (
-    "📸 *Got your product photo!*\n\n"
-    "What is the *name of your product*?\n"
-    "_(e.g. Gold necklace, Chocolate cake, Running shoes)_"
-)
+async def detect_product_name(image_bytes: bytes) -> str:
+    """Use Claude Vision to detect the product name from the photo."""
+    try:
+        api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            return "your product"
+        client = anthropic.Anthropic(api_key=api_key)
+        image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+        response = await asyncio.to_thread(
+            client.messages.create,
+            model="claude-haiku-4-5",
+            max_tokens=30,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {"type": "base64", "media_type": "image/jpeg", "data": image_b64},
+                    },
+                    {
+                        "type": "text",
+                        "text": "What product is in this image? Reply with only the product name, 2-5 words, no punctuation.",
+                    },
+                ],
+            }],
+        )
+        name = response.content[0].text.strip().strip(".")
+        return name if name else "your product"
+    except Exception as e:
+        print(f"[WA-UGC] Product detection failed: {e}")
+        return "your product"
+
+
+# ── Step prompts ──────────────────────────────────────────────────────────────
 
 ASK_STYLE = (
     "🎬 *Choose your video style:*\n\n"
@@ -154,12 +184,21 @@ async def handle_whatsapp_message(body: dict, process_order_func):
         if msg_type == "image":
             media_id    = msg["image"]["id"]
             image_bytes = await download_wa_media(media_id)
+
+            # Auto-detect product name with Claude Vision
+            product_name = await detect_product_name(image_bytes)
+
             sessions[from_phone] = {
-                "step":        "await_name",
-                "image_bytes": image_bytes,
-                "image_mime":  "image/jpeg",
+                "step":         "await_style",
+                "image_bytes":  image_bytes,
+                "image_mime":   "image/jpeg",
+                "product_name": product_name,
             }
-            await send_text(from_phone, ASK_NAME)
+            await send_text(from_phone,
+                f"📸 *Got your photo!*\n"
+                f"🔍 Product detected: *{product_name}*\n\n"
+                + ASK_STYLE
+            )
             return
 
         # ── Text replies ──────────────────────────────────────────────────────
@@ -175,18 +214,7 @@ async def handle_whatsapp_message(body: dict, process_order_func):
             )
             return
 
-        # Step 1 — waiting for product name
-        if step == "await_name":
-            if not text:
-                await send_text(from_phone, "Please type your product name. 😊")
-                return
-            session["product_name"] = text
-            session["step"] = "await_style"
-            sessions[from_phone] = session
-            await send_text(from_phone, ASK_STYLE)
-            return
-
-        # Step 2 — waiting for style choice
+        # Step 1 — waiting for style choice
         if step == "await_style":
             if text == "1":
                 session["video_style"]    = "kling"
