@@ -1906,6 +1906,17 @@ async def poll_veo3_task(task_id: str) -> str:
                 print(f"[Veo3 poll #{i}] Got URL from direct field (state={state!r})")
                 return direct_urls[0]
 
+            # kie.ai Veo3 nests the URL inside data.response.resultUrls
+            response_obj = data.get("response") or {}
+            nested_urls = response_obj.get("resultUrls") or response_obj.get("videoUrls") or []
+            if nested_urls:
+                print(f"[Veo3 poll #{i}] Got URL from response.resultUrls (state={state!r})")
+                return nested_urls[0]
+
+            # successFlag=1 means done — if we still have no URL, something is wrong
+            if data.get("successFlag") == 1:
+                raise Exception(f"Veo3 successFlag=1 but no URL found: {body}")
+
             if state in SUCCESS_STATES:
                 raise Exception(f"Veo3 state={state} but no URL found: {body}")
 
