@@ -1,24 +1,23 @@
 """
 WhatsApp Bot for Vishleshak UGC Tool
 =====================================
-Step-by-step conversation flow:
+Step-by-step conversation flow matching the order form:
 
   1. Customer sends a product photo
      Bot: "Got your photo! What is your product name?"
 
   2. Customer types product name
-     Bot: "Choose style: 1=Talking Head / 2=Cinematic"
+     Bot: "Choose style:
+           1 = Talking Ad — AI presenter speaks (5s, ₹499)
+           2 = Cinematic  — Veo3 lifestyle video (6s, ₹599)"
 
   3. Customer types 1 or 2
-     Bot: "Choose duration: 1=5s ₹499 / 2=10s ₹999 / 3=15s ₹1499"
+     Bot: "Choose language: 1=Hindi / 2=English / 3=Hinglish"
 
   4. Customer types 1/2/3
-     Bot: "Choose language: 1=Hindi / 2=English"
-
-  5. Customer types 1 or 2
      Bot: "✅ Order confirmed! [summary] — We'll start shortly."
 
-  6. Admin approves → video generated → sent back on WhatsApp
+  5. Admin approves → video generated → sent back on WhatsApp
 """
 
 import os
@@ -111,24 +110,17 @@ ASK_NAME = (
 
 ASK_STYLE = (
     "🎬 *Choose your video style:*\n\n"
-    "1️⃣ *Talking Head* — AI presenter speaks about your product\n"
-    "2️⃣ *Cinematic* — Elegant lifestyle motion video\n\n"
+    "1️⃣ *Talking Ad* — AI presenter lip-syncs about your product _(5s · ₹499)_\n"
+    "2️⃣ *Cinematic* — Elegant Veo3 lifestyle video _(6s · ₹599)_\n\n"
     "Reply *1* or *2*"
-)
-
-ASK_DURATION = (
-    "⏱ *Choose video duration:*\n\n"
-    "1️⃣  5 seconds — ₹499\n"
-    "2️⃣ 10 seconds — ₹999\n"
-    "3️⃣ 15 seconds — ₹1499\n\n"
-    "Reply *1*, *2* or *3*"
 )
 
 ASK_LANGUAGE = (
     "🗣 *Choose language:*\n\n"
     "1️⃣ Hindi\n"
-    "2️⃣ English\n\n"
-    "Reply *1* or *2*"
+    "2️⃣ English\n"
+    "3️⃣ Hinglish\n\n"
+    "Reply *1*, *2* or *3*"
 )
 
 
@@ -197,38 +189,29 @@ async def handle_whatsapp_message(body: dict, process_order_func):
         # Step 2 — waiting for style choice
         if step == "await_style":
             if text == "1":
-                session["video_style"] = "kling"
+                session["video_style"]    = "kling"
+                session["video_duration"] = "5"
             elif text == "2":
-                session["video_style"] = "seedance"
+                session["video_style"]    = "veo3"
+                session["video_duration"] = "6"
             else:
-                await send_text(from_phone, "Please reply *1* for Talking Head or *2* for Cinematic. 🎬")
-                return
-            session["step"] = "await_duration"
-            sessions[from_phone] = session
-            await send_text(from_phone, ASK_DURATION)
-            return
-
-        # Step 3 — waiting for duration choice
-        if step == "await_duration":
-            duration_map = {"1": "5", "2": "10", "3": "15"}
-            if text in duration_map:
-                session["video_duration"] = duration_map[text]
-            else:
-                await send_text(from_phone, "Please reply *1*, *2* or *3* for the duration. ⏱")
+                await send_text(from_phone, "Please reply *1* for Talking Ad or *2* for Cinematic. 🎬")
                 return
             session["step"] = "await_language"
             sessions[from_phone] = session
             await send_text(from_phone, ASK_LANGUAGE)
             return
 
-        # Step 4 — waiting for language choice
+        # Step 3 — waiting for language choice
         if step == "await_language":
             if text == "1":
                 session["language"] = "hindi"
             elif text == "2":
                 session["language"] = "english"
+            elif text == "3":
+                session["language"] = "hinglish"
             else:
-                await send_text(from_phone, "Please reply *1* for Hindi or *2* for English. 🗣")
+                await send_text(from_phone, "Please reply *1* for Hindi, *2* for English, or *3* for Hinglish. 🗣")
                 return
 
             # All info collected — place the order
@@ -257,9 +240,8 @@ async def place_order(from_phone: str, session: dict, process_order_func):
     language       = session.get("language", "hindi")
     image_bytes    = session.get("image_bytes", b"")
 
-    style_name    = "Talking Head" if video_style == "kling" else "Cinematic"
-    duration_price = {"5": "₹499", "10": "₹999", "15": "₹1499"}
-    price_str = duration_price.get(video_duration, "₹499")
+    style_name = "Talking Ad (Lip-sync)" if video_style == "kling" else "Cinematic (Veo3)"
+    price_str  = "₹499" if video_style == "kling" else "₹599"
 
     order_id   = str(uuid.uuid4())
     image_path = os.path.join(
@@ -308,8 +290,9 @@ async def place_order(from_phone: str, session: dict, process_order_func):
         f"✅ *Order confirmed!*\n\n"
         f"📦 Product: {product_name}\n"
         f"🎬 Style: {style_name}\n"
-        f"⏱ Duration: {video_duration} seconds ({price_str})\n"
-        f"🗣 Language: {language.title()}\n\n"
+        f"⏱ Duration: {video_duration} seconds\n"
+        f"🗣 Language: {language.title()}\n"
+        f"💰 Price: {price_str}\n\n"
         f"Our team will review your order and start creating your video shortly.\n"
         f"You'll receive the video here on WhatsApp once it's ready! ⏳\n\n"
         f"For queries: wa.me/919953910987"
