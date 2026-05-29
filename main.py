@@ -1785,15 +1785,56 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 )
             elif step == "ask_date":
                 dental["date"] = text
-                dental["step"] = "ask_time"
-                _dental_sessions[from_phone] = dental
-                await wa_send_text(from_phone,
-                    "⏰ Preferred *time slot*?\n\n"
-                    "1️⃣ Morning (9am – 12pm)\n"
-                    "2️⃣ Afternoon (12pm – 4pm)\n"
-                    "3️⃣ Evening (4pm – 8pm)\n\n"
-                    "_Reply with 1, 2 or 3_"
-                )
+                # Try to extract time from the date input
+                _dl = text.lower()
+                _auto_slot = None
+                if any(w in _dl for w in ("morning", "9am", "9 am", "10am", "10 am", "11am", "11 am")):
+                    _auto_slot = "Morning (9am–12pm)"
+                elif any(w in _dl for w in ("noon", "afternoon", "12pm", "12 pm", "1pm", "1 pm", "2pm", "2 pm", "3pm", "3 pm")):
+                    _auto_slot = "Afternoon (12pm–4pm)"
+                elif any(w in _dl for w in ("evening", "4pm", "4 pm", "5pm", "5 pm", "6pm", "6 pm", "7pm", "7 pm")):
+                    _auto_slot = "Evening (4pm–8pm)"
+
+                if _auto_slot:
+                    # Time already specified — skip ask_time and book directly
+                    dental["time"] = _auto_slot
+                    owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
+                    summary = (
+                        f"🦷 *New Appointment Request*\n\n"
+                        f"👤 Name: {dental['name']}\n"
+                        f"📋 Service: {dental['service']}\n"
+                        f"📅 Date: {dental['date']}\n"
+                        f"⏰ Time: {dental['time']}\n"
+                        f"📞 WhatsApp: {from_phone}"
+                    )
+                    cal_link = await create_gcal_event(dental['name'], dental['service'], dental['date'], dental['time'], from_phone)
+                    try:
+                        await wa_send_text(owner_wa, summary)
+                    except Exception as e:
+                        print(f"[Dental] Failed to notify owner: {e}")
+                    cal_line = f"\n📆 *Calendar:* {cal_link}" if cal_link else ""
+                    await wa_send_text(from_phone,
+                        f"✅ *Appointment Request Sent!*\n\n"
+                        f"📋 *{dental['service']}*\n"
+                        f"📅 {dental['date']} · {dental['time']}{cal_line}\n\n"
+                        f"The clinic will confirm your slot shortly.\n\n"
+                        f"🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
+                        f"📍 C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
+                        f"📞 +91 9868018541\n\n"
+                        f"_Type *hi* to go back to the main menu._"
+                    )
+                    _dental_sessions.pop(from_phone, None)
+                    _router_sessions.pop(from_phone, None)
+                else:
+                    dental["step"] = "ask_time"
+                    _dental_sessions[from_phone] = dental
+                    await wa_send_text(from_phone,
+                        "⏰ Preferred *time slot*?\n\n"
+                        "1️⃣ Morning (9am – 12pm)\n"
+                        "2️⃣ Afternoon (12pm – 4pm)\n"
+                        "3️⃣ Evening (4pm – 8pm)\n\n"
+                        "_Reply with 1, 2 or 3_"
+                    )
             elif step == "ask_time":
                 slots = {"1": "Morning (9am–12pm)", "2": "Afternoon (12pm–4pm)", "3": "Evening (4pm–8pm)"}
                 dental["time"] = slots.get(text, text)
