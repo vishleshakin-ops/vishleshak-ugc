@@ -75,24 +75,84 @@ def _gcal_service():
         print(f"[GCal] Service init failed: {e}")
         return None
 
+def _parse_event_datetime(date_str: str, hour: int) -> datetime:
+    """Parse date string and return datetime with given hour."""
+    from dateutil import parser as dateparser
+    try:
+        event_date = dateparser.parse(date_str, dayfirst=True)
+        if not event_date or event_date.date() < datetime.now().date():
+            event_date = datetime.now() + timedelta(days=1)
+    except Exception:
+        event_date = datetime.now() + timedelta(days=1)
+    return event_date.replace(hour=hour, minute=0, second=0, microsecond=0)
+
+
+async def check_gcal_conflict(date_str: str, start_hour: int) -> list[str]:
+    """
+    Check Google Calendar for conflicts at given time.
+    Returns list of alternative time strings if conflict found, else empty list.
+    """
+    import asyncio
+    try:
+        from pytz import timezone
+        IST = timezone("Asia/Kolkata")
+    except Exception:
+        from datetime import timezone as tz
+        IST = tz(timedelta(hours=5, minutes=30))
+
+    try:
+        start_dt = _parse_event_datetime(date_str, start_hour)
+        end_dt   = start_dt + timedelta(minutes=30)
+
+        svc = await asyncio.get_event_loop().run_in_executor(None, _gcal_service)
+        if not svc:
+            return []
+
+        result = await asyncio.get_event_loop().run_in_executor(None, lambda: svc.events().list(
+            calendarId=GCAL_CALENDAR_ID,
+            timeMin=start_dt.isoformat() + "+05:30",
+            timeMax=end_dt.isoformat() + "+05:30",
+            singleEvents=True
+        ).execute())
+
+        events = result.get("items", [])
+        if not events:
+            return []  # No conflict
+
+        # Generate up to 3 alternative slots (±1h, ±2h within clinic hours)
+        alternatives = []
+        for delta in [-1, 1, -2, 2, 3]:
+            alt_hour = start_hour + delta
+            if 9 <= alt_hour <= 19:  # within clinic hours
+                label = f"{alt_hour}:00 {'AM' if alt_hour < 12 else 'PM'}" if alt_hour <= 12 else f"{alt_hour - 12}:00 PM"
+                # Quick check if alt slot is also free
+                alt_start = _parse_event_datetime(date_str, alt_hour)
+                alt_end   = alt_start + timedelta(minutes=30)
+                alt_result = await asyncio.get_event_loop().run_in_executor(None, lambda: svc.events().list(
+                    calendarId=GCAL_CALENDAR_ID,
+                    timeMin=alt_start.isoformat() + "+05:30",
+                    timeMax=alt_end.isoformat() + "+05:30",
+                    singleEvents=True
+                ).execute())
+                if not alt_result.get("items"):
+                    alternatives.append(f"{alt_hour}:00" if alt_hour < 12 else f"{alt_hour-12 or 12}:00 PM")
+                if len(alternatives) >= 3:
+                    break
+        return alternatives
+
+    except Exception as e:
+        print(f"[GCal] Conflict check failed: {e}")
+        return []
+
+
 async def create_gcal_event(name: str, service: str, date_str: str, time_slot: str, patient_phone: str, specific_hour: int | None = None) -> str | None:
     """Create a Google Calendar event. Returns event URL or None."""
     import asyncio
     try:
-        # Use specific hour if provided, else fall back to slot start
         slot_hours = {"Morning (9am–12pm)": 9, "Afternoon (12pm–4pm)": 12, "Evening (4pm–8pm)": 16}
         start_hour = specific_hour if specific_hour else slot_hours.get(time_slot, 10)
 
-        # Parse date — try common formats, fallback to tomorrow
-        from dateutil import parser as dateparser
-        try:
-            event_date = dateparser.parse(date_str, dayfirst=True)
-            if not event_date or event_date.date() < datetime.now().date():
-                event_date = datetime.now() + timedelta(days=1)
-        except Exception:
-            event_date = datetime.now() + timedelta(days=1)
-
-        start_dt = event_date.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+        start_dt = _parse_event_datetime(date_str, start_hour)
         end_dt   = start_dt + timedelta(minutes=30)
 
         event = {
@@ -1847,10 +1907,21 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     _auto_slot = "Evening (4pm–8pm)"
 
                 if _auto_slot:
-                    # Time already specified — skip ask_time and book directly
+                    # Time already specified — check conflict first
                     dental["time"] = _auto_slot
                     if _auto_hour:
                         dental["gcal_hour"] = _auto_hour
+                    _conflicts = await check_gcal_conflict(dental['date'], _auto_hour or 9)
+                    if _conflicts:
+                        alts = "\n".join([f"• {a}" for a in _conflicts])
+                        await wa_send_text(from_phone,
+                            f"⚠️ Sorry, *{_auto_hour}:00 PM* on that day is already booked.\n\n"
+                            f"Here are available slots:\n{alts}\n\n"
+                            f"📅 Please reply with your preferred time."
+                        )
+                        dental["step"] = "ask_date"
+                        _dental_sessions[from_phone] = dental
+                        return {"status": "ok"}
                     owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
                     summary = (
                         f"🦷 *New Appointment Request*\n\n"
@@ -1890,7 +1961,21 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     )
             elif step == "ask_time":
                 slots = {"1": "Morning (9am–12pm)", "2": "Afternoon (12pm–4pm)", "3": "Evening (4pm–8pm)"}
+                slot_start = {"1": 9, "2": 12, "3": 16}
                 dental["time"] = slots.get(text, text)
+                _check_hour = dental.get("gcal_hour") or slot_start.get(text, 9)
+                # Check for conflicts before booking
+                _conflicts = await check_gcal_conflict(dental['date'], _check_hour)
+                if _conflicts:
+                    alts = "\n".join([f"• {a}" for a in _conflicts])
+                    await wa_send_text(from_phone,
+                        f"⚠️ Sorry, that slot is already *booked*.\n\n"
+                        f"Available slots on that day:\n{alts}\n\n"
+                        f"Please reply with one of these times."
+                    )
+                    dental["step"] = "ask_time"
+                    _dental_sessions[from_phone] = dental
+                    return {"status": "ok"}
                 # Notify clinic owner
                 owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
                 summary = (
