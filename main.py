@@ -53,7 +53,13 @@ def _gcal_service():
         # Railway: read from env var; local: read from file
         creds_json = os.getenv("GCAL_CREDENTIALS_JSON")
         if creds_json:
-            info = json.loads(creds_json)
+            # Support both raw JSON and base64-encoded JSON
+            try:
+                import base64
+                decoded = base64.b64decode(creds_json).decode("utf-8")
+                info = json.loads(decoded)
+            except Exception:
+                info = json.loads(creds_json)
             creds = service_account.Credentials.from_service_account_info(
                 info, scopes=["https://www.googleapis.com/auth/calendar"]
             )
