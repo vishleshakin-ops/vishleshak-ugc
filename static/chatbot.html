@@ -42,7 +42,7 @@
 
     /* HERO */
     .hero {
-      padding: 40px 48px 0;
+      padding: 80px 48px 72px;
       position: relative; overflow: hidden;
     }
     .hero::before {
@@ -53,7 +53,7 @@
     }
     .hero-inner {
       max-width: 1100px; margin: 0 auto;
-      display: grid; grid-template-columns: 1fr 300px; gap: 64px; align-items: center;
+      display: grid; grid-template-columns: 1fr 280px; gap: 64px; align-items: center;
       position: relative; z-index: 1;
     }
     .eyebrow {
@@ -124,7 +124,7 @@
     .phone-info .name { font-size: 0.82rem; font-weight: 700; color: #fff; }
     .phone-info .online { font-size: 0.68rem; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 4px; }
     .phone-info .online::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #25d366; flex-shrink: 0; }
-    .phone-chat { background: #0d1117; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; height: 210px; overflow: hidden; }
+    .phone-chat { background: #0d1117; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; height: 170px; overflow: hidden; }
     .pchat { max-width: 90%; padding: 8px 12px; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; }
     .pchat.bot { background: rgba(124,58,237,0.18); color: rgba(255,255,255,0.85); border-radius: 4px 10px 10px 10px; align-self: flex-start; }
     .pchat.user { background: rgba(37,99,235,0.35); color: #fff; border-radius: 10px 4px 10px 10px; align-self: flex-end; }
@@ -136,15 +136,15 @@
     @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
 
     /* STATS */
-    .stats { padding: 0 48px 40px; }
+    .stats { padding: 0 48px 64px; }
     .stats-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .stat-card {
       background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 14px; padding: 16px 14px; text-align: center;
+      border-radius: 16px; padding: 24px 20px; text-align: center;
     }
-    .stat-num { font-size: 1.5rem; font-weight: 900; color: #fff; display: block; }
+    .stat-num { font-size: 2rem; font-weight: 900; color: #fff; display: block; }
     .stat-num span { background: linear-gradient(135deg,#a78bfa,#60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
 
     /* DEMO SECTION */
     .demo { padding: 72px 48px; background: rgba(0,0,0,0.18); }
