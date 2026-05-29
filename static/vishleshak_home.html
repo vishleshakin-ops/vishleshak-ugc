@@ -280,15 +280,16 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 .pill {
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 16px; padding: 24px;
-  text-align: center; cursor: pointer;
-  transition: all 0.3s;
+  border-radius: 16px; padding: 18px 20px;
+  text-align: center; text-decoration: none;
+  display: block; transition: all 0.25s;
   backdrop-filter: blur(10px);
 }
-.pill:hover { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.5); transform: translateY(-4px); }
-.pill-icon { font-size: 32px; margin-bottom: 10px; }
-.pill-title { color: white; font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-.pill-desc { color: rgba(255,255,255,0.55); font-size: 13px; line-height: 1.5; }
+.pill:hover { background: rgba(124,58,237,0.22); border-color: rgba(124,58,237,0.55); transform: translateY(-4px); box-shadow: 0 8px 28px rgba(124,58,237,0.2); }
+.pill-icon { font-size: 28px; margin-bottom: 8px; }
+.pill-title { color: white; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.pill-desc { color: rgba(255,255,255,0.55); font-size: 12.5px; line-height: 1.5; margin-bottom: 10px; }
+.pill-arrow { font-size: 12px; color: #a78bfa; font-weight: 600; letter-spacing: 0.3px; }
 
 /* FEATURES */
 .features {
@@ -838,21 +839,24 @@ footer {
 
   <!-- PILLS -->
   <div class="hero-pills">
-    <div class="pill">
+    <a class="pill" href="https://vishleshak-ugc-production.up.railway.app/static/chatbot.html" target="_blank">
       <div class="pill-icon">🤖</div>
       <div class="pill-title">Smart Chatbots</div>
-      <div class="pill-desc">Friendly bots for gyms, salons, and restaurants that engage customers 24/7</div>
-    </div>
-    <div class="pill">
+      <div class="pill-desc">Bots for gyms, salons & restaurants — handle orders, bookings and queries 24/7</div>
+      <div class="pill-arrow">Explore →</div>
+    </a>
+    <a class="pill" href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank">
       <div class="pill-icon">🎬</div>
-      <div class="pill-title">UGC Videos</div>
-      <div class="pill-desc">Authentic AI-powered user-generated content videos made easy and affordable</div>
-    </div>
-    <div class="pill">
+      <div class="pill-title">UGC Video Ads</div>
+      <div class="pill-desc">AI-generated product videos from ₹499 — no camera, no actor needed</div>
+      <div class="pill-arrow">Create now →</div>
+    </a>
+    <a class="pill" href="https://vishleshak-ugc-production.up.railway.app/static/ai-reception.html" target="_blank">
       <div class="pill-icon">📞</div>
       <div class="pill-title">AI Reception</div>
-      <div class="pill-desc">Effortless appointment handling for doctors and clinics — never miss a patient</div>
-    </div>
+      <div class="pill-desc">AI receptionist for clinics — books appointments, sends reminders, never misses a call</div>
+      <div class="pill-arrow">Explore →</div>
+    </a>
   </div>
 </section>
 
