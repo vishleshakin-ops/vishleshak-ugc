@@ -246,7 +246,7 @@
           ${mediaHtml}
           ${scriptHtml}
           <div class="action-row">
-            <a class="dl-btn" href="${dlUrl}" download="${dlName}">⬇ Download</a>
+            <button class="dl-btn" onclick="blobDownload('${dlUrl}','${dlName}')">⬇ Download</button>
             ${order.script ? `<button class="copy-btn" id="copy-caption-btn" type="button">📋 Copy Caption</button>` : ""}
           </div>
           <div style="margin-top:14px" class="order-id-row">Order ID: ${order.id}</div>`;
@@ -283,6 +283,22 @@
           </div>
           ${order.error ? `<p style="margin-top:12px;font-size:12px;color:#991b1b;word-break:break-all">${order.error}</p>` : ""}
           <div style="margin-top:14px" class="order-id-row">Order ID: ${order.id}</div>`;
+      }
+    }
+
+    async function blobDownload(url, filename) {
+      try {
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      } catch(e) {
+        window.open(url, "_blank");
       }
     }
 
