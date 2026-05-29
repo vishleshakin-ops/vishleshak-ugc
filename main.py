@@ -1710,7 +1710,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
         if _is_question:
             try:
                 resp = anthropic_client.messages.create(
-                    model="claude-haiku-4-5-20251001",
+                    model="claude-haiku-4-5",
                     max_tokens=200,
                     system=(
                         "You are a WhatsApp assistant for a dental clinic. "
