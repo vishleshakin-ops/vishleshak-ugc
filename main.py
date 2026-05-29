@@ -1866,8 +1866,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             "ask_name": "What's your *full name*?",
             "ask_service": "What type of appointment do you need?\n\n1️⃣ Routine Checkup / Cleaning\n2️⃣ Root Canal / Filling\n3️⃣ Teeth Whitening / Smile Design\n4️⃣ Braces / Invisalign\n5️⃣ Tooth Pain / Emergency\n6️⃣ Other\n\n_Reply with a number_",
             "ask_date": "📅 What *date* works for you?\n\n_Example: Monday 2 June or Tomorrow_",
-            "ask_period": "Which part of the day do you prefer?\n\n1️⃣ Morning (9am–12pm)\n2️⃣ Afternoon (12pm–4pm)\n3️⃣ Evening (4pm–8pm)",
-            "ask_time": "⏰ Please reply with your preferred time (e.g. *10:30 AM*, *3 PM*).",
+            "ask_time": "⏰ What time works for you? e.g. *2 PM*, *10:30 AM*, *4:30 PM*",
         }
 
         import re as _re
@@ -2120,50 +2119,17 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     _dental_sessions.pop(from_phone, None)
                     _router_sessions.pop(from_phone, None)
                 else:
-                    # No time given — ask preferred period first
-                    dental["step"] = "ask_period"
+                    # No time given — just ask for a specific time
+                    dental["step"] = "ask_time"
                     _dental_sessions[from_phone] = dental
                     await wa_send_text(from_phone,
-                        "⏰ Which part of the day do you prefer?\n\n"
-                        "1️⃣ Morning (9am – 12pm)\n"
-                        "2️⃣ Afternoon (12pm – 4pm)\n"
-                        "3️⃣ Evening (4pm – 8pm)\n\n"
-                        "_Reply with 1, 2 or 3_"
-                    )
-            elif step == "ask_period":
-                period_map = {"1": "morning", "2": "afternoon", "3": "evening"}
-                _period = period_map.get(text.strip())
-                if not _period:
-                    # Try natural language
-                    if any(w in _tl for w in ("morning",)): _period = "morning"
-                    elif any(w in _tl for w in ("afternoon","noon")): _period = "afternoon"
-                    elif any(w in _tl for w in ("evening",)): _period = "evening"
-                    else:
-                        await wa_send_text(from_phone,
-                            "Please reply *1* for Morning, *2* for Afternoon, or *3* for Evening."
-                        )
-                        return {"status": "ok"}
-                _free_slots = await get_available_slots(dental['date'], max_slots=6, period=_period)
-                dental["step"] = "ask_time"
-                dental["alt_slots"] = _free_slots
-                _dental_sessions[from_phone] = dental
-                if _free_slots:
-                    emojis = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣"]
-                    slot_list = "\n".join([f"{emojis[i]} {s}" for i, s in enumerate(_free_slots)])
-                    await wa_send_text(from_phone,
-                        f"⏰ Available slots:\n\n{slot_list}\n\n"
-                        f"_Reply with a number to book, or type a different time._"
-                    )
-                else:
-                    await wa_send_text(from_phone,
-                        f"⚠️ No free slots available in that period.\n\n"
-                        f"Please try another time or call us at *+91 9868018541*."
+                        "⏰ What time works for you?\n\n"
+                        "_e.g. 10:30 AM, 2 PM, 4:30 PM_\n\n"
+                        "🕐 Clinic hours: Mon–Fri 9am–8pm | Sat 9am–6pm"
                     )
             elif step == "ask_time":
-                slots = {"1": "Morning (9am–12pm)", "2": "Afternoon (12pm–4pm)", "3": "Evening (4pm–8pm)"}
-                slot_start = {"1": 9, "2": 12, "3": 16}
-                dental["time"] = slots.get(text, text)
-                _check_hour = dental.get("gcal_hour") or slot_start.get(text, 9)
+                dental["time"] = text  # Use the exact time user gave
+                _check_hour = dental.get("gcal_hour") or 9
                 # Check for conflicts before booking
                 _conflicts = await check_gcal_conflict(dental['date'], _check_hour)
                 if _conflicts:
