@@ -107,8 +107,10 @@ def _format_date(date_str: str, hour: int | None = None) -> str:
         return date_str
 
 
-async def get_available_slots(date_str: str, max_slots: int = 6) -> list[str]:
-    """Return up to max_slots free 30-min slots for the given day, within clinic hours."""
+async def get_available_slots(date_str: str, max_slots: int = 6, period: str = "all") -> list[str]:
+    """Return up to max_slots free 30-min slots for the given day within a period.
+    period: 'morning' (9-12), 'afternoon' (12-16), 'evening' (16-20), 'all' (9-20)
+    """
     import asyncio
     try:
         from dateutil import parser as dateparser
@@ -124,7 +126,9 @@ async def get_available_slots(date_str: str, max_slots: int = 6) -> list[str]:
 
         # Saturday closes at 18:00, others at 20:00
         is_saturday = day.weekday() == 5
-        open_h, close_h = 9, 18 if is_saturday else 20
+        day_close = 18 if is_saturday else 20
+        period_ranges = {"morning": (9,12), "afternoon": (12,16), "evening": (16, day_close), "all": (9, day_close)}
+        open_h, close_h = period_ranges.get(period, (9, day_close))
 
         svc = await asyncio.get_event_loop().run_in_executor(None, _gcal_service)
         if not svc:
@@ -1862,6 +1866,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             "ask_name": "What's your *full name*?",
             "ask_service": "What type of appointment do you need?\n\n1️⃣ Routine Checkup / Cleaning\n2️⃣ Root Canal / Filling\n3️⃣ Teeth Whitening / Smile Design\n4️⃣ Braces / Invisalign\n5️⃣ Tooth Pain / Emergency\n6️⃣ Other\n\n_Reply with a number_",
             "ask_date": "📅 What *date* works for you?\n\n_Example: Monday 2 June or Tomorrow_",
+            "ask_period": "Which part of the day do you prefer?\n\n1️⃣ Morning (9am–12pm)\n2️⃣ Afternoon (12pm–4pm)\n3️⃣ Evening (4pm–8pm)",
             "ask_time": "⏰ Please reply with your preferred time (e.g. *10:30 AM*, *3 PM*).",
         }
 
@@ -2115,26 +2120,45 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     _dental_sessions.pop(from_phone, None)
                     _router_sessions.pop(from_phone, None)
                 else:
-                    # No time given — show available 30-min slots for that day
-                    _free_slots = await get_available_slots(text)
-                    dental["step"] = "ask_time"
-                    dental["alt_slots"] = _free_slots
+                    # No time given — ask preferred period first
+                    dental["step"] = "ask_period"
                     _dental_sessions[from_phone] = dental
-                    if _free_slots:
-                        emojis = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣"]
-                        slot_list = "\n".join([f"{emojis[i]} {s}" for i, s in enumerate(_free_slots)])
-                        await wa_send_text(from_phone,
-                            f"⏰ Available slots:\n\n{slot_list}\n\n"
-                            f"_Reply with a number to book, or type a different time._"
-                        )
+                    await wa_send_text(from_phone,
+                        "⏰ Which part of the day do you prefer?\n\n"
+                        "1️⃣ Morning (9am – 12pm)\n"
+                        "2️⃣ Afternoon (12pm – 4pm)\n"
+                        "3️⃣ Evening (4pm – 8pm)\n\n"
+                        "_Reply with 1, 2 or 3_"
+                    )
+            elif step == "ask_period":
+                period_map = {"1": "morning", "2": "afternoon", "3": "evening"}
+                _period = period_map.get(text.strip())
+                if not _period:
+                    # Try natural language
+                    if any(w in _tl for w in ("morning",)): _period = "morning"
+                    elif any(w in _tl for w in ("afternoon","noon")): _period = "afternoon"
+                    elif any(w in _tl for w in ("evening",)): _period = "evening"
                     else:
                         await wa_send_text(from_phone,
-                            "⏰ Preferred *time slot*?\n\n"
-                            "1️⃣ Morning (9am – 12pm)\n"
-                            "2️⃣ Afternoon (12pm – 4pm)\n"
-                            "3️⃣ Evening (4pm – 8pm)\n\n"
-                            "_Reply with 1, 2 or 3_"
+                            "Please reply *1* for Morning, *2* for Afternoon, or *3* for Evening."
                         )
+                        return {"status": "ok"}
+                _free_slots = await get_available_slots(dental['date'], max_slots=6, period=_period)
+                dental["step"] = "ask_time"
+                dental["alt_slots"] = _free_slots
+                _dental_sessions[from_phone] = dental
+                if _free_slots:
+                    emojis = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣"]
+                    slot_list = "\n".join([f"{emojis[i]} {s}" for i, s in enumerate(_free_slots)])
+                    await wa_send_text(from_phone,
+                        f"⏰ Available slots:\n\n{slot_list}\n\n"
+                        f"_Reply with a number to book, or type a different time._"
+                    )
+                else:
+                    await wa_send_text(from_phone,
+                        f"⚠️ No free slots available in that period.\n\n"
+                        f"Please try another time or call us at *+91 9868018541*."
+                    )
             elif step == "ask_time":
                 slots = {"1": "Morning (9am–12pm)", "2": "Afternoon (12pm–4pm)", "3": "Evening (4pm–8pm)"}
                 slot_start = {"1": 9, "2": 12, "3": 16}
