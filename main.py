@@ -95,7 +95,8 @@ def _parse_event_datetime(date_str: str, hour: int) -> datetime:
                 event_date = datetime.now() + timedelta(days=1)
     except Exception:
         event_date = datetime.now() + timedelta(days=1)
-    return event_date.replace(hour=hour, minute=0, second=0, microsecond=0)
+    minute = 30 if isinstance(hour, float) and hour % 1 else 0
+    return event_date.replace(hour=int(hour), minute=minute, second=0, microsecond=0)
 
 def _format_date(date_str: str, hour: int | None = None) -> str:
     """Return a nicely formatted date string like 'Tuesday, 3 June 2026'."""
@@ -138,25 +139,39 @@ async def check_gcal_conflict(date_str: str, start_hour: int) -> list[str]:
         if not events:
             return []  # No conflict
 
-        # Generate up to 3 alternative slots (±1h, ±2h within clinic hours)
+        # Generate up to 3 alternative slots in 30-min steps (nearest first)
+        def _fmt_slot(h: int, m: int) -> str:
+            period = "AM" if h < 12 else "PM"
+            disp_h = h if h <= 12 else h - 12
+            if disp_h == 0: disp_h = 12
+            return f"{disp_h}:{m:02d} {period}"
+
+        # Build candidate offsets in 30-min steps: +30, -30, +60, -60, +90, -90 ...
+        candidates = []
+        for steps in range(1, 10):
+            candidates.append(steps * 30)
+            candidates.append(-steps * 30)
+
         alternatives = []
-        for delta in [-1, 1, -2, 2, 3]:
-            alt_hour = start_hour + delta
-            if 9 <= alt_hour <= 19:  # within clinic hours
-                label = f"{alt_hour}:00 {'AM' if alt_hour < 12 else 'PM'}" if alt_hour <= 12 else f"{alt_hour - 12}:00 PM"
-                # Quick check if alt slot is also free
-                alt_start = _parse_event_datetime(date_str, alt_hour)
-                alt_end   = alt_start + timedelta(minutes=30)
-                alt_result = await asyncio.get_event_loop().run_in_executor(None, lambda: svc.events().list(
-                    calendarId=GCAL_CALENDAR_ID,
-                    timeMin=alt_start.isoformat() + "+05:30",
-                    timeMax=alt_end.isoformat() + "+05:30",
-                    singleEvents=True
-                ).execute())
-                if not alt_result.get("items"):
-                    alternatives.append(f"{alt_hour}:00" if alt_hour < 12 else f"{alt_hour-12 or 12}:00 PM")
-                if len(alternatives) >= 3:
-                    break
+        for delta_min in candidates:
+            alt_start = start_dt + timedelta(minutes=delta_min)
+            alt_h, alt_m = alt_start.hour, alt_start.minute
+            # Within clinic hours: 9:00–19:30 (last slot starts at 19:30 ends 20:00)
+            if not (9 <= alt_h < 20 and (alt_h < 19 or alt_m == 0)):
+                continue
+            alt_end = alt_start + timedelta(minutes=30)
+            alt_result = await asyncio.get_event_loop().run_in_executor(None, lambda s=alt_start, e=alt_end: svc.events().list(
+                calendarId=GCAL_CALENDAR_ID,
+                timeMin=s.isoformat() + "+05:30",
+                timeMax=e.isoformat() + "+05:30",
+                singleEvents=True
+            ).execute())
+            if not alt_result.get("items"):
+                label = _fmt_slot(alt_h, alt_m)
+                if label not in alternatives:
+                    alternatives.append(label)
+            if len(alternatives) >= 3:
+                break
         return alternatives
 
     except Exception as e:
