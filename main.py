@@ -1789,9 +1789,31 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
         import re as _re
         _tl = text.lower().strip()
 
+        # Acknowledgment words — just re-prompt, don't treat as FAQ
+        _ACK_WORDS = ("sorry", "ok", "okay", "thanks", "thank you", "got it", "alright", "fine", "sure", "noted")
+        if _tl in _ACK_WORDS and step in STEP_PROMPTS:
+            await wa_send_text(from_phone, STEP_PROMPTS[step])
+            return {"status": "ok"}
+
         if step == "ask_time":
-            # If already a valid slot number, use directly — skip all normalisation
-            if text.strip() not in ("1", "2", "3"):
+            # If alt_slots exist and user picks 1/2/3, map to the stored alternative
+            _alt_slots = dental.get("alt_slots", [])
+            if _alt_slots and text.strip() in ("1", "2", "3"):
+                _picked = _alt_slots[int(text.strip()) - 1]
+                # Parse the picked time like "5:00 PM" → hour
+                import re as _re2
+                _m = _re2.search(r'(\d+):?\d*\s*(am|pm)', _picked.lower())
+                if _m:
+                    _ph = int(_m.group(1))
+                    if _m.group(2) == "pm" and _ph != 12:
+                        _ph += 12
+                    dental["gcal_hour"] = _ph
+                dental["alt_slots"] = []
+                text = _picked  # Use as time description
+                _tl = _picked.lower()
+
+            # If already a valid slot number (no alt_slots), use directly — skip normalisation
+            if text.strip() in ("1", "2", "3") and not dental.get("alt_slots"):
                 # Normalise dot/colon notation: "2.30"→"2:30pm", "7.00"→"7:00pm"
                 _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _tl)
                 _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _tl)
@@ -1949,14 +1971,16 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         dental["gcal_hour"] = _auto_hour
                     _conflicts = await check_gcal_conflict(dental['date'], _auto_hour or 9)
                     if _conflicts:
-                        alts = "\n".join([f"• {a}" for a in _conflicts])
+                        emojis = ["1️⃣","2️⃣","3️⃣"]
+                        alts = "\n".join([f"{emojis[i]} {a}" for i, a in enumerate(_conflicts)])
+                        dental["alt_slots"] = _conflicts
+                        dental["step"] = "ask_time"
+                        _dental_sessions[from_phone] = dental
                         await wa_send_text(from_phone,
                             f"⚠️ Sorry, *{_auto_hour % 12 or 12}:00 {'AM' if _auto_hour < 12 else 'PM'}* on that day is already booked.\n\n"
-                            f"Here are available slots:\n{alts}\n\n"
-                            f"📅 Please reply with your preferred time."
+                            f"Available slots:\n{alts}\n\n"
+                            f"_Reply with 1, 2 or 3 to pick a slot, or type another time._"
                         )
-                        dental["step"] = "ask_date"
-                        _dental_sessions[from_phone] = dental
                         return {"status": "ok"}
                     owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
                     summary = (
@@ -2003,14 +2027,16 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 # Check for conflicts before booking
                 _conflicts = await check_gcal_conflict(dental['date'], _check_hour)
                 if _conflicts:
-                    alts = "\n".join([f"• {a}" for a in _conflicts])
-                    await wa_send_text(from_phone,
-                        f"⚠️ Sorry, that slot is already *booked*.\n\n"
-                        f"Available slots on that day:\n{alts}\n\n"
-                        f"Please reply with one of these times."
-                    )
+                    emojis = ["1️⃣","2️⃣","3️⃣"]
+                    alts = "\n".join([f"{emojis[i]} {a}" for i, a in enumerate(_conflicts)])
+                    dental["alt_slots"] = _conflicts
                     dental["step"] = "ask_time"
                     _dental_sessions[from_phone] = dental
+                    await wa_send_text(from_phone,
+                        f"⚠️ Sorry, that slot is already *booked*.\n\n"
+                        f"Available slots:\n{alts}\n\n"
+                        f"_Reply with 1, 2 or 3 to pick a slot, or type another time._"
+                    )
                     return {"status": "ok"}
                 # Notify clinic owner
                 owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
