@@ -1034,20 +1034,20 @@ async def _send_order_email(order: dict):
     await loop.run_in_executor(None, _send_order_email_sync, order)
 
 
-async def _upload_to_cloudinary(local_path: str, public_id: str) -> str:
-    """Upload a local video file to Cloudinary. Returns the secure CDN URL."""
+async def _upload_to_cloudinary(local_path: str, public_id: str, resource_type: str = "video") -> str:
+    """Upload a local file to Cloudinary. Returns the secure CDN URL."""
     if not _CLOUDINARY_READY:
         return ""
     try:
         result = await asyncio.to_thread(
             cloudinary.uploader.upload,
             local_path,
-            resource_type = "video",
+            resource_type = resource_type,
             public_id     = f"vishleshak-ugc/{public_id}",
             overwrite     = True,
         )
         url = result.get("secure_url", "")
-        print(f"[Cloudinary] Uploaded: {url}")
+        print(f"[Cloudinary] Uploaded ({resource_type}): {url}")
         return url
     except Exception as e:
         print(f"[Cloudinary] Upload failed: {e}")
@@ -1692,6 +1692,13 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
                     "product_type": product_type,
                     "language": language,
                 })
+                # Upload to Cloudinary → push CDN URL to Railway
+                oid = jobs[job_id].get("order_id")
+                if oid:
+                    local_img = os.path.join(os.path.dirname(__file__), "static", "images", f"{job_id}.jpg")
+                    cdn_url = await _upload_to_cloudinary(local_img, job_id, resource_type="image") if os.path.exists(local_img) else None
+                    public_image_url = cdn_url or (f"{PUBLIC_URL}{final_image_url}" if PUBLIC_URL else final_image_url)
+                    asyncio.create_task(_push_result_to_railway(oid, "", public_image_url, script))
                 return
 
             # Step 2: TTS via edge-tts + fal.ai storage (0x0.st is dead)
