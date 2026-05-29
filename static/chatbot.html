@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Chatbots — Vishleshak AI</title>
+  <title>WhatsApp Chatbots — Vishleshak AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --purple: #7C5CFA;
-      --purple2: #5b3de8;
+      --purple: #7C3AED;
+      --purple2: #5b21b6;
       --green:  #25D366;
       --white:  #ffffff;
-      --text:   rgba(255,255,255,0.75);
-      --muted:  rgba(255,255,255,0.45);
-      --card:   rgba(255,255,255,0.07);
-      --border: rgba(255,255,255,0.12);
+      --text:   rgba(255,255,255,0.72);
+      --muted:  rgba(255,255,255,0.42);
+      --card:   rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.11);
     }
     html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', system-ui, sans-serif;
-      background: linear-gradient(145deg, #0d0640 0%, #1e1080 35%, #3530b8 65%, #4845cc 100%);
+      background: linear-gradient(145deg, #0d0640 0%, #1a0a40 40%, #2d1b8a 70%, #1e0a4e 100%);
       min-height: 100vh; color: #fff;
       overflow-x: hidden; -webkit-font-smoothing: antialiased;
     }
@@ -28,108 +28,234 @@
     /* NAV */
     nav {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 40px;
-      background: rgba(13,6,64,0.7); backdrop-filter: blur(20px);
+      padding: 14px 48px;
+      background: rgba(13,6,64,0.8); backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       position: sticky; top: 0; z-index: 100;
     }
     .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .logo-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--purple); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 16px; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg,#7C3AED,#2563EB); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 17px; }
     .logo-name { font-size: 1rem; font-weight: 700; color: #fff; }
-    .logo-sub { font-size: 0.68rem; color: var(--muted); display: block; margin-top: -2px; }
-    .back-btn { color: var(--text); font-size: 0.875rem; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+    .logo-sub { font-size: 0.67rem; color: var(--muted); display: block; margin-top: -2px; }
+    .back-btn { color: var(--text); font-size: 0.85rem; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
     .back-btn:hover { color: #fff; }
 
     /* HERO */
-    .hero { padding: 80px 40px 60px; text-align: center; position: relative; }
-    .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(124,92,250,0.2), transparent 60%); pointer-events: none; }
-    .eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #A78BFA; margin-bottom: 14px; }
-    .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; letter-spacing: -1.2px; margin-bottom: 16px; }
-    .hero h1 .accent { color: #A78BFA; }
-    .hero-sub { font-size: 1.05rem; color: var(--text); max-width: 540px; margin: 0 auto 40px; line-height: 1.7; }
-    .wa-btn-hero {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--green); color: #fff; font-weight: 700; font-size: 1rem;
-      padding: 14px 30px; border-radius: 10px; text-decoration: none;
-      box-shadow: 0 4px 24px rgba(37,211,102,0.35);
-      transition: transform 0.15s, opacity 0.15s;
+    .hero {
+      padding: 80px 48px 72px;
+      position: relative; overflow: hidden;
     }
-    .wa-btn-hero:hover { transform: translateY(-2px); opacity: 0.92; }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 30% 50%, rgba(124,58,237,0.22), transparent 65%),
+                  radial-gradient(ellipse 50% 50% at 80% 50%, rgba(37,99,235,0.12), transparent 60%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 420px; gap: 64px; align-items: center;
+      position: relative; z-index: 1;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,58,237,0.2); border: 1px solid rgba(124,58,237,0.4);
+      color: #c4b5fd; padding: 5px 14px; border-radius: 100px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem); font-weight: 900;
+      letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px;
+    }
+    .hero h1 .accent {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-sub { font-size: 1.05rem; color: var(--text); line-height: 1.7; margin-bottom: 32px; max-width: 480px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-wa {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--green); color: #fff; font-weight: 700; font-size: 0.95rem;
+      padding: 13px 26px; border-radius: 10px; text-decoration: none;
+      box-shadow: 0 4px 24px rgba(37,211,102,0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(37,211,102,0.45); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.08); color: #fff; font-weight: 600; font-size: 0.95rem;
+      padding: 13px 26px; border-radius: 10px; text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: background 0.15s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.13); }
 
-    /* USE CASES */
-    .section { padding: 72px 40px; }
-    .section-inner { max-width: 1000px; margin: 0 auto; }
-    .section-center { text-align: center; }
-    h2.section-title { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 900; color: #fff; letter-spacing: -0.6px; margin-bottom: 12px; }
-    .section-desc { color: var(--text); font-size: 0.95rem; line-height: 1.7; max-width: 500px; margin: 0 auto 48px; }
+    /* PHONE MOCKUP */
+    .phone-wrap { display: flex; justify-content: center; align-items: center; }
+    .phone {
+      width: 260px;
+      background: #1a1a2e;
+      border-radius: 32px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1);
+      overflow: hidden;
+      position: relative;
+    }
+    .phone-status {
+      background: #075e54; padding: 10px 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .phone-avatar { width: 34px; height: 34px; border-radius: 50%; background: #25d366; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .phone-info .name { font-size: 0.82rem; font-weight: 700; color: #fff; }
+    .phone-info .online { font-size: 0.68rem; color: rgba(255,255,255,0.7); }
+    .phone-chat { background: #0d1117; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; min-height: 340px; }
+    .pchat { max-width: 90%; padding: 8px 12px; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; }
+    .pchat.bot { background: #1e2a1e; color: rgba(255,255,255,0.85); border-radius: 4px 10px 10px 10px; align-self: flex-start; }
+    .pchat.user { background: #005c4b; color: #fff; border-radius: 10px 4px 10px 10px; align-self: flex-end; }
+    .pchat-time { font-size: 0.62rem; color: rgba(255,255,255,0.35); text-align: right; margin-top: -4px; margin-bottom: 2px; }
+    .typing { display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: #1e2a1e; border-radius: 4px 10px 10px 10px; align-self: flex-start; width: fit-content; }
+    .typing span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); animation: bounce 1.2s infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
 
-    /* CHAT MOCKUP */
-    .mockup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    /* STATS */
+    .stats { padding: 0 48px 64px; }
+    .stats-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .stat-card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 24px 20px; text-align: center;
+    }
+    .stat-num { font-size: 2rem; font-weight: 900; color: #fff; display: block; }
+    .stat-num span { background: linear-gradient(135deg,#a78bfa,#60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+
+    /* DEMO SECTION */
+    .demo { padding: 72px 48px; background: rgba(0,0,0,0.18); }
+    .demo-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+    .section-title { font-size: clamp(1.7rem, 3vw, 2.3rem); font-weight: 900; letter-spacing: -0.7px; margin-bottom: 12px; }
+    .section-desc { color: var(--text); font-size: 0.95rem; line-height: 1.7; max-width: 500px; margin: 0 auto 36px; }
+    .demo-card {
+      background: linear-gradient(135deg, rgba(37,211,102,0.1), rgba(37,211,102,0.05));
+      border: 1px solid rgba(37,211,102,0.3);
+      border-radius: 20px; padding: 32px 40px;
+      display: flex; align-items: center; justify-content: space-between; gap: 32px;
+      text-align: left; margin-bottom: 24px;
+    }
+    .demo-number-block .label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #25D366; margin-bottom: 6px; }
+    .demo-number-block .number { font-size: 1.6rem; font-weight: 900; color: #fff; }
+    .demo-number-block .sub { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .demo-badge { display: flex; align-items: center; gap: 6px; background: rgba(37,211,102,0.15); border: 1px solid rgba(37,211,102,0.3); color: #25D366; font-size: 0.75rem; font-weight: 700; padding: 5px 12px; border-radius: 100px; margin-bottom: 16px; }
+    .demo-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #25D366; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+    /* CHAT TABS */
+    .tabs-section { padding: 72px 48px; }
+    .tabs-inner { max-width: 1000px; margin: 0 auto; }
+    .tab-header { display: flex; gap: 8px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 10px 22px; border-radius: 100px; font-size: 0.85rem; font-weight: 600;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text); cursor: pointer; transition: all 0.2s;
+    }
+    .tab-btn.active { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.12); }
+    .tab-content { display: none; }
+    .tab-content.active { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+    .chat-info h3 { font-size: 1.4rem; font-weight: 800; margin-bottom: 12px; }
+    .chat-info p { color: var(--text); font-size: 0.92rem; line-height: 1.7; margin-bottom: 20px; }
+    .chat-feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .chat-feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.88rem; color: var(--text); }
+    .chat-feature-list li::before { content: '✓'; color: #25D366; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
     .mockup-card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 20px; overflow: hidden;
-      transition: transform 0.2s, border-color 0.2s;
     }
-    .mockup-card:hover { transform: translateY(-4px); border-color: rgba(124,92,250,0.4); }
     .mockup-header {
-      background: rgba(0,0,0,0.3); padding: 14px 18px;
+      background: #075e54; padding: 14px 18px;
       display: flex; align-items: center; gap: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .mockup-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .mockup-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
     .mockup-name { font-size: 0.88rem; font-weight: 700; color: #fff; }
-    .mockup-status { font-size: 0.72rem; color: var(--green); }
-    .mockup-body { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
-    .msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.83rem; line-height: 1.5; }
-    .msg.bot { background: rgba(255,255,255,0.1); color: var(--text); border-radius: 4px 12px 12px 12px; align-self: flex-start; }
-    .msg.user { background: #005c4b; color: #fff; border-radius: 12px 4px 12px 12px; align-self: flex-end; }
-    .msg-time { font-size: 0.65rem; color: var(--muted); margin-top: 3px; text-align: right; }
-    .mockup-label { padding: 12px 18px 16px; font-size: 0.78rem; font-weight: 700; color: #A78BFA; text-transform: uppercase; letter-spacing: 1px; }
+    .mockup-status { font-size: 0.7rem; color: rgba(255,255,255,0.7); }
+    .mockup-body { background: #0d1117; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .msg { max-width: 88%; padding: 9px 13px; border-radius: 10px; font-size: 0.8rem; line-height: 1.55; }
+    .msg.bot { background: #1e2a1e; color: rgba(255,255,255,0.88); border-radius: 4px 10px 10px 10px; align-self: flex-start; }
+    .msg.user { background: #005c4b; color: #fff; border-radius: 10px 4px 10px 10px; align-self: flex-end; }
+    .msg-time { font-size: 0.62rem; color: rgba(255,255,255,0.3); text-align: right; }
 
     /* FEATURES */
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 48px; }
+    .features { padding: 72px 48px; background: rgba(0,0,0,0.15); }
+    .features-inner { max-width: 1000px; margin: 0 auto; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
     .feature-box {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 24px 20px; text-align: center;
+      border-radius: 16px; padding: 28px 22px;
       transition: border-color 0.2s, transform 0.2s;
     }
-    .feature-box:hover { border-color: rgba(124,92,250,0.4); transform: translateY(-3px); }
-    .feature-icon { font-size: 2rem; margin-bottom: 12px; display: block; }
+    .feature-box:hover { border-color: rgba(124,58,237,0.4); transform: translateY(-3px); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 16px;
+    }
+    .fi-purple { background: rgba(124,58,237,0.2); }
+    .fi-green  { background: rgba(37,211,102,0.15); }
+    .fi-blue   { background: rgba(37,99,235,0.2); }
+    .fi-orange { background: rgba(249,115,22,0.15); }
+    .fi-pink   { background: rgba(236,72,153,0.15); }
+    .fi-teal   { background: rgba(20,184,166,0.15); }
     .feature-title { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
     .feature-desc { font-size: 0.82rem; color: var(--text); line-height: 1.6; }
 
-    /* WHO IT'S FOR */
-    .industry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 40px; }
+    /* INDUSTRY */
+    .industry { padding: 72px 48px; }
+    .industry-inner { max-width: 1000px; margin: 0 auto; text-align: center; }
+    .industry-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 36px; }
     .industry-chip {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 12px; padding: 18px 12px; text-align: center;
+      border-radius: 14px; padding: 20px 14px; text-align: center;
       font-size: 0.85rem; color: var(--text); font-weight: 500;
-      transition: border-color 0.15s, transform 0.15s;
+      transition: border-color 0.15s, transform 0.15s, background 0.15s;
+      cursor: default;
     }
-    .industry-chip:hover { border-color: rgba(124,92,250,0.4); transform: translateY(-2px); }
-    .industry-chip .emoji { display: block; font-size: 1.6rem; margin-bottom: 7px; }
+    .industry-chip:hover { border-color: rgba(124,58,237,0.4); background: rgba(124,58,237,0.08); transform: translateY(-2px); }
+    .industry-chip .emoji { display: block; font-size: 1.8rem; margin-bottom: 8px; }
 
     /* CTA */
-    .cta-section { padding: 80px 40px; text-align: center; background: rgba(0,0,0,0.15); }
-    .cta-section h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; color: #fff; letter-spacing: -0.8px; margin-bottom: 12px; }
-    .cta-section p { color: var(--text); font-size: 1rem; margin-bottom: 32px; }
-    .wa-btn {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--green); color: #fff; font-weight: 700; font-size: 1rem;
-      padding: 14px 30px; border-radius: 10px; text-decoration: none;
-      box-shadow: 0 4px 24px rgba(37,211,102,0.35);
-      transition: transform 0.15s, opacity 0.15s;
+    .cta-section {
+      padding: 80px 48px; text-align: center;
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(37,99,235,0.1));
+      border-top: 1px solid rgba(255,255,255,0.08);
+      position: relative; overflow: hidden;
     }
-    .wa-btn:hover { transform: translateY(-2px); opacity: 0.92; }
+    .cta-section::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 0%, rgba(124,58,237,0.2), transparent 70%);
+      pointer-events: none;
+    }
+    .cta-section h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; letter-spacing: -1px; margin-bottom: 12px; position: relative; }
+    .cta-section p { color: var(--text); font-size: 1rem; margin-bottom: 36px; position: relative; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; }
 
-    footer { padding: 24px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); color: var(--muted); font-size: 0.8rem; }
-    footer a { color: #A78BFA; text-decoration: none; }
+    footer { padding: 24px 48px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); color: var(--muted); font-size: 0.8rem; }
+    footer a { color: #a78bfa; text-decoration: none; }
 
-    @media (max-width: 640px) {
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .phone-wrap { display: none; }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .tab-content.active { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .industry-grid { grid-template-columns: repeat(2, 1fr); }
+      .demo-card { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 600px) {
       nav { padding: 12px 20px; }
-      .hero { padding: 60px 20px 40px; }
-      .section { padding: 52px 20px; }
-      .cta-section { padding: 60px 20px; }
+      .hero { padding: 60px 20px 48px; }
+      .stats, .demo, .tabs-section, .features, .industry, .cta-section { padding: 52px 20px; }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .features-grid { grid-template-columns: 1fr; }
+      .industry-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -148,44 +274,109 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="eyebrow">✦ Smart Chatbots</div>
-  <h1>Your Business.<br/><span class="accent">Always Available.</span></h1>
-  <p class="hero-sub">AI chatbots that handle orders, bookings, and customer questions on WhatsApp — 24/7, zero app download needed.</p>
-  <a class="wa-btn-hero" href="https://wa.me/919953910987?text=Hi%2C+I+want+a+chatbot+for+my+business" target="_blank">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-    Get Your Chatbot
-  </a>
-</section>
-
-<!-- LIVE DEMO BANNER -->
-<section class="section section-center" style="background: rgba(0,0,0,0.2); padding: 52px 40px;">
-  <div class="section-inner">
-    <div class="eyebrow">✦ Try It Now — Free</div>
-    <h2 class="section-title">Chat With a Live Demo Bot</h2>
-    <p class="section-desc" style="margin-bottom: 16px;">This is a real running bot — order food, ask about the menu, book a slot. See exactly what your customers will experience.</p>
-    <div style="display: inline-block; background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.3); border-radius: 14px; padding: 18px 32px; margin-bottom: 28px;">
-      <div style="font-size: 0.75rem; font-weight: 700; color: #25D366; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px;">Demo WhatsApp Number</div>
-      <div style="font-size: 1.4rem; font-weight: 900; color: #fff; letter-spacing: 0.5px;">+1 (555) 652-2393</div>
-      <div style="font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-top: 4px;">Bite Tongue Tingling — Restaurant Bot</div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="eyebrow">✦ WhatsApp AI Chatbots</div>
+      <h1>Your Business.<br/><span class="accent">Always Answering.</span></h1>
+      <p class="hero-sub">AI chatbots that take orders, book appointments, and answer customers on WhatsApp — 24/7, without you lifting a finger.</p>
+      <div class="hero-btns">
+        <a class="btn-wa" href="https://wa.me/919953910987?text=Hi%2C+I+want+a+WhatsApp+chatbot+for+my+business" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Get Your Chatbot
+        </a>
+        <a class="btn-outline" href="#demo">🤖 Try Live Demo</a>
+      </div>
     </div>
-    <br/>
-    <a class="wa-btn-hero" href="https://wa.me/15556522393?text=Hi%2C+show+me+the+menu" target="_blank" style="font-size: 1.05rem; padding: 16px 36px;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      Open WhatsApp Demo →
-    </a>
-    <p style="font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-top: 16px;">Opens WhatsApp · Works on mobile & desktop · No sign-up needed</p>
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="phone-status">
+          <div class="phone-avatar">🍽️</div>
+          <div class="phone-info">
+            <div class="name">Bite Tongue Tingling</div>
+            <div class="online">● online</div>
+          </div>
+        </div>
+        <div class="phone-chat" id="phone-chat">
+          <div class="pchat bot">👋 Hi! Welcome to Bite Tongue Tingling.<br/>Type <b>menu</b> to see today's specials!</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- LIVE EXAMPLES -->
-<section class="section section-center" style="background: rgba(0,0,0,0.1)">
-  <div class="section-inner">
-    <div class="eyebrow">✦ Live Examples</div>
-    <h2 class="section-title">See It in Action</h2>
-    <p class="section-desc">Real conversations our AI chatbots handle every day — automatically, instantly.</p>
-    <div class="mockup-grid">
+<!-- STATS -->
+<section class="stats">
+  <div class="stats-inner">
+    <div class="stat-card">
+      <span class="stat-num"><span>24/7</span></span>
+      <div class="stat-label">Always available, no breaks</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num"><span>&lt; 1s</span></span>
+      <div class="stat-label">Average response time</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num"><span>0</span> apps</span>
+      <div class="stat-label">Works inside WhatsApp</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num"><span>24h</span></span>
+      <div class="stat-label">Setup & go live</div>
+    </div>
+  </div>
+</section>
 
-      <!-- Restaurant -->
+<!-- LIVE DEMO -->
+<section class="demo" id="demo">
+  <div class="demo-inner">
+    <div class="eyebrow">✦ Try It Free</div>
+    <h2 class="section-title">Chat With a Live Bot</h2>
+    <p class="section-desc">This is a real running bot for a restaurant — order food, ask the menu, check delivery. Exactly what your customers will experience.</p>
+    <div class="demo-card">
+      <div class="demo-number-block">
+        <div class="label">Demo WhatsApp Number</div>
+        <div class="number">+1 (555) 652-2393</div>
+        <div class="sub">Bite Tongue Tingling · Restaurant Bot</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="demo-badge">Live & Running</div>
+        <a class="btn-wa" href="https://wa.me/15556522393?text=Hi%2C+show+me+the+menu" target="_blank" style="font-size:1rem; padding:14px 28px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Open WhatsApp Demo →
+        </a>
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:10px;">No sign-up · Works on mobile & desktop</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHAT EXAMPLES (TABBED) -->
+<section class="tabs-section">
+  <div class="tabs-inner">
+    <div style="text-align:center; margin-bottom: 8px;">
+      <div class="eyebrow">✦ Real Conversations</div>
+      <h2 class="section-title">See It in Action</h2>
+      <p class="section-desc">Pick a business type to see exactly how the chatbot handles customers.</p>
+    </div>
+    <div class="tab-header">
+      <button class="tab-btn active" onclick="switchTab('restaurant', this)">🍽️ Restaurant</button>
+      <button class="tab-btn" onclick="switchTab('gym', this)">💪 Gym</button>
+      <button class="tab-btn" onclick="switchTab('salon', this)">✂️ Salon</button>
+    </div>
+
+    <!-- Restaurant -->
+    <div class="tab-content active" id="tab-restaurant">
+      <div class="chat-info">
+        <h3>🍽️ Restaurant Ordering Bot</h3>
+        <p>Customers browse the menu, place orders, and share their location — all inside WhatsApp. Zero phone calls, zero missed orders.</p>
+        <ul class="chat-feature-list">
+          <li>Shows full menu with prices on request</li>
+          <li>Takes orders and calculates total automatically</li>
+          <li>Requests delivery location via WhatsApp</li>
+          <li>Sends order confirmation instantly</li>
+          <li>Handles special requests and add-ons</li>
+        </ul>
+      </div>
       <div class="mockup-card">
         <div class="mockup-header">
           <div class="mockup-avatar">🍽️</div>
@@ -196,16 +387,27 @@
         </div>
         <div class="mockup-body">
           <div class="msg user">Hi, show me the menu</div>
-          <div class="msg-time">2:14 PM</div>
-          <div class="msg bot">👋 Welcome! Here's our menu:<br/><br/>🍔 Burgers — ₹149–₹299<br/>🍕 Pizza — ₹199–₹449<br/>🥤 Drinks — ₹49–₹99<br/><br/>Reply with item name to order!</div>
+          <div class="msg bot">👋 Welcome! Here's our menu:<br/><br/>🍔 Burgers — ₹149–₹299<br/>🍕 Pizza — ₹199–₹449<br/>🥤 Drinks — ₹49–₹99<br/><br/>Reply with item to order!</div>
           <div class="msg user">1 Paneer Pizza please</div>
           <div class="msg bot">✅ Added! Paneer Pizza ₹299<br/>Share your location to confirm delivery 📍</div>
           <div class="msg-time">2:15 PM ✓✓</div>
         </div>
-        <div class="mockup-label">🍽️ Restaurant Ordering Bot</div>
       </div>
+    </div>
 
-      <!-- Gym -->
+    <!-- Gym -->
+    <div class="tab-content" id="tab-gym">
+      <div class="chat-info">
+        <h3>💪 Gym Membership Bot</h3>
+        <p>Answers plan questions, books free trial visits, and converts leads while you sleep. No staff required after hours.</p>
+        <ul class="chat-feature-list">
+          <li>Explains all membership plans & pricing</li>
+          <li>Books trial visits with time slot selection</li>
+          <li>Sends payment link when ready</li>
+          <li>Answers FAQs: timings, trainers, equipment</li>
+          <li>Follows up automatically with warm leads</li>
+        </ul>
+      </div>
       <div class="mockup-card">
         <div class="mockup-header">
           <div class="mockup-avatar">💪</div>
@@ -216,15 +418,27 @@
         </div>
         <div class="mockup-body">
           <div class="msg user">I want to join the gym</div>
-          <div class="msg bot">💪 Great choice! We have 3 plans:<br/><br/>⚡ Monthly — ₹999<br/>🔥 Quarterly — ₹2,499<br/>💎 Annual — ₹7,999<br/><br/>Which plan interests you?</div>
+          <div class="msg bot">💪 Great choice! Our plans:<br/><br/>⚡ Monthly — ₹999<br/>🔥 Quarterly — ₹2,499<br/>💎 Annual — ₹7,999<br/><br/>Which plan interests you?</div>
           <div class="msg user">Monthly sounds good</div>
-          <div class="msg bot">Perfect! 🎉 Book a free trial visit first?<br/>Choose your slot:<br/>1️⃣ Morning 6–9 AM<br/>2️⃣ Evening 5–8 PM</div>
+          <div class="msg bot">🎉 Book a free trial first?<br/>1️⃣ Morning 6–9 AM<br/>2️⃣ Evening 5–8 PM</div>
           <div class="msg-time">3:42 PM ✓✓</div>
         </div>
-        <div class="mockup-label">💪 Gym Membership Bot</div>
       </div>
+    </div>
 
-      <!-- Salon -->
+    <!-- Salon -->
+    <div class="tab-content" id="tab-salon">
+      <div class="chat-info">
+        <h3>✂️ Salon Booking Bot</h3>
+        <p>Takes bookings, shows service menus, and fills your calendar — 24/7. Customers book at midnight, you wake up to appointments.</p>
+        <ul class="chat-feature-list">
+          <li>Lists all services with pricing</li>
+          <li>Shows available slots in real time</li>
+          <li>Confirms bookings with reminders</li>
+          <li>Handles cancellations and reschedules</li>
+          <li>Upsells add-on services automatically</li>
+        </ul>
+      </div>
       <div class="mockup-card">
         <div class="mockup-header">
           <div class="mockup-avatar">✂️</div>
@@ -235,51 +449,49 @@
         </div>
         <div class="mockup-body">
           <div class="msg user">I need a hair appointment</div>
-          <div class="msg bot">💇 Hi! Our services:<br/><br/>✂️ Haircut — ₹299<br/>🎨 Colour — ₹799<br/>💆 Spa — ₹599<br/><br/>Which service?</div>
+          <div class="msg bot">💇 Our services:<br/>✂️ Haircut — ₹299<br/>🎨 Colour — ₹799<br/>💆 Spa — ₹599<br/><br/>Which service?</div>
           <div class="msg user">Haircut + Colour please</div>
-          <div class="msg bot">✅ Total: ₹1,098<br/><br/>Available slots tomorrow:<br/>📅 11 AM · 2 PM · 4 PM<br/><br/>Which time works?</div>
+          <div class="msg bot">✅ Total: ₹1,098<br/>Slots tomorrow:<br/>📅 11 AM · 2 PM · 4 PM<br/>Which time?</div>
           <div class="msg-time">11:08 AM ✓✓</div>
         </div>
-        <div class="mockup-label">✂️ Salon Booking Bot</div>
       </div>
-
     </div>
   </div>
 </section>
 
 <!-- FEATURES -->
-<section class="section section-center">
-  <div class="section-inner">
+<section class="features">
+  <div class="features-inner" style="text-align:center;">
     <div class="eyebrow">✦ What It Does</div>
     <h2 class="section-title">Everything on Auto-Pilot</h2>
     <div class="features-grid">
       <div class="feature-box">
-        <span class="feature-icon">🕐</span>
+        <div class="feature-icon fi-purple">🕐</div>
         <div class="feature-title">24/7 Availability</div>
-        <div class="feature-desc">Never miss a customer — your bot replies instantly, even at 2 AM.</div>
+        <div class="feature-desc">Never miss a customer — instant replies even at 2 AM on holidays.</div>
       </div>
       <div class="feature-box">
-        <span class="feature-icon">📋</span>
+        <div class="feature-icon fi-green">📋</div>
         <div class="feature-title">Menu & Catalogue</div>
-        <div class="feature-desc">Share your full menu or product list with prices, auto-formatted.</div>
+        <div class="feature-desc">Share your full menu or product list with prices, beautifully formatted.</div>
       </div>
       <div class="feature-box">
-        <span class="feature-icon">📅</span>
+        <div class="feature-icon fi-blue">📅</div>
         <div class="feature-title">Bookings & Slots</div>
-        <div class="feature-desc">Let customers book appointments or delivery slots instantly.</div>
+        <div class="feature-desc">Let customers book appointments or delivery slots — no phone tag.</div>
       </div>
       <div class="feature-box">
-        <span class="feature-icon">📍</span>
-        <div class="feature-title">Location Sharing</div>
-        <div class="feature-desc">Request customer location for delivery — directly in WhatsApp.</div>
+        <div class="feature-icon fi-orange">📍</div>
+        <div class="feature-title">Location & Delivery</div>
+        <div class="feature-desc">Request customer location for delivery — right inside the chat.</div>
       </div>
       <div class="feature-box">
-        <span class="feature-icon">💬</span>
+        <div class="feature-icon fi-pink">💬</div>
         <div class="feature-title">FAQs & Support</div>
-        <div class="feature-desc">Answer common questions automatically — hours, pricing, policies.</div>
+        <div class="feature-desc">Handles hours, pricing, policies, and common questions automatically.</div>
       </div>
       <div class="feature-box">
-        <span class="feature-icon">📲</span>
+        <div class="feature-icon fi-teal">📲</div>
         <div class="feature-title">No App Needed</div>
         <div class="feature-desc">Works inside WhatsApp — your customers already have it installed.</div>
       </div>
@@ -288,8 +500,8 @@
 </section>
 
 <!-- WHO IT'S FOR -->
-<section class="section section-center" style="background: rgba(0,0,0,0.1)">
-  <div class="section-inner">
+<section class="industry">
+  <div class="industry-inner">
     <div class="eyebrow">✦ Perfect For</div>
     <h2 class="section-title">Any Business. Any Size.</h2>
     <div class="industry-grid">
@@ -308,16 +520,72 @@
 <!-- CTA -->
 <section class="cta-section">
   <h2>Ready to Automate<br/>Your Business?</h2>
-  <p>Chat with us on WhatsApp and we'll set up your bot in 24 hours.</p>
-  <a class="wa-btn" href="https://wa.me/919953910987?text=Hi%2C+I+want+a+chatbot+for+my+business" target="_blank">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-    Chat on WhatsApp — +91 99539 10987
-  </a>
+  <p>Chat with us and we'll have your bot live in 24 hours.</p>
+  <div class="cta-btns">
+    <a class="btn-wa" href="https://wa.me/919953910987?text=Hi%2C+I+want+a+WhatsApp+chatbot+for+my+business" target="_blank" style="font-size:1rem; padding:14px 30px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Chat on WhatsApp
+    </a>
+    <a class="btn-outline" href="#demo" style="padding:14px 30px;">🤖 Try the Demo First</a>
+  </div>
 </section>
 
 <footer>
-  <p><a href="https://vishleshak.in">Vishleshak AI</a> &nbsp;·&nbsp; Smart Chatbots for Indian Businesses &nbsp;·&nbsp; © 2026</p>
+  <p><a href="https://vishleshak.in">Vishleshak AI</a> &nbsp;·&nbsp; WhatsApp Chatbots for Businesses &nbsp;·&nbsp; © 2026</p>
 </footer>
+
+<script>
+// Tab switcher
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Animated phone chat
+const messages = [
+  { type: 'user', text: 'Hi, show me the menu' },
+  { type: 'bot',  text: '👋 Here\'s today\'s menu:\n🍔 Burgers — ₹149–₹299\n🍕 Pizza — ₹199–₹449\n🥤 Drinks — ₹49–₹99\n\nReply to order!' },
+  { type: 'user', text: '1 Paneer Pizza please' },
+  { type: 'bot',  text: '✅ Added! Paneer Pizza ₹299\nShare your location to confirm 📍' },
+];
+
+const chat = document.getElementById('phone-chat');
+let mi = 0;
+
+function addMsg() {
+  if (mi >= messages.length) {
+    setTimeout(() => { chat.innerHTML = '<div class="pchat bot">👋 Hi! Welcome to Bite Tongue Tingling.<br/>Type <b>menu</b> to see today\'s specials!</div>'; mi = 0; setTimeout(addMsg, 2000); }, 3000);
+    return;
+  }
+  const m = messages[mi++];
+  if (m.type === 'bot') {
+    const typing = document.createElement('div');
+    typing.className = 'typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+    setTimeout(() => {
+      typing.remove();
+      const el = document.createElement('div');
+      el.className = 'pchat bot';
+      el.innerHTML = m.text.replace(/\n/g, '<br/>');
+      chat.appendChild(el);
+      chat.scrollTop = chat.scrollHeight;
+      setTimeout(addMsg, 1800);
+    }, 1200);
+  } else {
+    const el = document.createElement('div');
+    el.className = 'pchat user';
+    el.textContent = m.text;
+    chat.appendChild(el);
+    chat.scrollTop = chat.scrollHeight;
+    setTimeout(addMsg, 800);
+  }
+}
+setTimeout(addMsg, 1500);
+</script>
 
 </body>
 </html>
