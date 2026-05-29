@@ -1608,6 +1608,25 @@ async def whatsapp_receive(request: Request):
     if current_bot == "dental":
         dental = _dental_sessions.get(from_phone, {"step": "ask_name"})
         step = dental.get("step")
+
+        # FAQ: answer questions about hours without advancing the step
+        _tl = text.lower()
+        _HOURS_FAQ = (
+            "🕐 *Clinic Hours:*\n"
+            "Mon–Fri: 9:00 AM – 8:00 PM\n"
+            "Saturday: 9:00 AM – 6:00 PM\n"
+            "Sunday: ❌ Closed\n\n"
+        )
+        if any(w in _tl for w in ("saturday", "sunday", "hours", "open", "closed", "timing", "time", "working day", "holiday")):
+            step_prompts = {
+                "ask_name": "What's your *full name*?",
+                "ask_service": "What type of appointment do you need?\n\n1️⃣ Routine Checkup / Cleaning\n2️⃣ Root Canal / Filling\n3️⃣ Teeth Whitening / Smile Design\n4️⃣ Braces / Invisalign\n5️⃣ Tooth Pain / Emergency\n6️⃣ Other\n\n_Reply with a number_",
+                "ask_date": "📅 What *date* works for you?\n\n_Example: Monday 2 June or Tomorrow_",
+                "ask_time": "⏰ Preferred *time slot*?\n\n1️⃣ Morning (9am – 12pm)\n2️⃣ Afternoon (12pm – 4pm)\n3️⃣ Evening (4pm – 8pm)\n\n_Reply with 1, 2 or 3_",
+            }
+            await wa_send_text(from_phone, _HOURS_FAQ + (step_prompts.get(step, "What's your *full name*?")))
+            return {"status": "ok"}
+
         try:
             if step == "ask_name":
                 dental["name"] = text
@@ -1640,8 +1659,8 @@ async def whatsapp_receive(request: Request):
                 await wa_send_text(from_phone,
                     "⏰ Preferred *time slot*?\n\n"
                     "1️⃣ Morning (9am – 12pm)\n"
-                    "2️⃣ Afternoon (1pm – 4pm)\n"
-                    "3️⃣ Evening (4pm – 7pm)\n\n"
+                    "2️⃣ Afternoon (12pm – 4pm)\n"
+                    "3️⃣ Evening (4pm – 8pm)\n\n"
                     "_Reply with 1, 2 or 3_"
                 )
             elif step == "ask_time":
