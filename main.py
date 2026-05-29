@@ -27,7 +27,7 @@ _t.join(timeout=10)
 edge_tts = _edge_tts_result[0]
 if edge_tts is None:
     print("[WARNING] edge_tts failed to import or timed out — TTS will be unavailable")
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -39,6 +39,63 @@ from dotenv import load_dotenv, set_key
 
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 load_dotenv(dotenv_path=ENV_FILE, override=True)
+
+# ── Google Calendar ────────────────────────────────────────────────────────────
+GCAL_CALENDAR_ID   = os.getenv("GCAL_CALENDAR_ID", "vishleshak.in@gmail.com")
+GCAL_CREDENTIALS   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dental_clinic_calendar.json")
+
+def _gcal_service():
+    """Return authenticated Google Calendar service, or None if not configured."""
+    try:
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+        creds = service_account.Credentials.from_service_account_file(
+            GCAL_CREDENTIALS,
+            scopes=["https://www.googleapis.com/auth/calendar"]
+        )
+        return build("calendar", "v3", credentials=creds)
+    except Exception as e:
+        print(f"[GCal] Service init failed: {e}")
+        return None
+
+async def create_gcal_event(name: str, service: str, date_str: str, time_slot: str, patient_phone: str) -> str | None:
+    """Create a Google Calendar event. Returns event URL or None."""
+    import asyncio
+    try:
+        # Parse time slot to get start hour
+        slot_hours = {"Morning (9am–12pm)": 9, "Afternoon (12pm–4pm)": 12, "Evening (4pm–8pm)": 16}
+        start_hour = slot_hours.get(time_slot, 10)
+
+        # Parse date — try common formats, fallback to tomorrow
+        from dateutil import parser as dateparser
+        try:
+            event_date = dateparser.parse(date_str, dayfirst=True)
+            if not event_date or event_date.date() < datetime.now().date():
+                event_date = datetime.now() + timedelta(days=1)
+        except Exception:
+            event_date = datetime.now() + timedelta(days=1)
+
+        start_dt = event_date.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+        end_dt   = start_dt + timedelta(minutes=30)
+
+        event = {
+            "summary": f"🦷 {service} — {name}",
+            "description": f"Patient: {name}\nService: {service}\nWhatsApp: {patient_phone}",
+            "start": {"dateTime": start_dt.isoformat(), "timeZone": "Asia/Kolkata"},
+            "end":   {"dateTime": end_dt.isoformat(),   "timeZone": "Asia/Kolkata"},
+        }
+
+        svc = await asyncio.get_event_loop().run_in_executor(None, _gcal_service)
+        if not svc:
+            return None
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: svc.events().insert(calendarId=GCAL_CALENDAR_ID, body=event).execute()
+        )
+        return result.get("htmlLink")
+    except Exception as e:
+        print(f"[GCal] Event creation failed: {e}")
+        return None
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 KIE_API_KEY       = os.getenv("KIE_API_KEY")
@@ -1709,15 +1766,20 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     f"⏰ Time: {dental['time']}\n"
                     f"📞 WhatsApp: {from_phone}"
                 )
+                # Create Google Calendar event
+                cal_link = await create_gcal_event(
+                    dental['name'], dental['service'], dental['date'], dental['time'], from_phone
+                )
                 try:
                     await wa_send_text(owner_wa, summary)
                 except Exception as e:
                     print(f"[Dental] Failed to notify owner: {e}")
                 # Confirm to patient
+                cal_line = f"\n📆 *Calendar:* {cal_link}" if cal_link else ""
                 await wa_send_text(from_phone,
                     f"✅ *Appointment Request Sent!*\n\n"
                     f"📋 *{dental['service']}*\n"
-                    f"📅 {dental['date']} · {dental['time']}\n\n"
+                    f"📅 {dental['date']} · {dental['time']}{cal_line}\n\n"
                     f"The clinic will confirm your slot shortly.\n\n"
                     f"🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
                     f"📍 C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"

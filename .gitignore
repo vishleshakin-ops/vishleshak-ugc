@@ -1,5 +1,6 @@
 # Environment — never commit secrets
 .env
+dental_clinic_calendar.json
 
 # Python
 __pycache__/
