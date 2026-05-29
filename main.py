@@ -86,6 +86,14 @@ def _parse_event_datetime(date_str: str, hour: int) -> datetime:
         event_date = datetime.now() + timedelta(days=1)
     return event_date.replace(hour=hour, minute=0, second=0, microsecond=0)
 
+def _format_date(date_str: str, hour: int | None = None) -> str:
+    """Return a nicely formatted date string like 'Tuesday, 3 June 2026'."""
+    try:
+        dt = _parse_event_datetime(date_str, hour or 9)
+        return dt.strftime("%A, %-d %B %Y")
+    except Exception:
+        return date_str
+
 
 async def check_gcal_conflict(date_str: str, start_hour: int) -> list[str]:
     """
@@ -1931,7 +1939,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         f"🦷 *New Appointment Request*\n\n"
                         f"👤 Name: {dental['name']}\n"
                         f"📋 Service: {dental['service']}\n"
-                        f"📅 Date: {dental['date']}\n"
+                        f"📅 Date: {_format_date(dental['date'], dental.get('gcal_hour'))}\n"
                         f"⏰ Time: {dental['time']}\n"
                         f"📞 WhatsApp: {from_phone}"
                     )
@@ -1944,7 +1952,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     await wa_send_text(from_phone,
                         f"✅ *Appointment Request Sent!*\n\n"
                         f"📋 *{dental['service']}*\n"
-                        f"📅 {dental['date']} · {dental['time']}{cal_line}\n\n"
+                        f"📅 {_format_date(dental['date'], dental.get('gcal_hour'))} · {dental['time']}{cal_line}\n\n"
                         f"The clinic will confirm your slot shortly.\n\n"
                         f"🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
                         f"📍 C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
