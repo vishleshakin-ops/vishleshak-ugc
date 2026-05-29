@@ -101,16 +101,17 @@
       position: relative;
     }
     .phone-status {
-      background: #075e54; padding: 10px 16px;
+      background: linear-gradient(135deg, #3b1f8c, #1e3a8a); padding: 10px 16px;
       display: flex; align-items: center; gap: 10px;
     }
-    .phone-avatar { width: 34px; height: 34px; border-radius: 50%; background: #25d366; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .phone-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #7C3AED, #2563EB); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
     .phone-info .name { font-size: 0.82rem; font-weight: 700; color: #fff; }
-    .phone-info .online { font-size: 0.68rem; color: rgba(255,255,255,0.7); }
+    .phone-info .online { font-size: 0.68rem; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 4px; }
+    .phone-info .online::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #25d366; flex-shrink: 0; }
     .phone-chat { background: #0d1117; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; height: 240px; overflow: hidden; }
     .pchat { max-width: 90%; padding: 8px 12px; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; }
-    .pchat.bot { background: #1e2a1e; color: rgba(255,255,255,0.85); border-radius: 4px 10px 10px 10px; align-self: flex-start; }
-    .pchat.user { background: #005c4b; color: #fff; border-radius: 10px 4px 10px 10px; align-self: flex-end; }
+    .pchat.bot { background: rgba(124,58,237,0.18); color: rgba(255,255,255,0.85); border-radius: 4px 10px 10px 10px; align-self: flex-start; }
+    .pchat.user { background: rgba(37,99,235,0.35); color: #fff; border-radius: 10px 4px 10px 10px; align-self: flex-end; }
     .pchat-time { font-size: 0.62rem; color: rgba(255,255,255,0.35); text-align: right; margin-top: -4px; margin-bottom: 2px; }
     .typing { display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: #1e2a1e; border-radius: 4px 10px 10px 10px; align-self: flex-start; width: fit-content; }
     .typing span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); animation: bounce 1.2s infinite; }
@@ -574,14 +575,13 @@ function addMsg() {
     typing.className = 'typing';
     typing.innerHTML = '<span></span><span></span><span></span>';
     chat.appendChild(typing);
-    chat.scrollTop = chat.scrollHeight;
     setTimeout(() => {
       typing.remove();
       const el = document.createElement('div');
       el.className = 'pchat bot';
       el.innerHTML = m.text.replace(/\n/g, '<br/>');
       chat.appendChild(el);
-      chat.scrollTop = chat.scrollHeight;
+      while (chat.children.length > 4) chat.removeChild(chat.firstChild);
       setTimeout(addMsg, 1800);
     }, 1200);
   } else {
@@ -589,7 +589,7 @@ function addMsg() {
     el.className = 'pchat user';
     el.textContent = m.text;
     chat.appendChild(el);
-    chat.scrollTop = chat.scrollHeight;
+    while (chat.children.length > 4) chat.removeChild(chat.firstChild);
     setTimeout(addMsg, 800);
   }
 }
