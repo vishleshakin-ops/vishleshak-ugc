@@ -466,85 +466,94 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 .samples .section-sub { color: rgba(255,255,255,0.55); margin-bottom: 48px; }
 .samples-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 16px;
-  max-width: 1000px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 960px;
   margin: 0 auto 36px;
+  justify-items: center;
 }
 .sample-card {
-  position: relative;
-  border-radius: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
   overflow: hidden;
-  background: #1e0a4e;
-  cursor: pointer;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  transition: transform 0.3s, box-shadow 0.3s;
-  aspect-ratio: 9/16;
+  width: 100%;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-.sample-card.featured {
-  grid-column: 1;
-  grid-row: 1 / 3;
-  aspect-ratio: unset;
-}
+.sample-card:nth-child(4) { grid-column: 1; }
+.sample-card:nth-child(5) { grid-column: 2; }
 .sample-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(124,58,237,0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(124,58,237,0.3);
 }
-.sample-card video {
+.sample-video-wrap {
+  position: relative;
+  aspect-ratio: 9/14;
+  background: #0d0d10;
+  overflow: hidden;
+  cursor: pointer;
+}
+.sample-video-wrap video {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
 }
-.sample-overlay {
+.sample-video-overlay {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.35);
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.25s;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
 }
-.sample-card.paused .sample-overlay { opacity: 1; pointer-events: auto; }
-.sample-play {
-  width: 54px; height: 54px;
-  border-radius: 50%;
+.sample-video-wrap:not(.playing):hover .sample-video-overlay { opacity: 1; }
+.sample-play-icon {
+  width: 48px; height: 48px; border-radius: 50%;
   background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
   border: 2px solid rgba(255,255,255,0.6);
-  color: white; font-size: 20px;
-  cursor: pointer;
+  color: white; font-size: 18px;
   display: flex; align-items: center; justify-content: center;
-  transition: transform 0.2s, background 0.2s;
 }
-.sample-play:hover { background: rgba(124,58,237,0.7); transform: scale(1.1); }
 .sample-tag {
   position: absolute;
-  top: 12px; left: 12px;
-  background: rgba(0,0,0,0.55);
+  bottom: 8px; left: 8px;
+  background: rgba(0,0,0,0.6);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.15);
   color: white;
-  font-size: 11px; font-weight: 700;
+  font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.06em;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 20px;
-  z-index: 10;
+  z-index: 5;
 }
 .sample-mute {
   position: absolute;
-  bottom: 10px; right: 10px;
-  width: 32px; height: 32px;
+  bottom: 8px; right: 8px;
+  width: 28px; height: 28px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(6px);
-  border: 1.5px solid rgba(255,255,255,0.3);
-  color: white; font-size: 14px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  border: none;
+  color: white; font-size: 12px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  opacity: 1;
-  transition: background 0.2s, transform 0.2s;
-  z-index: 10;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.18s, transform 0.18s, background 0.14s;
+  z-index: 6;
 }
-.sample-mute:hover { background: rgba(124,58,237,0.8); transform: scale(1.1); }
+.sample-card:hover .sample-mute { opacity: 1; transform: scale(1); }
+.sample-mute:hover { background: rgba(124,58,237,0.8); }
+.sample-card-body { padding: 10px 12px 12px; text-align: left; }
+.sample-caption {
+  margin: 0;
+  font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.4;
+}
+.sample-caption small { display: block; font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 .samples-cta { margin-top: 8px; }
 .samples-cta a {
   display: inline-flex; align-items: center; gap: 8px;
@@ -816,8 +825,8 @@ footer {
   .hero-right { display: none; }
   .hero-pills { grid-template-columns: 1fr; }
   .features, .services, .testimonials, .cta, .samples { padding: 60px 24px; }
-  .samples-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .sample-card.featured { grid-column: 1 / -1; grid-row: auto; aspect-ratio: 9/16; max-height: 420px; }
+  .samples-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .sample-card:nth-child(4), .sample-card:nth-child(5) { grid-column: auto; }
   .features-grid, .services-grid, .testimonials-grid { grid-template-columns: 1fr; }
   .why-us { padding: 60px 24px; }
   .why-us-inner { flex-direction: column; }
@@ -933,35 +942,60 @@ footer {
   <h2 class="section-title">AI-Generated UGC Videos</h2>
   <p class="section-sub">Real videos created by our AI — ready to post on Instagram, YouTube & Facebook.</p>
   <div class="samples-grid">
-    <div class="sample-card featured">
-      <span class="sample-tag">✨ Fashion</span>
-      <video src="/static/samples/sample2.mp4" autoplay muted loop playsinline></video>
-      <div class="sample-overlay"><button class="sample-play">▶</button></div>
-      <button class="sample-mute" title="Unmute">🔇</button>
+    <div class="sample-card">
+      <div class="sample-video-wrap">
+        <video src="/static/samples/sample2.mp4" playsinline preload="metadata" muted></video>
+        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
+        <span class="sample-tag">✨ Fashion</span>
+        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+      </div>
+      <div class="sample-card-body">
+        <p class="sample-caption">Fashion Ad<small>Hindi · Instagram Reel</small></p>
+      </div>
     </div>
     <div class="sample-card">
-      <span class="sample-tag">💍 Jewelry</span>
-      <video src="/static/samples/sample3.mp4" autoplay muted loop playsinline></video>
-      <div class="sample-overlay"><button class="sample-play">▶</button></div>
-      <button class="sample-mute" title="Unmute">🔇</button>
+      <div class="sample-video-wrap">
+        <video src="/static/samples/sample3.mp4" playsinline preload="metadata" muted></video>
+        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
+        <span class="sample-tag">💍 Jewelry</span>
+        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+      </div>
+      <div class="sample-card-body">
+        <p class="sample-caption">Jewelry Ad<small>Hindi · Instagram Reel</small></p>
+      </div>
     </div>
     <div class="sample-card">
-      <span class="sample-tag">👶 Kids Fashion</span>
-      <video src="/static/samples/sample4.mp4" autoplay muted loop playsinline></video>
-      <div class="sample-overlay"><button class="sample-play">▶</button></div>
-      <button class="sample-mute" title="Unmute">🔇</button>
+      <div class="sample-video-wrap">
+        <video src="/static/samples/sample4.mp4" playsinline preload="metadata" muted></video>
+        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
+        <span class="sample-tag">👶 Kids Fashion</span>
+        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+      </div>
+      <div class="sample-card-body">
+        <p class="sample-caption">Kids Fashion<small>Hindi · Instagram Reel</small></p>
+      </div>
     </div>
     <div class="sample-card">
-      <span class="sample-tag">👗 Ethnic Wear</span>
-      <video src="/static/samples/sample5.mp4" autoplay muted loop playsinline></video>
-      <div class="sample-overlay"><button class="sample-play">▶</button></div>
-      <button class="sample-mute" title="Unmute">🔇</button>
+      <div class="sample-video-wrap">
+        <video src="/static/samples/sample5.mp4" playsinline preload="metadata" muted></video>
+        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
+        <span class="sample-tag">👗 Ethnic Wear</span>
+        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+      </div>
+      <div class="sample-card-body">
+        <p class="sample-caption">Ethnic Wear Ad<small>Hindi · Instagram Reel</small></p>
+      </div>
     </div>
     <div class="sample-card">
-      <span class="sample-tag">🛍️ Lifestyle</span>
-      <video src="/static/samples/sample6.mp4" autoplay muted loop playsinline></video>
-      <div class="sample-overlay"><button class="sample-play">▶</button></div>
-      <button class="sample-mute" title="Unmute">🔇</button>
+      <div class="sample-video-wrap">
+        <video src="/static/samples/sample6.mp4" playsinline preload="metadata" muted></video>
+        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
+        <span class="sample-tag">🛍️ Lifestyle</span>
+        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+      </div>
+      <div class="sample-card-body">
+        <p class="sample-caption">Lifestyle Ad<small>Hindi · Instagram Reel</small></p>
+      </div>
     </div>
   </div>
   <div class="samples-cta">
@@ -1270,38 +1304,35 @@ footer {
   updateActive(); // run once on load
 })();
 
-// Sample videos — autoplay+loop, click to pause/resume, always-visible mute toggle
+// Sample videos — hover to play/pause, global mute toggle (matches index.html behaviour)
+let samplesMuted = true;
+
+function toggleSamplesMute(btn, e) {
+  e.stopPropagation();
+  samplesMuted = !samplesMuted;
+  document.querySelectorAll('.sample-video-wrap video').forEach(v => { v.muted = samplesMuted; });
+  document.querySelectorAll('.sample-mute').forEach(b => {
+    b.textContent = samplesMuted ? '🔇' : '🔊';
+    b.title       = samplesMuted ? 'Unmute' : 'Mute';
+  });
+}
+
 document.querySelectorAll('.sample-card').forEach(card => {
-  const video   = card.querySelector('video');
-  const muteBtn = card.querySelector('.sample-mute');
-  const overlay = card.querySelector('.sample-overlay');
-  const playBtn = card.querySelector('.sample-play');
+  const wrap  = card.querySelector('.sample-video-wrap');
+  const video = wrap && wrap.querySelector('video');
+  if (!video) return;
 
-  // Click card → pause / resume (ignore mute button clicks)
-  card.addEventListener('click', e => {
-    if (muteBtn.contains(e.target)) return;
-    if (video.paused) {
-      video.play();
-      card.classList.remove('paused');
-    } else {
-      video.pause();
-      card.classList.add('paused');
-    }
+  video.muted = samplesMuted;
+
+  wrap.addEventListener('mouseenter', () => {
+    video.muted = samplesMuted;
+    video.play().catch(() => {});
+    wrap.classList.add('playing');
   });
-
-  // Play button inside overlay also resumes
-  playBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    video.play();
-    card.classList.remove('paused');
-  });
-
-  // Mute button — toggles sound, icon updates instantly
-  muteBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    video.muted = !video.muted;
-    muteBtn.textContent = video.muted ? '🔇' : '🔊';
-    muteBtn.title       = video.muted ? 'Unmute' : 'Mute';
+  wrap.addEventListener('mouseleave', () => {
+    video.pause();
+    video.currentTime = 0;
+    wrap.classList.remove('playing');
   });
 });
 
