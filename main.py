@@ -1768,7 +1768,11 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
         }
 
         # Normalise natural language time inputs at ask_time step
+        # Convert "2.30", "2:30" formats to "2 30pm" for easier matching
+        import re as _re
         _tl = text.lower().strip()
+        _tl = _re.sub(r'(\d+)[\.:](\d{2})\s*(am|pm)', r'\1:\2\3', _tl)  # 2.30pm → 2:30pm
+        _tl = _re.sub(r'(\d+)[\.:](\d{2})(?!\d)', r'\1:\2pm', _tl)  # 2.30 → 2:30pm
         if step == "ask_time":
             # Detect after-hours times and warn
             _after_hours = any(w in _tl for w in ("9pm", "9 pm", "10pm", "10 pm", "11pm", "11 pm", "12am", "midnight", "after 8", "after 9"))
@@ -1787,9 +1791,9 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             # Map to slot AND capture specific hour for calendar
             _specific_hour = None
             _time_map = {
-                "9am": 9, "9 am": 9, "10am": 10, "10 am": 10, "11am": 11, "11 am": 11,
-                "12pm": 12, "12 pm": 12, "1pm": 13, "1 pm": 13, "2pm": 14, "2 pm": 14, "3pm": 15, "3 pm": 15,
-                "4pm": 16, "4 pm": 16, "5pm": 17, "5 pm": 17, "6pm": 18, "6 pm": 18, "7pm": 19, "7 pm": 19, "8pm": 20, "8 pm": 20
+                "9am": 9, "9 am": 9, "9:00am": 9, "10am": 10, "10 am": 10, "10:30am": 10, "11am": 11, "11 am": 11, "11:30am": 11,
+                "12pm": 12, "12 pm": 12, "12:30pm": 12, "1pm": 13, "1 pm": 13, "1:30pm": 13, "2pm": 14, "2 pm": 14, "2:30pm": 14, "3pm": 15, "3 pm": 15, "3:30pm": 15,
+                "4pm": 16, "4 pm": 16, "4:30pm": 16, "5pm": 17, "5 pm": 17, "5:30pm": 17, "6pm": 18, "6 pm": 18, "6:30pm": 18, "7pm": 19, "7 pm": 19, "7:30pm": 19, "8pm": 20, "8 pm": 20
             }
             for t, h in _time_map.items():
                 if t in _tl:
@@ -1915,7 +1919,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     if _conflicts:
                         alts = "\n".join([f"• {a}" for a in _conflicts])
                         await wa_send_text(from_phone,
-                            f"⚠️ Sorry, *{_auto_hour}:00 PM* on that day is already booked.\n\n"
+                            f"⚠️ Sorry, *{_auto_hour % 12 or 12}:00 {'AM' if _auto_hour < 12 else 'PM'}* on that day is already booked.\n\n"
                             f"Here are available slots:\n{alts}\n\n"
                             f"📅 Please reply with your preferred time."
                         )
