@@ -100,9 +100,13 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   position: fixed; top: 0; width: 100%; z-index: 1000;
   background: rgba(15, 10, 40, 0.95);
   backdrop-filter: blur(10px);
-  padding: 16px 60px;
-  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 60px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.nav-inner {
+  max-width: 1200px; width: 100%; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 0;
 }
 .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .nav-logo-icon {
@@ -767,22 +771,24 @@ footer {
 
 <!-- NAVIGATION -->
 <nav class="nav">
-  <a href="#" class="nav-logo">
-    <div class="nav-logo-icon">V</div>
-    <div>
-      <span style="color:white;font-size:18px;font-weight:700;">Vishleshak</span>
-      <span class="nav-logo-sub">An AI Studio</span>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">V</div>
+      <div>
+        <span style="color:white;font-size:18px;font-weight:700;">Vishleshak</span>
+        <span class="nav-logo-sub">An AI Studio</span>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#">Home</a>
+      <a href="#services">Services</a>
+      <a href="#samples">Samples</a>
+      <a href="#demo">Live Demo</a>
+      <a href="#testimonials">Testimonials</a>
+      <a href="#why-us">Why Us</a>
+      <a href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank" class="ugc-btn">🎬 UGC Videos</a>
+      <a href="#contact">Contact</a>
     </div>
-  </a>
-  <div class="nav-links">
-    <a href="#">Home</a>
-    <a href="#services">Services</a>
-    <a href="#samples">Samples</a>
-    <a href="#demo">Live Demo</a>
-    <a href="#testimonials">Testimonials</a>
-    <a href="#why-us">Why Us</a>
-    <a href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank" class="ugc-btn">🎬 UGC Videos</a>
-    <a href="#contact">Contact</a>
   </div>
 </nav>
 
