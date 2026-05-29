@@ -107,6 +107,70 @@ def _format_date(date_str: str, hour: int | None = None) -> str:
         return date_str
 
 
+async def get_available_slots(date_str: str, max_slots: int = 6) -> list[str]:
+    """Return up to max_slots free 30-min slots for the given day, within clinic hours."""
+    import asyncio
+    try:
+        from dateutil import parser as dateparser
+        try:
+            day = dateparser.parse(date_str, dayfirst=True)
+            if not day or day.date() < datetime.now().date():
+                if any(d in date_str.lower() for d in _DAY_NAMES):
+                    day += timedelta(days=7)
+                else:
+                    day = datetime.now() + timedelta(days=1)
+        except Exception:
+            day = datetime.now() + timedelta(days=1)
+
+        # Saturday closes at 18:00, others at 20:00
+        is_saturday = day.weekday() == 5
+        open_h, close_h = 9, 18 if is_saturday else 20
+
+        svc = await asyncio.get_event_loop().run_in_executor(None, _gcal_service)
+        if not svc:
+            return []
+
+        # Fetch all events for the day
+        day_start = day.replace(hour=open_h,  minute=0, second=0, microsecond=0)
+        day_end   = day.replace(hour=close_h, minute=0, second=0, microsecond=0)
+        result = await asyncio.get_event_loop().run_in_executor(None, lambda: svc.events().list(
+            calendarId=GCAL_CALENDAR_ID,
+            timeMin=day_start.isoformat() + "+05:30",
+            timeMax=day_end.isoformat()   + "+05:30",
+            singleEvents=True, orderBy="startTime"
+        ).execute())
+        booked = result.get("items", [])
+
+        # Build set of booked start times
+        booked_starts = set()
+        for ev in booked:
+            st = ev.get("start", {}).get("dateTime", "")
+            if st:
+                try:
+                    dt = datetime.fromisoformat(st.replace("Z", "+00:00"))
+                    booked_starts.add((dt.hour, dt.minute))
+                except Exception:
+                    pass
+
+        # Walk 30-min slots
+        free = []
+        slot = day_start
+        while slot < day_end:
+            if (slot.hour, slot.minute) not in booked_starts:
+                h, m = slot.hour, slot.minute
+                period = "AM" if h < 12 else "PM"
+                dh = h if h <= 12 else h - 12
+                if dh == 0: dh = 12
+                free.append(f"{dh}:{m:02d} {period}")
+            slot += timedelta(minutes=30)
+            if len(free) >= max_slots:
+                break
+        return free
+    except Exception as e:
+        print(f"[GCal] get_available_slots failed: {e}")
+        return []
+
+
 async def check_gcal_conflict(date_str: str, start_hour: int) -> list[str]:
     """
     Check Google Calendar for conflicts at given time.
@@ -1798,7 +1862,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             "ask_name": "What's your *full name*?",
             "ask_service": "What type of appointment do you need?\n\n1️⃣ Routine Checkup / Cleaning\n2️⃣ Root Canal / Filling\n3️⃣ Teeth Whitening / Smile Design\n4️⃣ Braces / Invisalign\n5️⃣ Tooth Pain / Emergency\n6️⃣ Other\n\n_Reply with a number_",
             "ask_date": "📅 What *date* works for you?\n\n_Example: Monday 2 June or Tomorrow_",
-            "ask_time": "⏰ Preferred *time slot*?\n\n1️⃣ Morning (9am – 12pm)\n2️⃣ Afternoon (12pm – 4pm)\n3️⃣ Evening (4pm – 8pm)\n\n_Reply with 1, 2 or 3_",
+            "ask_time": "⏰ Please reply with your preferred time (e.g. *10:30 AM*, *3 PM*).",
         }
 
         import re as _re
@@ -2051,15 +2115,26 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     _dental_sessions.pop(from_phone, None)
                     _router_sessions.pop(from_phone, None)
                 else:
+                    # No time given — show available 30-min slots for that day
+                    _free_slots = await get_available_slots(text)
                     dental["step"] = "ask_time"
+                    dental["alt_slots"] = _free_slots
                     _dental_sessions[from_phone] = dental
-                    await wa_send_text(from_phone,
-                        "⏰ Preferred *time slot*?\n\n"
-                        "1️⃣ Morning (9am – 12pm)\n"
-                        "2️⃣ Afternoon (12pm – 4pm)\n"
-                        "3️⃣ Evening (4pm – 8pm)\n\n"
-                        "_Reply with 1, 2 or 3_"
-                    )
+                    if _free_slots:
+                        emojis = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣"]
+                        slot_list = "\n".join([f"{emojis[i]} {s}" for i, s in enumerate(_free_slots)])
+                        await wa_send_text(from_phone,
+                            f"⏰ Available slots:\n\n{slot_list}\n\n"
+                            f"_Reply with a number to book, or type a different time._"
+                        )
+                    else:
+                        await wa_send_text(from_phone,
+                            "⏰ Preferred *time slot*?\n\n"
+                            "1️⃣ Morning (9am – 12pm)\n"
+                            "2️⃣ Afternoon (12pm – 4pm)\n"
+                            "3️⃣ Evening (4pm – 8pm)\n\n"
+                            "_Reply with 1, 2 or 3_"
+                        )
             elif step == "ask_time":
                 slots = {"1": "Morning (9am–12pm)", "2": "Afternoon (12pm–4pm)", "3": "Evening (4pm–8pm)"}
                 slot_start = {"1": 9, "2": 12, "3": 16}
