@@ -4,431 +4,337 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vishleshak AI — UGC Video Ads for Indian Brands</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --purple: #7C3AED;
-      --blue:   #2563EB;
-      --grad:   linear-gradient(135deg, #7C3AED, #2563EB);
-      --dark:   #09090B;
-      --dark2:  #111115;
-      --card:   #18181B;
-      --border: rgba(124,58,237,0.25);
-      --white:  #FFFFFF;
-      --text:   #E4E4E7;
-      --muted:  #71717A;
-      --green:  #22C55E;
+      --bg-from:  #12065e;
+      --bg-to:    #3b2bbf;
+      --purple:   #7C5CFA;
+      --purple2:  #5b3de8;
+      --blue:     #4f8ef7;
+      --white:    #ffffff;
+      --text:     rgba(255,255,255,0.75);
+      --muted:    rgba(255,255,255,0.45);
+      --card-bg:  rgba(255,255,255,0.07);
+      --card-border: rgba(255,255,255,0.12);
+      --green:    #22C55E;
+      --radius:   16px;
     }
 
+    html { scroll-behavior: smooth; }
+
     body {
-      background: var(--dark);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(145deg, #0d0640 0%, #1e1080 35%, #3530b8 65%, #4845cc 100%);
+      min-height: 100vh;
+      color: var(--white);
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
 
     /* ── NAV ── */
     nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0;
-      background: rgba(9,9,11,0.95);
-      backdrop-filter: blur(12px);
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 40px;
+      background: rgba(13,6,64,0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .logo-icon {
-      width: 36px; height: 36px;
-      background: var(--grad);
-      border-radius: 9px;
+      width: 36px; height: 36px; border-radius: 9px;
+      background: var(--purple);
       display: flex; align-items: center; justify-content: center;
-      font-weight: 800; color: #fff; font-size: 18px;
+      font-weight: 900; color: #fff; font-size: 17px;
     }
-    .logo-text {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--white);
-    }
-    .logo-text span { color: #A78BFA; }
+    .logo-name { font-size: 1rem; font-weight: 700; color: #fff; }
+    .logo-sub { font-size: 0.68rem; color: var(--muted); font-weight: 400; display: block; margin-top: -2px; }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-link { color: var(--text); font-size: 0.875rem; font-weight: 500; text-decoration: none; transition: color 0.15s; }
+    .nav-link:hover { color: #fff; }
     .nav-cta {
-      background: var(--grad);
-      color: white;
-      font-weight: 600;
-      font-size: 0.85rem;
-      padding: 10px 20px;
-      border-radius: 50px;
-      text-decoration: none;
-      white-space: nowrap;
-      box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+      background: var(--purple);
+      color: #fff; font-weight: 700; font-size: 0.875rem;
+      padding: 10px 22px; border-radius: 8px; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background 0.15s, transform 0.15s;
     }
+    .nav-cta:hover { background: var(--purple2); transform: translateY(-1px); }
 
     /* ── HERO ── */
     .hero {
-      text-align: center;
-      padding: 72px 24px 48px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 65%);
+      padding: 96px 40px 80px;
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      align-items: center; gap: 60px;
     }
     .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(124,58,237,0.15);
-      border: 1px solid rgba(124,58,237,0.4);
-      color: #C4B5FD;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      padding: 6px 16px;
-      border-radius: 50px;
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.85);
+      font-size: 0.78rem; font-weight: 600;
+      padding: 6px 16px; border-radius: 100px;
       margin-bottom: 28px;
     }
+    .hero-badge::before { content: '●'; color: var(--green); font-size: 0.6rem; }
     .hero h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.2rem, 6vw, 3.6rem);
-      color: var(--white);
-      line-height: 1.15;
-      margin-bottom: 16px;
+      font-size: clamp(2.4rem, 4.5vw, 3.6rem);
+      font-weight: 900; line-height: 1.08; letter-spacing: -1.5px;
+      color: #fff; margin-bottom: 20px;
     }
-    .hero h1 .highlight {
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .hero-hindi {
-      font-size: 1.15rem;
-      color: #A78BFA;
-      margin-bottom: 16px;
-      font-weight: 500;
-    }
+    .hero h1 .accent { color: #A78BFA; }
     .hero-sub {
-      font-size: 1.05rem;
-      color: var(--muted);
-      max-width: 520px;
-      margin: 0 auto 36px;
-      line-height: 1.65;
+      font-size: 1.05rem; color: var(--text);
+      line-height: 1.7; margin-bottom: 36px; max-width: 460px;
     }
-    .hero-btns {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
     .btn-primary {
-      background: var(--grad);
-      color: white;
-      font-weight: 700;
-      font-size: 1rem;
-      padding: 14px 30px;
-      border-radius: 50px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 24px rgba(124,58,237,0.45);
-      transition: transform 0.15s, box-shadow 0.15s;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--purple); color: #fff;
+      font-weight: 700; font-size: 0.95rem;
+      padding: 13px 26px; border-radius: 9px; text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,58,237,0.5); }
+    .btn-primary:hover { background: var(--purple2); transform: translateY(-2px); }
     .btn-secondary {
-      background: transparent;
-      color: #A78BFA;
-      font-weight: 600;
-      font-size: 1rem;
-      padding: 14px 30px;
-      border-radius: 50px;
-      border: 1.5px solid rgba(124,58,237,0.5);
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; font-weight: 600; font-size: 0.95rem;
+      padding: 13px 26px; border-radius: 9px; text-decoration: none;
       transition: background 0.15s;
     }
-    .btn-secondary:hover { background: rgba(124,58,237,0.1); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.16); }
 
-    /* ── TRUST BAR ── */
-    .trust-bar {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      padding: 24px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      flex-wrap: wrap;
+    /* Hero right — phone mockup area */
+    .hero-visual {
+      position: relative; display: flex; justify-content: center; align-items: center;
+    }
+    .phone-frame {
+      width: 220px;
+      background: #0a0618;
+      border-radius: 32px;
+      border: 2px solid rgba(255,255,255,0.12);
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+    }
+    .phone-frame video { width: 100%; display: block; aspect-ratio: 9/16; object-fit: cover; }
+    .hero-badge-float {
+      position: absolute;
+      background: #fff; color: #1e1080;
+      border-radius: 12px; padding: 10px 16px;
+      font-size: 0.78rem; font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .float-top { top: 20px; right: -20px; }
+    .float-bottom { bottom: 60px; right: -30px; }
+    .float-icon { font-size: 1.1rem; }
+    .float-text { display: flex; flex-direction: column; }
+    .float-title { font-size: 0.82rem; font-weight: 800; color: #1e1080; }
+    .float-sub { font-size: 0.68rem; color: #64748b; font-weight: 500; }
+
+    /* ── TRUST STRIP ── */
+    .trust-strip {
+      display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.15);
     }
     .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.88rem;
-      color: var(--muted);
-      font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      padding: 16px 32px;
+      font-size: 0.85rem; color: var(--text); font-weight: 500;
+      border-right: 1px solid rgba(255,255,255,0.08);
     }
-    .trust-item .dot { color: var(--green); font-size: 1.1rem; }
+    .trust-item:last-child { border-right: none; }
+    .trust-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 
-    /* ── SECTION COMMON ── */
-    .section { padding: 64px 24px; }
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 12px;
+    /* ── SECTIONS ── */
+    .section { padding: 80px 40px; }
+    .section-inner { max-width: 960px; margin: 0 auto; }
+    .section-center { text-align: center; }
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: #A78BFA; margin-bottom: 14px;
     }
-    .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(1.8rem, 4vw, 2.4rem);
-      color: var(--white);
-      margin-bottom: 10px;
+    h2.section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 900; color: #fff; letter-spacing: -0.8px;
+      line-height: 1.15; margin-bottom: 14px;
     }
-    .section-sub {
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.6;
-      max-width: 500px;
+    .section-desc {
+      color: var(--text); font-size: 1rem; line-height: 1.7;
+      max-width: 520px; margin: 0 auto;
     }
 
     /* ── VIDEO SHOWCASE ── */
     .video-section {
-      padding: 64px 24px;
-      background: linear-gradient(180deg, transparent, rgba(124,58,237,0.06) 50%, transparent);
+      padding: 80px 40px;
+      background: rgba(0,0,0,0.15);
     }
     .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      max-width: 900px;
-      margin: 36px auto 0;
+      display: flex; gap: 20px; justify-content: center;
+      flex-wrap: wrap; margin-top: 48px;
     }
     .video-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      transition: transform 0.2s, border-color 0.2s;
+      width: 210px; flex-shrink: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius); overflow: hidden;
+      transition: transform 0.25s, border-color 0.25s;
     }
-    .video-card:hover { transform: translateY(-4px); border-color: rgba(124,58,237,0.5); }
-    .video-card video {
-      width: 100%;
-      display: block;
-      aspect-ratio: 9/16;
-      object-fit: cover;
-      background: #0a0a0e;
-      max-height: 480px;
+    .video-card:hover { transform: translateY(-6px); border-color: rgba(124,92,250,0.5); }
+    .video-card video { width: 100%; display: block; aspect-ratio: 9/16; object-fit: cover; background: #080814; }
+    .video-card-info { padding: 12px 14px 14px; }
+    .video-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(124,92,250,0.2);
+      border: 1px solid rgba(124,92,250,0.35);
+      color: #C4B5FD; font-size: 0.68rem; font-weight: 700;
+      padding: 3px 9px; border-radius: 100px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 5px;
     }
-    .video-card-footer {
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .video-tag {
-      background: rgba(124,58,237,0.2);
-      color: #C4B5FD;
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 50px;
-      letter-spacing: 0.5px;
-    }
-    .video-desc {
-      color: var(--muted);
-      font-size: 0.8rem;
-    }
+    .video-caption { color: var(--muted); font-size: 0.78rem; }
 
-    /* ── HOW IT WORKS ── */
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      max-width: 800px;
-      margin: 36px auto 0;
-    }
+    /* ── STEPS ── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 48px; }
     .step {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px 20px;
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 28px 24px;
+      transition: border-color 0.2s, transform 0.2s;
     }
+    .step:hover { border-color: rgba(124,92,250,0.4); transform: translateY(-3px); }
+    .step-icon { font-size: 1.8rem; margin-bottom: 14px; display: block; }
     .step-num {
-      width: 36px; height: 36px; flex-shrink: 0;
-      background: var(--grad);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; color: #fff; font-size: 0.9rem;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+      color: #A78BFA; text-transform: uppercase; margin-bottom: 8px;
     }
-    .step-title { font-weight: 700; color: var(--white); margin-bottom: 6px; font-size: 0.95rem; }
-    .step-desc { color: var(--muted); font-size: 0.85rem; line-height: 1.55; }
+    .step-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .step-desc { font-size: 0.875rem; color: var(--text); line-height: 1.6; }
 
     /* ── PRODUCTS GRID ── */
     .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
-      max-width: 800px;
-      margin: 32px auto 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px; margin-top: 40px;
     }
     .product-chip {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 12px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--text);
-      font-weight: 500;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 12px; padding: 16px 10px;
+      text-align: center; font-size: 0.82rem; color: var(--text);
+      font-weight: 500; transition: border-color 0.15s, transform 0.15s;
     }
-    .product-chip span { display: block; font-size: 1.4rem; margin-bottom: 6px; }
+    .product-chip:hover { border-color: rgba(124,92,250,0.4); transform: translateY(-2px); }
+    .product-chip .emoji { display: block; font-size: 1.5rem; margin-bottom: 7px; }
 
     /* ── STATS ── */
     .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 16px;
-      max-width: 700px;
-      margin: 36px auto 0;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px; margin-top: 48px;
     }
     .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px 16px;
-      text-align: center;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 32px 20px; text-align: center;
     }
     .stat-num {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.2rem;
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      font-weight: 700;
-      line-height: 1;
-      margin-bottom: 8px;
+      font-size: 2.4rem; font-weight: 900; color: #fff;
+      letter-spacing: -1px; line-height: 1; margin-bottom: 8px;
     }
-    .stat-label { color: var(--muted); font-size: 0.85rem; }
+    .stat-label { font-size: 0.82rem; color: var(--text); line-height: 1.4; }
 
     /* ── PRICING ── */
-    .plans {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-      max-width: 820px;
-      margin: 36px auto 0;
-    }
+    .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 48px; }
     .plan {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
-      position: relative;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 32px 26px;
+      position: relative; display: flex; flex-direction: column;
+      transition: border-color 0.2s;
     }
-    .plan.popular {
-      border-color: var(--purple);
-      box-shadow: 0 0 0 1px var(--purple), 0 8px 32px rgba(124,58,237,0.25);
+    .plan.featured {
+      background: rgba(124,92,250,0.15);
+      border-color: rgba(124,92,250,0.5);
+      box-shadow: 0 0 0 1px rgba(124,92,250,0.2), 0 24px 60px rgba(124,92,250,0.2);
     }
-    .popular-badge {
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--grad);
-      color: white;
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 4px 14px;
-      border-radius: 50px;
-      white-space: nowrap;
+    .plan-badge {
+      position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+      background: var(--purple); color: #fff;
+      font-size: 0.7rem; font-weight: 700; padding: 5px 16px;
+      border-radius: 0 0 10px 10px; white-space: nowrap; letter-spacing: 0.5px;
     }
-    .plan-name { font-weight: 700; color: var(--white); font-size: 1rem; margin-bottom: 6px; }
-    .plan-price { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--white); margin-bottom: 4px; }
-    .plan-price span { font-family: 'Inter', sans-serif; font-size: 0.88rem; color: var(--muted); font-weight: 400; }
-    .plan-per { color: var(--muted); font-size: 0.8rem; margin-bottom: 20px; }
-    .plan-features { list-style: none; margin-bottom: 24px; }
+    .plan-name { font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .plan-price { font-size: 2.8rem; font-weight: 900; color: #fff; letter-spacing: -1.5px; line-height: 1; margin-bottom: 4px; }
+    .plan-price sub { font-size: 1.1rem; font-weight: 600; vertical-align: middle; letter-spacing: 0; }
+    .plan-note { font-size: 0.78rem; color: var(--muted); margin-bottom: 24px; }
+    .plan-divider { height: 1px; background: rgba(255,255,255,0.08); margin-bottom: 20px; }
+    .plan-features { list-style: none; flex: 1; margin-bottom: 26px; }
     .plan-features li {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 7px 0;
-      font-size: 0.87rem;
-      color: var(--text);
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; font-size: 0.875rem; color: var(--text);
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .plan-features li::before { content: "✓"; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .plan-features li:last-child { border-bottom: none; }
+    .check { color: var(--green); font-size: 0.8rem; margin-top: 2px; flex-shrink: 0; }
     .plan-btn {
-      display: block;
-      text-align: center;
-      padding: 12px;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.9rem;
-      text-decoration: none;
-      transition: opacity 0.15s;
+      display: block; text-align: center; padding: 13px;
+      border-radius: 9px; font-weight: 700; font-size: 0.9rem; text-decoration: none;
+      transition: opacity 0.15s, transform 0.15s;
     }
-    .plan-btn:hover { opacity: 0.85; }
-    .plan-btn-primary { background: var(--grad); color: white; }
-    .plan-btn-outline { border: 1.5px solid rgba(124,58,237,0.5); color: #A78BFA; }
+    .plan-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .plan-btn-filled { background: var(--purple); color: #fff; }
+    .plan-btn-outline { border: 1.5px solid rgba(255,255,255,0.2); color: #fff; }
+    .plan-btn-outline:hover { background: rgba(255,255,255,0.08); }
 
     /* ── CTA ── */
     .cta-section {
-      padding: 80px 24px;
-      text-align: center;
-      background: radial-gradient(ellipse at center, rgba(124,58,237,0.15) 0%, transparent 70%);
+      padding: 100px 40px; text-align: center;
+      background: rgba(0,0,0,0.2);
     }
     .cta-section h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(1.8rem, 4vw, 2.6rem);
-      color: var(--white);
-      margin-bottom: 12px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900; color: #fff; letter-spacing: -1px;
+      margin-bottom: 14px;
     }
-    .cta-section p { color: var(--muted); margin-bottom: 32px; font-size: 1rem; }
-    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-    .whatsapp-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #25D366;
-      color: white;
-      font-weight: 700;
-      font-size: 0.95rem;
-      padding: 14px 26px;
-      border-radius: 50px;
-      text-decoration: none;
-      transition: transform 0.15s;
+    .cta-section p { color: var(--text); font-size: 1rem; margin-bottom: 36px; }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .wa-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: #25D366; color: #fff; font-weight: 700; font-size: 0.95rem;
+      padding: 13px 26px; border-radius: 9px; text-decoration: none;
+      transition: transform 0.15s, opacity 0.15s;
     }
-    .whatsapp-btn:hover { transform: translateY(-2px); }
+    .wa-btn:hover { transform: translateY(-2px); opacity: 0.92; }
 
+    /* ── FOOTER ── */
     footer {
-      padding: 24px;
-      text-align: center;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      color: var(--muted);
-      font-size: 0.8rem;
+      padding: 28px 40px; text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted); font-size: 0.8rem;
+      background: rgba(0,0,0,0.2);
     }
     footer a { color: #A78BFA; text-decoration: none; }
 
-    @media (max-width: 600px) {
-      .trust-bar { gap: 20px; }
-      .hero { padding: 52px 20px 36px; }
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      nav { padding: 12px 20px; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; gap: 40px; padding: 60px 20px 48px; text-align: center; }
+      .hero-sub { margin: 0 auto 36px; }
+      .hero-btns { justify-content: center; }
+      .hero-visual { justify-content: center; }
+      .float-top { right: 0; }
+      .float-bottom { left: 0; }
+      .section { padding: 60px 20px; }
+      .video-section { padding: 60px 20px; }
+      .trust-item { padding: 12px 18px; font-size: 0.8rem; }
+      .cta-section { padding: 72px 20px; }
+      footer { padding: 24px 20px; }
     }
   </style>
 </head>
@@ -436,210 +342,258 @@
 
 <!-- NAV -->
 <nav>
-  <a href="https://vishleshak.in" class="logo">
+  <a class="logo" href="https://vishleshak.in">
     <div class="logo-icon">V</div>
-    <div class="logo-text">Vishleshak <span>AI</span></div>
+    <div>
+      <span class="logo-name">Vishleshak</span>
+      <span class="logo-sub">An AI Studio</span>
+    </div>
   </a>
-  <a href="/order" class="nav-cta">Try Free →</a>
+  <div class="nav-links">
+    <a class="nav-link" href="#demo">Samples</a>
+    <a class="nav-link" href="#how">How It Works</a>
+    <a class="nav-link" href="#pricing">Pricing</a>
+  </div>
+  <a class="nav-cta" href="/order">🎬 UGC Videos</a>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-badge">✦ AI UGC Video Studio</div>
-  <h1>Your Product.<br/><span class="highlight">Professional Video Ad.</span><br/>In 5 Minutes.</h1>
-  <p class="hero-hindi">बस एक फोटो अपलोड करो — हम पूरा Ad बना देंगे।</p>
-  <p class="hero-sub">
-    Upload a product photo. Get a cinematic UGC video with an AI model, Hindi or English voiceover, and professional editing — ready for Instagram, Reels, and WhatsApp.
-  </p>
-  <div class="hero-btns">
-    <a href="/order" class="btn-primary">🎬 Create Your First Video</a>
-    <a href="#how" class="btn-secondary">See How It Works</a>
+  <div class="hero-left">
+    <div class="hero-badge">AI-Powered for Indian Businesses</div>
+    <h1>
+      Your Product.<br/>
+      <span class="accent">Professional Video Ad.</span><br/>
+      In Minutes.
+    </h1>
+    <p class="hero-sub">
+      Upload a product photo. Get a cinematic UGC video with an AI model,
+      Hindi or English voiceover — ready for Instagram Reels and WhatsApp.
+    </p>
+    <div class="hero-btns">
+      <a class="btn-primary" href="/order">🎬 Create Your Video</a>
+      <a class="btn-secondary" href="#demo">Watch Samples</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="phone-frame">
+      <video autoplay muted loop playsinline>
+        <source src="https://res.cloudinary.com/da9mechjr/video/upload/v1779999868/vishleshak-ugc/22a725b0-06a6-4116-a661-76f86b671d52.mp4" type="video/mp4" />
+      </video>
+    </div>
+    <div class="hero-badge-float float-bottom">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="float-icon">📸</span>
+          <div class="float-text">
+            <span class="float-title">Image — ₹99</span>
+            <span class="float-sub">Ready in 5 min</span>
+          </div>
+        </div>
+        <div style="height:1px;background:#e2e8f0"></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="float-icon">🎬</span>
+          <div class="float-text">
+            <span class="float-title">Video — ₹499</span>
+            <span class="float-sub">Ready in 30 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- TRUST BAR -->
-<div class="trust-bar">
-  <div class="trust-item"><span class="dot">●</span> Hindi &amp; English voiceover</div>
-  <div class="trust-item"><span class="dot">●</span> AI model — no actor needed</div>
-  <div class="trust-item"><span class="dot">●</span> Ready in 5–10 minutes</div>
-  <div class="trust-item"><span class="dot">●</span> Works for any product</div>
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="trust-item"><span class="trust-dot"></span>No actor needed</div>
+  <div class="trust-item"><span class="trust-dot"></span>Hindi &amp; English</div>
+  <div class="trust-item"><span class="trust-dot"></span>Ready in 5–10 min</div>
+  <div class="trust-item"><span class="trust-dot"></span>Any product</div>
+  <div class="trust-item"><span class="trust-dot"></span>Image ₹99 · Video ₹499</div>
 </div>
 
 <!-- VIDEO SHOWCASE -->
-<section class="video-section" id="demo">
-  <div style="text-align:center">
-    <p class="section-label">✦ Live Results</p>
-    <h2 class="section-title">Real Videos. Real Products.</h2>
-    <p class="section-sub" style="margin:0 auto">Every video below was made by uploading a single product photo — no studio, no actor, no editing skills needed.</p>
-  </div>
+<section class="video-section section-center" id="demo">
+  <div class="eyebrow">✦ Live Results</div>
+  <h2 class="section-title">Real Videos. Real Products.</h2>
+  <p class="section-desc">Every video below was made by uploading a single product photo — no studio, no crew, no editing skills needed.</p>
   <div class="video-grid">
     <div class="video-card">
-      <video autoplay muted loop playsinline poster="">
+      <video autoplay muted loop playsinline>
         <source src="https://res.cloudinary.com/da9mechjr/video/upload/v1779999868/vishleshak-ugc/22a725b0-06a6-4116-a661-76f86b671d52.mp4" type="video/mp4" />
       </video>
-      <div class="video-card-footer">
-        <span class="video-tag">✨ Veo 3 Cinematic</span>
-        <span class="video-desc">Diamond Ring · English</span>
+      <div class="video-card-info">
+        <div class="video-badge">✨ Cinematic</div>
+        <p class="video-caption">Diamond Ring · English</p>
       </div>
     </div>
     <div class="video-card">
-      <video autoplay muted loop playsinline poster="">
+      <video autoplay muted loop playsinline>
         <source src="https://res.cloudinary.com/da9mechjr/video/upload/v1779959194/vishleshak-ugc/8aed5473-647f-485a-be38-3dc9014aa6a2.mp4" type="video/mp4" />
       </video>
-      <div class="video-card-footer">
-        <span class="video-tag">✨ Veo 3 Cinematic</span>
-        <span class="video-desc">Bridal Jewellery · Hindi</span>
+      <div class="video-card-info">
+        <div class="video-badge">✨ Cinematic</div>
+        <p class="video-caption">Bridal Jewellery · Hindi</p>
       </div>
     </div>
     <div class="video-card">
-      <video autoplay muted loop playsinline poster="">
+      <video autoplay muted loop playsinline>
         <source src="https://res.cloudinary.com/da9mechjr/video/upload/v1779970097/ugc_videos/5a24877d269114d14b255f6077fd13e8.mp4" type="video/mp4" />
       </video>
-      <div class="video-card-footer">
-        <span class="video-tag">✨ Veo 3 Cinematic</span>
-        <span class="video-desc">Product Ad · Hindi</span>
+      <div class="video-card-info">
+        <div class="video-badge">✨ Cinematic</div>
+        <p class="video-caption">Product Ad · Hindi</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- HOW IT WORKS -->
-<section class="section" id="how" style="text-align:center">
-  <p class="section-label">✦ Process</p>
-  <h2 class="section-title">3 Steps. 5 Minutes. Done.</h2>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <div>
-        <div class="step-title">📸 Upload Product Photo</div>
-        <div class="step-desc">Take a photo of your product on your phone and upload it. Any product, any background.</div>
+<section class="section section-center" id="how">
+  <div class="section-inner">
+    <div class="eyebrow">✦ Process</div>
+    <h2 class="section-title">3 Steps. 10 Minutes. Done.</h2>
+    <p class="section-desc">From product photo to a ready-to-post video — fully automated by AI.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-icon">📸</span>
+        <div class="step-num">Step 01</div>
+        <div class="step-title">Upload Product Photo</div>
+        <div class="step-desc">Take any photo of your product and upload it. Any product, any background — our AI handles the rest.</div>
       </div>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div>
-        <div class="step-title">🤖 AI Creates the Ad</div>
-        <div class="step-desc">Our AI writes a script, places your product on a model, and generates a cinematic video with voiceover.</div>
+      <div class="step">
+        <span class="step-icon">🤖</span>
+        <div class="step-num">Step 02</div>
+        <div class="step-title">AI Builds the Ad</div>
+        <div class="step-desc">We write the script, place your product on an AI model, add a voiceover, and generate the video automatically.</div>
       </div>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div>
-        <div class="step-title">📱 Download &amp; Post</div>
-        <div class="step-desc">Download your video and post directly to Instagram Reels, WhatsApp Status, or Facebook.</div>
+      <div class="step">
+        <span class="step-icon">📲</span>
+        <div class="step-num">Step 03</div>
+        <div class="step-title">Download &amp; Post</div>
+        <div class="step-desc">Your video arrives formatted for Instagram Reels, WhatsApp Status, Facebook, and YouTube — ready to post instantly.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PRODUCT TYPES -->
-<section class="section" style="text-align:center; background: linear-gradient(180deg, transparent, rgba(124,58,237,0.05) 50%, transparent)">
-  <p class="section-label">✦ Works For</p>
-  <h2 class="section-title">Any Product. Any Category.</h2>
-  <p class="section-sub" style="margin:0 auto 8px">Jewellery, clothing, food, skincare, electronics — if you can photograph it, we can make an ad for it.</p>
-  <div class="products-grid">
-    <div class="product-chip"><span>💍</span>Jewellery</div>
-    <div class="product-chip"><span>👗</span>Clothing</div>
-    <div class="product-chip"><span>👜</span>Bags</div>
-    <div class="product-chip"><span>👟</span>Footwear</div>
-    <div class="product-chip"><span>✨</span>Skincare</div>
-    <div class="product-chip"><span>💄</span>Makeup</div>
-    <div class="product-chip"><span>🍱</span>Food</div>
-    <div class="product-chip"><span>☕</span>Beverages</div>
-    <div class="product-chip"><span>📱</span>Electronics</div>
-    <div class="product-chip"><span>🕯️</span>Home Decor</div>
-    <div class="product-chip"><span>💊</span>Health</div>
-    <div class="product-chip"><span>🧸</span>Kids</div>
+<!-- PRODUCTS -->
+<section class="section section-center" style="background: rgba(0,0,0,0.1)">
+  <div class="section-inner">
+    <div class="eyebrow">✦ Works For</div>
+    <h2 class="section-title">Any Product Category</h2>
+    <p class="section-desc">Jewellery, clothing, food, skincare, electronics — if you can photograph it, we can make an ad for it.</p>
+    <div class="products-grid">
+      <div class="product-chip"><span class="emoji">💍</span>Jewellery</div>
+      <div class="product-chip"><span class="emoji">👗</span>Clothing</div>
+      <div class="product-chip"><span class="emoji">👜</span>Bags</div>
+      <div class="product-chip"><span class="emoji">👟</span>Footwear</div>
+      <div class="product-chip"><span class="emoji">✨</span>Skincare</div>
+      <div class="product-chip"><span class="emoji">💄</span>Makeup</div>
+      <div class="product-chip"><span class="emoji">🍱</span>Food</div>
+      <div class="product-chip"><span class="emoji">☕</span>Beverages</div>
+      <div class="product-chip"><span class="emoji">📱</span>Electronics</div>
+      <div class="product-chip"><span class="emoji">🕯️</span>Home Decor</div>
+      <div class="product-chip"><span class="emoji">💊</span>Health</div>
+      <div class="product-chip"><span class="emoji">🧸</span>Kids &amp; Toys</div>
+    </div>
   </div>
 </section>
 
 <!-- STATS -->
-<section class="section" style="text-align:center">
-  <p class="section-label">✦ Why Vishleshak</p>
-  <h2 class="section-title">Built for Indian Sellers</h2>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-num">5 min</div>
-      <div class="stat-label">Average delivery time</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">₹0</div>
-      <div class="stat-label">Model / actor cost</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">2</div>
-      <div class="stat-label">Languages — Hindi &amp; English</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">3</div>
-      <div class="stat-label">Video styles to choose from</div>
+<section class="section section-center">
+  <div class="section-inner">
+    <div class="eyebrow">✦ Why Vishleshak</div>
+    <h2 class="section-title">Built for Every Seller</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num">5 min</div>
+        <div class="stat-label">Average delivery time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">₹0</div>
+        <div class="stat-label">Model or actor cost</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Video styles available</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">4</div>
+        <div class="stat-label">Platforms supported</div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- PRICING -->
-<section class="section" id="pricing" style="text-align:center">
-  <p class="section-label">✦ Pricing</p>
-  <h2 class="section-title">Simple. Transparent.</h2>
-  <p class="section-sub" style="margin:0 auto">No hidden charges. No subscriptions required. Pay only for what you need.</p>
-  <div class="plans">
+<section class="section section-center" id="pricing" style="background: rgba(0,0,0,0.1)">
+  <div class="section-inner">
+    <div class="eyebrow">✦ Pricing</div>
+    <h2 class="section-title">Simple. Transparent.</h2>
+    <p class="section-desc">No hidden charges. No subscription required. Pay only for what you need.</p>
+    <div class="plans">
 
-    <div class="plan">
-      <div class="plan-name">Starter</div>
-      <div class="plan-price">&#8377;499 <span>/ video</span></div>
-      <div class="plan-per">One-time, no commitment</div>
-      <ul class="plan-features">
-        <li>1 AI UGC video ad</li>
-        <li>Hindi or English voiceover</li>
-        <li>AI model — no actor needed</li>
-        <li>HD quality, 5–8 seconds</li>
-        <li>Ready in 5–10 minutes</li>
-        <li>WhatsApp delivery</li>
-      </ul>
-      <a href="https://wa.me/919953910987?text=Hi%2C+I+want+to+order+a+UGC+video+ad" class="plan-btn plan-btn-outline">Order on WhatsApp</a>
+      <div class="plan">
+        <div class="plan-name">Image Ad</div>
+        <div class="plan-price"><sub>₹</sub>99</div>
+        <div class="plan-note">per image · one-time · ready in 5 min</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span>AI model with your product</li>
+          <li><span class="check">✓</span>Professional studio quality</li>
+          <li><span class="check">✓</span>AI-written caption included</li>
+          <li><span class="check">✓</span>Any product category</li>
+          <li><span class="check">✓</span>Ready in 5 minutes</li>
+          <li><span class="check">✓</span>WhatsApp delivery</li>
+        </ul>
+        <a href="/order" class="plan-btn plan-btn-outline">Order Now</a>
+      </div>
+
+      <div class="plan featured">
+        <div class="plan-badge">⭐ Most Popular</div>
+        <div class="plan-name">Video Ad</div>
+        <div class="plan-price"><sub>₹</sub>499</div>
+        <div class="plan-note">per video · one-time · ready in 30 min</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span>Full AI UGC video ad</li>
+          <li><span class="check">✓</span>Hindi or English voiceover</li>
+          <li><span class="check">✓</span>AI model — no actor needed</li>
+          <li><span class="check">✓</span>HD quality, 5–8 seconds</li>
+          <li><span class="check">✓</span>Ready in 30 minutes</li>
+          <li><span class="check">✓</span>WhatsApp delivery</li>
+        </ul>
+        <a href="/order" class="plan-btn plan-btn-filled">Order Now</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Monthly Pack</div>
+        <div class="plan-price"><sub>₹</sub>1,999</div>
+        <div class="plan-note">per month · 5 videos — save ₹500</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span>5 AI UGC videos / month</li>
+          <li><span class="check">✓</span>Hindi + English voiceover</li>
+          <li><span class="check">✓</span>All video styles included</li>
+          <li><span class="check">✓</span>Priority processing</li>
+          <li><span class="check">✓</span>Dedicated WhatsApp support</li>
+          <li><span class="check">✓</span>Unused videos roll over</li>
+        </ul>
+        <a href="https://wa.me/919953910987?text=Hi%2C+I+want+the+Monthly+Pack+for+UGC+videos" class="plan-btn plan-btn-outline">Chat on WhatsApp</a>
+      </div>
+
     </div>
-
-    <div class="plan popular">
-      <div class="popular-badge">&#11088; Best Value</div>
-      <div class="plan-name">Monthly Pack</div>
-      <div class="plan-price">&#8377;1,999 <span>/ month</span></div>
-      <div class="plan-per">&#8377;400 per video — save &#8377;500</div>
-      <ul class="plan-features">
-        <li>5 AI UGC videos / month</li>
-        <li>Hindi + English voiceover</li>
-        <li>All 3 video styles</li>
-        <li>Priority processing</li>
-        <li>Dedicated WhatsApp support</li>
-        <li>Unused videos roll over</li>
-      </ul>
-      <a href="https://wa.me/919953910987?text=Hi%2C+I+want+the+Monthly+Pack+for+UGC+videos" class="plan-btn plan-btn-primary">Get Started</a>
-    </div>
-
-    <div class="plan">
-      <div class="plan-name">Growth Pack</div>
-      <div class="plan-price">&#8377;3,499 <span>/ month</span></div>
-      <div class="plan-per">&#8377;350 per video — save &#8377;1,500</div>
-      <ul class="plan-features">
-        <li>10 AI UGC videos / month</li>
-        <li>Hindi + English voiceover</li>
-        <li>All 3 video styles</li>
-        <li>Priority processing</li>
-        <li>Dedicated account manager</li>
-        <li>Custom brand scripts</li>
-      </ul>
-      <a href="https://wa.me/919953910987?text=Hi%2C+I+want+the+Growth+Pack+for+UGC+videos" class="plan-btn plan-btn-outline">Get Started</a>
-    </div>
-
   </div>
 </section>
 
 <!-- CTA -->
 <section class="cta-section">
-  <h2>अपना पहला Video Ad<br/>बिल्कुल मुफ्त देखिए</h2>
-  <p>Upload your product photo right now. See your video ad in minutes — no account, no payment needed.</p>
+  <h2>Create Your First<br/><span style="color:#A78BFA">AI Video Ad</span> Today</h2>
+  <p>Upload your product photo right now. See your video in minutes — no account, no payment upfront.</p>
   <div class="cta-btns">
-    <a href="/order" class="btn-primary">🎬 Create Free Video Now</a>
-    <a href="https://wa.me/919953910987?text=Hi%2C+I+want+to+know+more+about+Vishleshak+AI+video+ads" class="whatsapp-btn">
+    <a class="btn-primary" href="/order">🎬 Create Free Video Now</a>
+    <a class="wa-btn" href="https://wa.me/919953910987?text=Hi%2C+I+want+to+know+more+about+Vishleshak+AI+video+ads">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       Chat on WhatsApp
     </a>
@@ -652,7 +606,7 @@
     <a href="https://vishleshak.in">Vishleshak AI</a> &nbsp;·&nbsp;
     AI Video Ads for Indian Brands &nbsp;·&nbsp;
     <a href="https://wa.me/919953910987">+91 99539 10987</a> &nbsp;·&nbsp;
-    &copy; 2026
+    © 2026
   </p>
 </footer>
 

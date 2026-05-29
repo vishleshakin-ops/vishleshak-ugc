@@ -1083,7 +1083,7 @@ function renderOrderCard(order) {
   if (order.status === "pending" || order.status === "failed") {
     // If a Veo3 task was already submitted (credits spent), show recovery option
     const kieTaskId = order.kie_task_id || "";
-    const recoverRow = order.video_style === "veo3" || kieTaskId ? `
+    const recoverRow = order.video_style === "cinematic" || kieTaskId ? `
       <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
         <input id="recover-task-${order.id}" type="text" placeholder="kie.ai task ID" value="${kieTaskId}"
           style="flex:1;font-size:11px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc"/>

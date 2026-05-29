@@ -280,6 +280,17 @@ async def generate_model_with_product(
     custom_scene     = c.get("custom_scene", "").strip()
     model_action     = c.get("model_action", "").strip()
     custom_instr     = c.get("custom_instructions", "").strip()
+    aspect_ratio     = c.get("aspect_ratio", "9:16")
+
+    # Map aspect ratio to kie.ai 4o Image size param and prompt frame description
+    _SIZE_MAP = {"9:16": "9:16", "16:9": "16:9", "1:1": "1:1"}
+    _FRAME_MAP = {
+        "9:16": "Vertical 9:16 portrait frame",
+        "16:9": "Horizontal 16:9 landscape frame",
+        "1:1":  "Square 1:1 frame",
+    }
+    kie_image_size = _SIZE_MAP.get(aspect_ratio, "9:16")
+    frame_desc     = _FRAME_MAP.get(aspect_ratio, "Vertical 9:16 portrait frame")
 
     # Resolve background description
     if scene == "custom" and custom_scene:
@@ -316,7 +327,7 @@ async def generate_model_with_product(
                 f"Shot on Sony A7III, 85mm f/1.8 lens, shallow depth of field, soft bokeh background. "
                 f"Soft diffused lighting with natural skin highlights. "
                 f"Hyper-realistic skin texture, visible pores, natural imperfections — NOT AI-looking, NOT plastic skin, NOT CGI. "
-                f"Real human face with natural asymmetry. Vertical 9:16 portrait frame. "
+                f"Real human face with natural asymmetry. {frame_desc}. "
                 f"Ultra high quality, 8K, magazine-grade photography. {EYES_OPEN}"
             )
         else:
@@ -388,7 +399,7 @@ async def generate_model_with_product(
             headers={"Authorization": f"Bearer {KIE_API_KEY}", "Content-Type": "application/json"},
             json={
                 "prompt": prompt,
-                "size": "2:3",
+                "size": kie_image_size,
                 "nVariants": 1,
                 "isEnhance": False,
                 "filesUrl": files_url,
