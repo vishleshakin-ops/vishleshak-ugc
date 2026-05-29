@@ -571,15 +571,29 @@ function switchTab(id, btn) {
   btn.classList.add('active');
 }
 
-// Call timer animation
+// Call timer animation — counts to 7:43 then shows "Call ended", resets, repeats
+const TIMER_MAX = 463;
 let sec = 0;
-setInterval(() => {
+let timerInterval = setInterval(tick, 1000);
+
+function tick() {
   sec++;
+  const el = document.getElementById('call-timer');
+  if (!el) return;
+  if (sec >= TIMER_MAX) {
+    clearInterval(timerInterval);
+    el.textContent = 'Call ended';
+    setTimeout(() => {
+      sec = 0;
+      el.textContent = '00:00';
+      timerInterval = setInterval(tick, 1000);
+    }, 2500);
+    return;
+  }
   const m = String(Math.floor(sec / 60)).padStart(2, '0');
   const s = String(sec % 60).padStart(2, '0');
-  const el = document.getElementById('call-timer');
-  if (el) el.textContent = m + ':' + s;
-}, 1000);
+  el.textContent = m + ':' + s;
+}
 
 // Retell modal
 (function() {
