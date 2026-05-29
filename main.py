@@ -1710,11 +1710,25 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
         # Normalise natural language time inputs at ask_time step
         _tl = text.lower().strip()
         if step == "ask_time":
+            # Detect after-hours times and warn
+            _after_hours = any(w in _tl for w in ("9pm", "9 pm", "10pm", "10 pm", "11pm", "11 pm", "12am", "midnight", "after 8", "after 9"))
+            _sat_after = any(w in _tl for w in ("7pm", "7 pm", "8pm", "8 pm")) and "saturday" in _tl
+            if _after_hours or _sat_after:
+                await wa_send_text(from_phone,
+                    "⚠️ Sorry, that time is *outside our working hours*.\n\n"
+                    "🕐 Mon–Fri: 9am–8pm | Sat: 9am–6pm\n\n"
+                    "⏰ Please choose a valid *time slot*:\n\n"
+                    "1️⃣ Morning (9am – 12pm)\n"
+                    "2️⃣ Afternoon (12pm – 4pm)\n"
+                    "3️⃣ Evening (4pm – 8pm)\n\n"
+                    "_Reply with 1, 2 or 3_"
+                )
+                return {"status": "ok"}
             if any(w in _tl for w in ("morning", "9am", "9 am", "10am", "10 am", "11am", "11 am")):
                 text = "1"
             elif any(w in _tl for w in ("afternoon", "noon", "12pm", "12 pm", "1pm", "1 pm", "2pm", "2 pm", "3pm", "3 pm")):
                 text = "2"
-            elif any(w in _tl for w in ("evening", "4pm", "4 pm", "5pm", "5 pm", "6pm", "6 pm", "7pm", "7 pm")):
+            elif any(w in _tl for w in ("evening", "4pm", "4 pm", "5pm", "5 pm", "6pm", "6 pm", "7pm", "7 pm", "8pm", "8 pm")):
                 text = "3"
 
         # Normalise natural language service inputs at ask_service step
@@ -1787,12 +1801,24 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 dental["date"] = text
                 # Try to extract time from the date input
                 _dl = text.lower()
+
+                # Warn about after-hours times in the date input
+                _after_hours_date = any(w in _dl for w in ("9pm", "9 pm", "10pm", "10 pm", "11pm", "11 pm", "12am", "midnight"))
+                if _after_hours_date:
+                    await wa_send_text(from_phone,
+                        "⚠️ *9 PM and later is outside our working hours.*\n\n"
+                        "🕐 Mon–Fri: 9am–8pm | Sat: 9am–6pm\n\n"
+                        "📅 Please choose another *date and time*:\n\n"
+                        "_Example: Monday 2 June or Tuesday 5 PM_"
+                    )
+                    return {"status": "ok"}
+
                 _auto_slot = None
                 if any(w in _dl for w in ("morning", "9am", "9 am", "10am", "10 am", "11am", "11 am")):
                     _auto_slot = "Morning (9am–12pm)"
                 elif any(w in _dl for w in ("noon", "afternoon", "12pm", "12 pm", "1pm", "1 pm", "2pm", "2 pm", "3pm", "3 pm")):
                     _auto_slot = "Afternoon (12pm–4pm)"
-                elif any(w in _dl for w in ("evening", "4pm", "4 pm", "5pm", "5 pm", "6pm", "6 pm", "7pm", "7 pm")):
+                elif any(w in _dl for w in ("evening", "4pm", "4 pm", "5pm", "5 pm", "6pm", "6 pm", "7pm", "7 pm", "8pm", "8 pm")):
                     _auto_slot = "Evening (4pm–8pm)"
 
                 if _auto_slot:
