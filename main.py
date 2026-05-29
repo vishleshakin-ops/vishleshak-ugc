@@ -47,12 +47,23 @@ GCAL_CREDENTIALS   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "d
 def _gcal_service():
     """Return authenticated Google Calendar service, or None if not configured."""
     try:
+        import json
         from google.oauth2 import service_account
         from googleapiclient.discovery import build
-        creds = service_account.Credentials.from_service_account_file(
-            GCAL_CREDENTIALS,
-            scopes=["https://www.googleapis.com/auth/calendar"]
-        )
+        # Railway: read from env var; local: read from file
+        creds_json = os.getenv("GCAL_CREDENTIALS_JSON")
+        if creds_json:
+            info = json.loads(creds_json)
+            creds = service_account.Credentials.from_service_account_info(
+                info, scopes=["https://www.googleapis.com/auth/calendar"]
+            )
+        elif os.path.exists(GCAL_CREDENTIALS):
+            creds = service_account.Credentials.from_service_account_file(
+                GCAL_CREDENTIALS, scopes=["https://www.googleapis.com/auth/calendar"]
+            )
+        else:
+            print("[GCal] No credentials found")
+            return None
         return build("calendar", "v3", credentials=creds)
     except Exception as e:
         print(f"[GCal] Service init failed: {e}")
