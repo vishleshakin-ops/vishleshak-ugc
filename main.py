@@ -1707,8 +1707,30 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             "ask_time": "⏰ Preferred *time slot*?\n\n1️⃣ Morning (9am – 12pm)\n2️⃣ Afternoon (12pm – 4pm)\n3️⃣ Evening (4pm – 8pm)\n\n_Reply with 1, 2 or 3_",
         }
 
+        # Normalise natural language time inputs at ask_time step
+        _tl = text.lower().strip()
+        if step == "ask_time":
+            if any(w in _tl for w in ("morning", "9am", "9 am", "10am", "10 am", "11am", "11 am")):
+                text = "1"
+            elif any(w in _tl for w in ("afternoon", "noon", "12pm", "12 pm", "1pm", "1 pm", "2pm", "2 pm", "3pm", "3 pm")):
+                text = "2"
+            elif any(w in _tl for w in ("evening", "4pm", "4 pm", "5pm", "5 pm", "6pm", "6 pm", "7pm", "7 pm")):
+                text = "3"
+
+        # Normalise natural language service inputs at ask_service step
+        if step == "ask_service":
+            if any(w in _tl for w in ("checkup", "cleaning", "check up")):
+                text = "1"
+            elif any(w in _tl for w in ("root canal", "filling", "cavity")):
+                text = "2"
+            elif any(w in _tl for w in ("whitening", "white", "smile")):
+                text = "3"
+            elif any(w in _tl for w in ("brace", "invisalign", "align")):
+                text = "4"
+            elif any(w in _tl for w in ("pain", "emergency", "urgent", "ache")):
+                text = "5"
+
         # Detect if input is a question rather than a step answer
-        _tl = text.lower()
         _is_question = (
             "?" in text
             or (step in ("ask_service", "ask_time") and text.strip() not in ("1","2","3","4","5","6"))
