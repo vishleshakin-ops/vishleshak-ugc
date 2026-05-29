@@ -75,13 +75,24 @@ def _gcal_service():
         print(f"[GCal] Service init failed: {e}")
         return None
 
+_DAY_NAMES = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
 def _parse_event_datetime(date_str: str, hour: int) -> datetime:
-    """Parse date string and return datetime with given hour."""
+    """Parse date string and return datetime with given hour. Always returns a future date."""
     from dateutil import parser as dateparser
+    today = datetime.now().date()
     try:
         event_date = dateparser.parse(date_str, dayfirst=True)
-        if not event_date or event_date.date() < datetime.now().date():
+        if not event_date:
             event_date = datetime.now() + timedelta(days=1)
+        elif event_date.date() < today:
+            # If user said a weekday name (e.g. "Tuesday") and it parsed to the past,
+            # roll forward to next occurrence of that day
+            dl = date_str.lower()
+            if any(d in dl for d in _DAY_NAMES):
+                event_date += timedelta(days=7)
+            else:
+                event_date = datetime.now() + timedelta(days=1)
     except Exception:
         event_date = datetime.now() + timedelta(days=1)
     return event_date.replace(hour=hour, minute=0, second=0, microsecond=0)
