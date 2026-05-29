@@ -27,8 +27,8 @@ RETELL_SECRET   = os.getenv("RETELL_WEBHOOK_SECRET", "")   # optional signing ch
 WA_API_BASE = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}"
 
 CLINIC_NAME    = "Dr. Akshay Midha Multi Speciality Dental Clinic"
-CLINIC_PHONE   = "+91 98765 43210"   # update in .env as CLINIC_PHONE
-CLINIC_ADDRESS = "Sector 14, Gurugram"  # update in .env as CLINIC_ADDRESS
+CLINIC_PHONE   = "+91 9868018541"
+CLINIC_ADDRESS = "C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015"
 
 
 def _clinic_name():

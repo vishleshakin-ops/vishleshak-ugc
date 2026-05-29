@@ -1579,7 +1579,8 @@ async def whatsapp_receive(request: Request):
                 _dental_sessions[from_phone] = {"step": "ask_name"}
                 await wa_send_text(from_phone,
                     "🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
-                    "📍 Sector 14, Gurugram\n\n"
+                    "📍 C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
+                    "📞 +91 9868018541\n\n"
                     "Let's book your appointment! 😊\n\n"
                     "What's your *full name*?"
                 )
@@ -1615,14 +1616,16 @@ async def whatsapp_receive(request: Request):
                 await wa_send_text(from_phone,
                     f"Nice to meet you, *{text}*! 😊\n\n"
                     "What type of appointment do you need?\n\n"
-                    "1️⃣ Routine Checkup\n"
-                    "2️⃣ Teeth Cleaning\n"
-                    "3️⃣ Tooth Pain / Emergency\n"
-                    "4️⃣ Other\n\n"
-                    "_Reply with 1, 2, 3 or 4_"
+                    "1️⃣ Routine Checkup / Cleaning\n"
+                    "2️⃣ Root Canal / Filling\n"
+                    "3️⃣ Teeth Whitening / Smile Design\n"
+                    "4️⃣ Braces / Invisalign\n"
+                    "5️⃣ Tooth Pain / Emergency\n"
+                    "6️⃣ Other\n\n"
+                    "_Reply with a number_"
                 )
             elif step == "ask_service":
-                services = {"1": "Routine Checkup", "2": "Teeth Cleaning", "3": "Tooth Pain / Emergency", "4": "Other"}
+                services = {"1": "Routine Checkup / Cleaning", "2": "Root Canal / Filling", "3": "Teeth Whitening / Smile Design", "4": "Braces / Invisalign", "5": "Tooth Pain / Emergency", "6": "Other"}
                 dental["service"] = services.get(text, text)
                 dental["step"] = "ask_date"
                 _dental_sessions[from_phone] = dental
@@ -1642,11 +1645,10 @@ async def whatsapp_receive(request: Request):
                     "_Reply with 1, 2 or 3_"
                 )
             elif step == "ask_time":
-                slots = {"1": "Morning (9am–12pm)", "2": "Afternoon (1pm–4pm)", "3": "Evening (4pm–7pm)"}
+                slots = {"1": "Morning (9am–12pm)", "2": "Afternoon (12pm–4pm)", "3": "Evening (4pm–8pm)"}
                 dental["time"] = slots.get(text, text)
                 # Notify clinic owner
                 owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
-                clinic_name = os.getenv("CLINIC_NAME", "Dr. Akshay Midha Dental Clinic")
                 summary = (
                     f"🦷 *New Appointment Request*\n\n"
                     f"👤 Name: {dental['name']}\n"
@@ -1664,9 +1666,10 @@ async def whatsapp_receive(request: Request):
                     f"✅ *Appointment Request Sent!*\n\n"
                     f"📋 *{dental['service']}*\n"
                     f"📅 {dental['date']} · {dental['time']}\n\n"
-                    f"The clinic will confirm your slot shortly.\n"
-                    f"📞 *{clinic_name}*\n"
-                    f"📍 Sector 14, Gurugram\n\n"
+                    f"The clinic will confirm your slot shortly.\n\n"
+                    f"🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
+                    f"📍 C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
+                    f"📞 +91 9868018541\n\n"
                     f"_Type *hi* to go back to the main menu._"
                 )
                 _dental_sessions.pop(from_phone, None)
