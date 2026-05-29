@@ -1796,21 +1796,47 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             return {"status": "ok"}
 
         if step == "ask_time":
-            # If alt_slots exist and user picks 1/2/3, map to the stored alternative
+            # If alt_slots exist, handle carefully
             _alt_slots = dental.get("alt_slots", [])
-            if _alt_slots and text.strip() in ("1", "2", "3"):
-                _picked = _alt_slots[int(text.strip()) - 1]
-                # Parse the picked time like "5:00 PM" → hour
-                import re as _re2
-                _m = _re2.search(r'(\d+):?\d*\s*(am|pm)', _picked.lower())
-                if _m:
-                    _ph = int(_m.group(1))
-                    if _m.group(2) == "pm" and _ph != 12:
-                        _ph += 12
-                    dental["gcal_hour"] = _ph
-                dental["alt_slots"] = []
-                text = _picked  # Use as time description
-                _tl = _picked.lower()
+            if _alt_slots:
+                if text.strip() in ("1", "2", "3"):
+                    # User picked a numbered alternative
+                    idx = int(text.strip()) - 1
+                    if idx < len(_alt_slots):
+                        _picked = _alt_slots[idx]
+                        import re as _re2
+                        _m = _re2.search(r'(\d+):?\d*\s*(am|pm)', _picked.lower())
+                        if _m:
+                            _ph = int(_m.group(1))
+                            if _m.group(2) == "pm" and _ph != 12:
+                                _ph += 12
+                            dental["gcal_hour"] = _ph
+                        dental["alt_slots"] = []
+                        text = _picked
+                        _tl = _picked.lower()
+                    else:
+                        await wa_send_text(from_phone, f"Please reply with *1*, *2*, or *3* to pick one of the available slots.")
+                        return {"status": "ok"}
+                else:
+                    # User typed something else — check if it's a NEW valid time (not the booked one)
+                    # Normalize to see if it's a time
+                    _try_tl = text.lower().strip()
+                    _try_tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _try_tl)
+                    _try_tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _try_tl)
+                    _has_time = any(w in _try_tl for w in ["am","pm","morning","afternoon","evening"])
+                    if not _has_time:
+                        # Not a recognizable time — remind them
+                        emojis = ["1️⃣","2️⃣","3️⃣"]
+                        alts = "\n".join([f"{emojis[i]} {a}" for i, a in enumerate(_alt_slots)])
+                        await wa_send_text(from_phone,
+                            f"Please pick one of the available slots:\n{alts}\n\n"
+                            f"_Reply with 1, 2 or 3_"
+                        )
+                        return {"status": "ok"}
+                    else:
+                        # They gave a new time — clear alt_slots and process normally
+                        dental["alt_slots"] = []
+                        _dental_sessions[from_phone] = dental
 
             # If already a valid slot number (no alt_slots), use directly — skip normalisation
             if text.strip() in ("1", "2", "3") and not dental.get("alt_slots"):
