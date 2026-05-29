@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Reception — Vishleshak AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #7C5CFA;
+      --purple2: #5b3de8;
+      --green:  #25D366;
+      --white:  #ffffff;
+      --text:   rgba(255,255,255,0.75);
+      --muted:  rgba(255,255,255,0.45);
+      --card:   rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.12);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(145deg, #0d0640 0%, #1e1080 35%, #3530b8 65%, #4845cc 100%);
+      min-height: 100vh; color: #fff;
+      overflow-x: hidden; -webkit-font-smoothing: antialiased;
+    }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 40px;
+      background: rgba(13,6,64,0.7); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--purple); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 16px; }
+    .logo-name { font-size: 1rem; font-weight: 700; color: #fff; }
+    .logo-sub { font-size: 0.68rem; color: var(--muted); display: block; margin-top: -2px; }
+    .back-btn { color: var(--text); font-size: 0.875rem; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+    .back-btn:hover { color: #fff; }
+
+    /* HERO */
+    .hero { padding: 80px 40px 60px; text-align: center; position: relative; }
+    .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(124,92,250,0.2), transparent 60%); pointer-events: none; }
+    .eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #A78BFA; margin-bottom: 14px; }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; letter-spacing: -1.2px; margin-bottom: 16px; }
+    .hero h1 .accent { color: #A78BFA; }
+    .hero-sub { font-size: 1.05rem; color: var(--text); max-width: 540px; margin: 0 auto 40px; line-height: 1.7; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .call-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--purple); color: #fff; font-weight: 700; font-size: 1rem;
+      padding: 14px 30px; border-radius: 10px; text-decoration: none;
+      box-shadow: 0 4px 24px rgba(124,92,250,0.4);
+      transition: transform 0.15s, background 0.15s; cursor: pointer; border: none;
+    }
+    .call-btn:hover { transform: translateY(-2px); background: var(--purple2); }
+    .wa-btn-hero {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--green); color: #fff; font-weight: 700; font-size: 1rem;
+      padding: 14px 30px; border-radius: 10px; text-decoration: none;
+      box-shadow: 0 4px 24px rgba(37,211,102,0.35);
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .wa-btn-hero:hover { transform: translateY(-2px); opacity: 0.92; }
+
+    /* SECTIONS */
+    .section { padding: 72px 40px; }
+    .section-inner { max-width: 1000px; margin: 0 auto; }
+    .section-center { text-align: center; }
+    h2.section-title { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 900; color: #fff; letter-spacing: -0.6px; margin-bottom: 12px; }
+    .section-desc { color: var(--text); font-size: 0.95rem; line-height: 1.7; max-width: 500px; margin: 0 auto 48px; }
+
+    /* CALL TRANSCRIPT MOCKUP */
+    .transcript-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden; max-width: 680px; margin: 0 auto;
+    }
+    .transcript-header {
+      background: rgba(0,0,0,0.3); padding: 18px 24px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .call-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .call-info-name { font-size: 0.95rem; font-weight: 700; color: #fff; }
+    .call-info-sub { font-size: 0.75rem; color: var(--muted); }
+    .call-duration { margin-left: auto; font-size: 0.8rem; color: var(--green); font-weight: 600; }
+    .transcript-body { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+    .line { display: flex; align-items: flex-start; gap: 12px; }
+    .line-speaker { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; width: 60px; margin-top: 2px; }
+    .line-speaker.ai { color: #A78BFA; }
+    .line-speaker.caller { color: #34D399; }
+    .line-text { font-size: 0.88rem; color: var(--text); line-height: 1.6; background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 10px; flex: 1; }
+
+    /* FEATURES */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 48px; }
+    .feature-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px 20px; text-align: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-box:hover { border-color: rgba(124,92,250,0.4); transform: translateY(-3px); }
+    .feature-icon { font-size: 2rem; margin-bottom: 12px; display: block; }
+    .feature-title { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .feature-desc { font-size: 0.82rem; color: var(--text); line-height: 1.6; }
+
+    /* USE CASES */
+    .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 48px; }
+    .usecase-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px 24px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .usecase-card:hover { border-color: rgba(124,92,250,0.4); transform: translateY(-3px); }
+    .usecase-icon { font-size: 2.2rem; margin-bottom: 14px; display: block; }
+    .usecase-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .usecase-desc { font-size: 0.85rem; color: var(--text); line-height: 1.6; }
+
+    /* CTA */
+    .cta-section { padding: 80px 40px; text-align: center; background: rgba(0,0,0,0.15); }
+    .cta-section h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; color: #fff; letter-spacing: -0.8px; margin-bottom: 12px; }
+    .cta-section p { color: var(--text); font-size: 1rem; margin-bottom: 32px; }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .wa-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--green); color: #fff; font-weight: 700; font-size: 1rem;
+      padding: 14px 30px; border-radius: 10px; text-decoration: none;
+      box-shadow: 0 4px 24px rgba(37,211,102,0.35);
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .wa-btn:hover { transform: translateY(-2px); opacity: 0.92; }
+
+    footer { padding: 24px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); color: var(--muted); font-size: 0.8rem; }
+    footer a { color: #A78BFA; text-decoration: none; }
+
+    /* Retell modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 999; }
+    .modal-backdrop.open { display: flex; }
+    .modal-box { background: #1a1040; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 36px 28px; width: min(420px, calc(100vw - 32px)); text-align: center; box-shadow: 0 24px 80px rgba(0,0,0,0.5); }
+    .modal-close { position: absolute; top: 14px; right: 18px; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+    .modal-title { font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+    .modal-sub { font-size: 0.88rem; color: var(--text); margin-bottom: 24px; line-height: 1.6; }
+
+    @media (max-width: 640px) {
+      nav { padding: 12px 20px; }
+      .hero { padding: 60px 20px 40px; }
+      .hero-btns { flex-direction: column; align-items: center; }
+      .section { padding: 52px 20px; }
+      .cta-section { padding: 60px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="https://vishleshak.in">
+    <div class="logo-icon">V</div>
+    <div>
+      <span class="logo-name">Vishleshak</span>
+      <span class="logo-sub">An AI Studio</span>
+    </div>
+  </a>
+  <a class="back-btn" href="https://vishleshak.in">← Back to Home</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="eyebrow">✦ AI Reception</div>
+  <h1>Never Miss<br/><span class="accent">A Patient Again.</span></h1>
+  <p class="hero-sub">An AI receptionist that books appointments, answers clinic questions, and handles patient calls 24/7 — no hold music, no missed calls.</p>
+  <div class="hero-btns">
+    <button class="call-btn" id="open-retell-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.9 2.18 2 2 0 012.91 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+      Call AI Receptionist Live
+    </button>
+    <a class="wa-btn-hero" href="https://wa.me/919953910987?text=Hi%2C+I+want+an+AI+receptionist+for+my+clinic" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Get for My Clinic
+    </a>
+  </div>
+</section>
+
+<!-- TRANSCRIPT DEMO -->
+<section class="section section-center" style="background: rgba(0,0,0,0.1)">
+  <div class="section-inner">
+    <div class="eyebrow">✦ Live Demo</div>
+    <h2 class="section-title">Hear It Handle a Real Call</h2>
+    <p class="section-desc">This is a real conversation our AI receptionist handles — automatically, any time of day.</p>
+    <div class="transcript-card">
+      <div class="transcript-header">
+        <div class="call-icon">🦷</div>
+        <div>
+          <div class="call-info-name">Dr. Akshay Midha Dental Clinic</div>
+          <div class="call-info-sub">AI Receptionist — Active</div>
+        </div>
+        <div class="call-duration">● Live Call</div>
+      </div>
+      <div class="transcript-body">
+        <div class="line">
+          <span class="line-speaker ai">AI</span>
+          <div class="line-text">Thank you for calling Dr. Akshay Midha Dental Clinic. I'm your AI receptionist. How can I help you today?</div>
+        </div>
+        <div class="line">
+          <span class="line-speaker caller">Caller</span>
+          <div class="line-text">Hi, I want to book an appointment for a tooth cleaning.</div>
+        </div>
+        <div class="line">
+          <span class="line-speaker ai">AI</span>
+          <div class="line-text">Of course! I have slots available this week. Would Tuesday at 11 AM or Thursday at 3 PM work better for you?</div>
+        </div>
+        <div class="line">
+          <span class="line-speaker caller">Caller</span>
+          <div class="line-text">Thursday at 3 works great.</div>
+        </div>
+        <div class="line">
+          <span class="line-speaker ai">AI</span>
+          <div class="line-text">Perfect! I've booked you for Thursday at 3 PM for a dental cleaning. Can I get your name for the appointment?</div>
+        </div>
+        <div class="line">
+          <span class="line-speaker caller">Caller</span>
+          <div class="line-text">Rahul Sharma.</div>
+        </div>
+        <div class="line">
+          <span class="line-speaker ai">AI</span>
+          <div class="line-text">Done, Rahul! Your appointment is confirmed for Thursday at 3 PM. You'll receive a reminder. Is there anything else I can help with?</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 24px;">
+      <button class="call-btn" id="open-retell-btn-2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.9 2.18 2 2 0 012.91 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+        Try It Yourself — Call Now
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section section-center">
+  <div class="section-inner">
+    <div class="eyebrow">✦ Capabilities</div>
+    <h2 class="section-title">What the AI Handles</h2>
+    <div class="features-grid">
+      <div class="feature-box">
+        <span class="feature-icon">📅</span>
+        <div class="feature-title">Appointment Booking</div>
+        <div class="feature-desc">Books, reschedules and confirms appointments automatically in real time.</div>
+      </div>
+      <div class="feature-box">
+        <span class="feature-icon">🔔</span>
+        <div class="feature-title">Reminders</div>
+        <div class="feature-desc">Sends WhatsApp reminders so patients never miss their appointment.</div>
+      </div>
+      <div class="feature-box">
+        <span class="feature-icon">❓</span>
+        <div class="feature-title">Clinic FAQs</div>
+        <div class="feature-desc">Answers questions about timings, fees, location and services instantly.</div>
+      </div>
+      <div class="feature-box">
+        <span class="feature-icon">🌙</span>
+        <div class="feature-title">24/7 Availability</div>
+        <div class="feature-desc">Handles calls at night, on weekends, and during holidays — always on.</div>
+      </div>
+      <div class="feature-box">
+        <span class="feature-icon">🗣️</span>
+        <div class="feature-title">Natural Conversation</div>
+        <div class="feature-desc">Speaks naturally like a real receptionist — no robotic menus or hold music.</div>
+      </div>
+      <div class="feature-box">
+        <span class="feature-icon">📋</span>
+        <div class="feature-title">Call Summaries</div>
+        <div class="feature-desc">Every call is logged with a summary sent to you on WhatsApp.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section class="section section-center" style="background: rgba(0,0,0,0.1)">
+  <div class="section-inner">
+    <div class="eyebrow">✦ Who It's For</div>
+    <h2 class="section-title">Perfect for Healthcare & Services</h2>
+    <div class="usecase-grid">
+      <div class="usecase-card">
+        <span class="usecase-icon">🦷</span>
+        <div class="usecase-title">Dental Clinics</div>
+        <div class="usecase-desc">Book cleanings, fillings and checkups. Handle patient queries about treatments and pricing without picking up the phone.</div>
+      </div>
+      <div class="usecase-card">
+        <span class="usecase-icon">🏥</span>
+        <div class="usecase-title">Doctors & Specialists</div>
+        <div class="usecase-desc">Manage appointment slots, answer common questions, and send reminders — all without a human receptionist.</div>
+      </div>
+      <div class="usecase-card">
+        <span class="usecase-icon">💆</span>
+        <div class="usecase-title">Spas & Wellness</div>
+        <div class="usecase-desc">Book massage, therapy and beauty sessions. Let customers pick their preferred therapist and time slot.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Stop Missing Calls.<br/>Start Booking More.</h2>
+  <p>Chat with us on WhatsApp — we'll have your AI receptionist live within 48 hours.</p>
+  <div class="cta-btns">
+    <button class="call-btn" id="open-retell-btn-3">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.9 2.18 2 2 0 012.91 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+      Try Live Demo Call
+    </button>
+    <a class="wa-btn" href="https://wa.me/919953910987?text=Hi%2C+I+want+an+AI+receptionist+for+my+clinic" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Chat on WhatsApp
+    </a>
+  </div>
+</section>
+
+<footer>
+  <p><a href="https://vishleshak.in">Vishleshak AI</a> &nbsp;·&nbsp; AI Reception for Indian Clinics &nbsp;·&nbsp; © 2026</p>
+</footer>
+
+<!-- Retell Modal -->
+<div class="modal-backdrop" id="retell-modal">
+  <div class="modal-box" style="position:relative">
+    <button class="modal-close" id="close-retell-btn">✕</button>
+    <div style="font-size:48px;margin-bottom:12px">🦷</div>
+    <div class="modal-title">AI Dental Receptionist</div>
+    <div class="modal-sub">Click below to start a free voice call with our AI receptionist. Works directly in your browser — no app needed.</div>
+    <div id="retell-widget-container"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js"></script>
+<script>
+  const RETELL_AGENT_ID = "agent_YOUR_RETELL_AGENT_ID_HERE";
+  const openBtns = document.querySelectorAll('[id^="open-retell-btn"]');
+  const closeBtn = document.getElementById("close-retell-btn");
+  const modal    = document.getElementById("retell-modal");
+  openBtns.forEach(b => b.addEventListener("click", () => modal.classList.add("open")));
+  closeBtn.addEventListener("click", () => modal.classList.remove("open"));
+  modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("open"); });
+</script>
+</body>
+</html>
