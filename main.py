@@ -75,13 +75,13 @@ def _gcal_service():
         print(f"[GCal] Service init failed: {e}")
         return None
 
-async def create_gcal_event(name: str, service: str, date_str: str, time_slot: str, patient_phone: str) -> str | None:
+async def create_gcal_event(name: str, service: str, date_str: str, time_slot: str, patient_phone: str, specific_hour: int | None = None) -> str | None:
     """Create a Google Calendar event. Returns event URL or None."""
     import asyncio
     try:
-        # Parse time slot to get start hour
+        # Use specific hour if provided, else fall back to slot start
         slot_hours = {"Morning (9am–12pm)": 9, "Afternoon (12pm–4pm)": 12, "Evening (4pm–8pm)": 16}
-        start_hour = slot_hours.get(time_slot, 10)
+        start_hour = specific_hour if specific_hour else slot_hours.get(time_slot, 10)
 
         # Parse date — try common formats, fallback to tomorrow
         from dateutil import parser as dateparser
@@ -1724,6 +1724,19 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     "_Reply with 1, 2 or 3_"
                 )
                 return {"status": "ok"}
+            # Map to slot AND capture specific hour for calendar
+            _specific_hour = None
+            _time_map = {
+                "9am": 9, "9 am": 9, "10am": 10, "10 am": 10, "11am": 11, "11 am": 11,
+                "12pm": 12, "12 pm": 12, "1pm": 13, "1 pm": 13, "2pm": 14, "2 pm": 14, "3pm": 15, "3 pm": 15,
+                "4pm": 16, "4 pm": 16, "5pm": 17, "5 pm": 17, "6pm": 18, "6 pm": 18, "7pm": 19, "7 pm": 19, "8pm": 20, "8 pm": 20
+            }
+            for t, h in _time_map.items():
+                if t in _tl:
+                    _specific_hour = h
+                    break
+            if _specific_hour:
+                dental["gcal_hour"] = _specific_hour
             if any(w in _tl for w in ("morning", "9am", "9 am", "10am", "10 am", "11am", "11 am")):
                 text = "1"
             elif any(w in _tl for w in ("afternoon", "noon", "12pm", "12 pm", "1pm", "1 pm", "2pm", "2 pm", "3pm", "3 pm")):
@@ -1833,7 +1846,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         f"⏰ Time: {dental['time']}\n"
                         f"📞 WhatsApp: {from_phone}"
                     )
-                    cal_link = await create_gcal_event(dental['name'], dental['service'], dental['date'], dental['time'], from_phone)
+                    cal_link = await create_gcal_event(dental['name'], dental['service'], dental['date'], dental['time'], from_phone, dental.get('gcal_hour'))
                     try:
                         await wa_send_text(owner_wa, summary)
                     except Exception as e:
@@ -1876,7 +1889,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 )
                 # Create Google Calendar event
                 cal_link = await create_gcal_event(
-                    dental['name'], dental['service'], dental['date'], dental['time'], from_phone
+                    dental['name'], dental['service'], dental['date'], dental['time'], from_phone, dental.get('gcal_hour')
                 )
                 try:
                     await wa_send_text(owner_wa, summary)
