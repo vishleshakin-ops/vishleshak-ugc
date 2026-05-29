@@ -1461,9 +1461,13 @@ COMBINED_WELCOME = (
     "👋 *Welcome to Vishleshak AI!*\n\n"
     "What are you looking for today?\n\n"
     "1️⃣  🍽️ *BTT Restaurant* — Menu, Orders & Table Booking\n"
-    "2️⃣  🎬 *UGC Video Ads* — AI video ads for your business\n\n"
-    "_Reply with 1 or 2 to get started!_"
+    "2️⃣  🎬 *UGC Video Ads* — AI video ads for your business\n"
+    "3️⃣  🦷 *Dental Appointment* — Book at Dr. Akshay Midha Clinic\n\n"
+    "_Reply with 1, 2 or 3 to get started!_"
 )
+
+# Dental appointment sessions: { phone: { "step": str, "name": str, "service": str, "date": str } }
+_dental_sessions: dict = {}
 
 
 async def notify_wa_on_complete(job_id: str, order_id: str, wa_from: str, product_name: str):
@@ -1546,6 +1550,7 @@ async def whatsapp_receive(request: Request):
     if text.lower() in RESET_WORDS:
         _router_sessions[from_phone] = None
         restaurant_sessions.pop(from_phone, None)
+        _dental_sessions.pop(from_phone, None)
         try:
             await wa_send_text(from_phone, COMBINED_WELCOME)
         except Exception as e:
@@ -1569,6 +1574,15 @@ async def whatsapp_receive(request: Request):
                     "📱 Formats supported: jewellery, clothing, food, electronics & more.\n"
                     "💰 Starting at just ₹499/video"
                 )
+            elif text == "3":
+                _router_sessions[from_phone] = "dental"
+                _dental_sessions[from_phone] = {"step": "ask_name"}
+                await wa_send_text(from_phone,
+                    "🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
+                    "📍 Sector 14, Gurugram\n\n"
+                    "Let's book your appointment! 😊\n\n"
+                    "What's your *full name*?"
+                )
             else:
                 await wa_send_text(from_phone, COMBINED_WELCOME)
         except Exception as e:
@@ -1587,6 +1601,81 @@ async def whatsapp_receive(request: Request):
                 await restaurant_send_text(from_phone, f"Sorry, something went wrong! 😅 Please type *hi* to restart.")
             except Exception:
                 pass
+        return {"status": "ok"}
+
+    # ── Route to dental bot ─────────────────────────────────────────
+    if current_bot == "dental":
+        dental = _dental_sessions.get(from_phone, {"step": "ask_name"})
+        step = dental.get("step")
+        try:
+            if step == "ask_name":
+                dental["name"] = text
+                dental["step"] = "ask_service"
+                _dental_sessions[from_phone] = dental
+                await wa_send_text(from_phone,
+                    f"Nice to meet you, *{text}*! 😊\n\n"
+                    "What type of appointment do you need?\n\n"
+                    "1️⃣ Routine Checkup\n"
+                    "2️⃣ Teeth Cleaning\n"
+                    "3️⃣ Tooth Pain / Emergency\n"
+                    "4️⃣ Other\n\n"
+                    "_Reply with 1, 2, 3 or 4_"
+                )
+            elif step == "ask_service":
+                services = {"1": "Routine Checkup", "2": "Teeth Cleaning", "3": "Tooth Pain / Emergency", "4": "Other"}
+                dental["service"] = services.get(text, text)
+                dental["step"] = "ask_date"
+                _dental_sessions[from_phone] = dental
+                await wa_send_text(from_phone,
+                    "📅 What *date* works for you?\n\n"
+                    "_Example: Monday 2 June or Tomorrow_"
+                )
+            elif step == "ask_date":
+                dental["date"] = text
+                dental["step"] = "ask_time"
+                _dental_sessions[from_phone] = dental
+                await wa_send_text(from_phone,
+                    "⏰ Preferred *time slot*?\n\n"
+                    "1️⃣ Morning (9am – 12pm)\n"
+                    "2️⃣ Afternoon (1pm – 4pm)\n"
+                    "3️⃣ Evening (4pm – 7pm)\n\n"
+                    "_Reply with 1, 2 or 3_"
+                )
+            elif step == "ask_time":
+                slots = {"1": "Morning (9am–12pm)", "2": "Afternoon (1pm–4pm)", "3": "Evening (4pm–7pm)"}
+                dental["time"] = slots.get(text, text)
+                # Notify clinic owner
+                owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
+                clinic_name = os.getenv("CLINIC_NAME", "Dr. Akshay Midha Dental Clinic")
+                summary = (
+                    f"🦷 *New Appointment Request*\n\n"
+                    f"👤 Name: {dental['name']}\n"
+                    f"📋 Service: {dental['service']}\n"
+                    f"📅 Date: {dental['date']}\n"
+                    f"⏰ Time: {dental['time']}\n"
+                    f"📞 WhatsApp: {from_phone}"
+                )
+                try:
+                    await wa_send_text(owner_wa, summary)
+                except Exception as e:
+                    print(f"[Dental] Failed to notify owner: {e}")
+                # Confirm to patient
+                await wa_send_text(from_phone,
+                    f"✅ *Appointment Request Sent!*\n\n"
+                    f"📋 *{dental['service']}*\n"
+                    f"📅 {dental['date']} · {dental['time']}\n\n"
+                    f"The clinic will confirm your slot shortly.\n"
+                    f"📞 *{clinic_name}*\n"
+                    f"📍 Sector 14, Gurugram\n\n"
+                    f"_Type *hi* to go back to the main menu._"
+                )
+                _dental_sessions.pop(from_phone, None)
+                _router_sessions.pop(from_phone, None)
+            else:
+                _dental_sessions[from_phone] = {"step": "ask_name"}
+                await wa_send_text(from_phone, "What's your *full name*?")
+        except Exception as e:
+            print(f"[Dental] Error: {e}")
         return {"status": "ok"}
 
     # ── Route to UGC bot ────────────────────────────────────────────
