@@ -463,38 +463,43 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 }
 .samples .section-label { color: #a78bfa; }
 .samples .section-title { color: white; }
-.samples .section-sub { color: rgba(255,255,255,0.55); margin-bottom: 56px; }
+.samples .section-sub { color: rgba(255,255,255,0.55); margin-bottom: 48px; }
 .samples-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  max-width: 1100px;
-  margin: 0 auto;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  max-width: 1000px;
+  margin: 0 auto 36px;
 }
 .sample-card {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  aspect-ratio: 9/16;
   background: #1e0a4e;
   cursor: pointer;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   transition: transform 0.3s, box-shadow 0.3s;
+  aspect-ratio: 9/16;
+}
+.sample-card.featured {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  aspect-ratio: unset;
 }
 .sample-card:hover {
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-4px) scale(1.02);
   box-shadow: 0 20px 60px rgba(124,58,237,0.4);
 }
 .sample-card video {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
-  transition: opacity 0.3s;
 }
 .sample-overlay {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(37,99,235,0.2));
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 100%);
   transition: opacity 0.3s;
 }
 .sample-card.playing .sample-overlay { opacity: 0; }
@@ -502,26 +507,39 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 .sample-play {
   width: 52px; height: 52px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.18);
   backdrop-filter: blur(8px);
-  border: 2px solid rgba(255,255,255,0.4);
+  border: 2px solid rgba(255,255,255,0.5);
   color: white;
   font-size: 18px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.2s, background 0.2s;
 }
-.sample-play:hover { background: rgba(124,58,237,0.6); transform: scale(1.1); }
+.sample-play:hover { background: rgba(124,58,237,0.7); transform: scale(1.1); }
+.sample-tag {
+  position: absolute;
+  top: 12px; left: 12px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 20px;
+  z-index: 10;
+}
 .sample-mute {
   position: absolute;
   bottom: 10px; right: 10px;
-  width: 34px; height: 34px;
+  width: 32px; height: 32px;
   border-radius: 50%;
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(6px);
   border: 1.5px solid rgba(255,255,255,0.25);
   color: white;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   opacity: 0;
@@ -530,6 +548,14 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 }
 .sample-card:hover .sample-mute { opacity: 1; }
 .sample-mute:hover { background: rgba(124,58,237,0.7); transform: scale(1.1); }
+.samples-cta { margin-top: 8px; }
+.samples-cta a {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: #a78bfa; font-size: 15px; font-weight: 600;
+  text-decoration: none; border-bottom: 1.5px solid rgba(167,139,250,0.4);
+  padding-bottom: 2px; transition: color 0.2s, border-color 0.2s;
+}
+.samples-cta a:hover { color: #c4b5fd; border-color: #c4b5fd; }
 
 /* CTA */
 .cta {
@@ -794,6 +820,7 @@ footer {
   .hero-pills { grid-template-columns: 1fr; }
   .features, .services, .testimonials, .cta, .samples { padding: 60px 24px; }
   .samples-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .sample-card.featured { grid-column: 1 / -1; grid-row: auto; aspect-ratio: 9/16; max-height: 420px; }
   .features-grid, .services-grid, .testimonials-grid { grid-template-columns: 1fr; }
   .why-us { padding: 60px 24px; }
   .why-us-inner { flex-direction: column; }
@@ -909,31 +936,39 @@ footer {
   <h2 class="section-title">AI-Generated UGC Videos</h2>
   <p class="section-sub">Real videos created by our AI — ready to post on Instagram, YouTube & Facebook.</p>
   <div class="samples-grid">
-    <div class="sample-card">
+    <div class="sample-card featured">
+      <span class="sample-tag">✨ Fashion</span>
       <video src="/static/samples/sample2.mp4" playsinline preload="metadata"></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
     <div class="sample-card">
+      <span class="sample-tag">💍 Jewelry</span>
       <video src="/static/samples/sample3.mp4" playsinline preload="metadata"></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
     <div class="sample-card">
+      <span class="sample-tag">👗 Ethnic Wear</span>
       <video src="/static/samples/sample4.mp4" playsinline preload="metadata"></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
     <div class="sample-card">
+      <span class="sample-tag">👶 Kids Fashion</span>
       <video src="/static/samples/sample5.mp4" playsinline preload="metadata"></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
     <div class="sample-card">
+      <span class="sample-tag">🛍️ Lifestyle</span>
       <video src="/static/samples/sample6.mp4" playsinline preload="metadata"></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
+  </div>
+  <div class="samples-cta">
+    <a href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank">🎬 Create your AI ad — from ₹99 →</a>
   </div>
 </section>
 
