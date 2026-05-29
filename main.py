@@ -1609,22 +1609,55 @@ async def whatsapp_receive(request: Request):
         dental = _dental_sessions.get(from_phone, {"step": "ask_name"})
         step = dental.get("step")
 
-        # FAQ: answer questions about hours without advancing the step
-        _tl = text.lower()
-        _HOURS_FAQ = (
-            "🕐 *Clinic Hours:*\n"
-            "Mon–Fri: 9:00 AM – 8:00 PM\n"
-            "Saturday: 9:00 AM – 6:00 PM\n"
-            "Sunday: ❌ Closed\n\n"
+        DENTAL_KB = """
+Business Name: Dr Akshay Midha Multi Speciality Dental Clinic
+Phone: +91 9868018541
+Address: C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015
+
+Hours: Mon–Fri 9am–8pm | Saturday 9am–6pm | Sunday CLOSED
+
+Services: Checkups, Cleaning, Fillings, Root Canal, Extractions, X-rays, Teeth Whitening, Smile Design, Veneers, Crowns, Bridges, Dentures, Implants, Braces, Invisalign, Retainers, Children's Dentistry, Emergency Care
+
+Payments: Cash, UPI, Credit/Debit cards. Insurance: select providers, contact clinic to verify.
+
+New patients: arrive 10–15 min early. Cancellation: 24 hours notice. Standard appointment: 30 min.
+Walk-ins: accepted based on availability. Cleanings: recommended every 6 months.
+
+Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out tooth, extreme pain): go to clinic immediately or call.
+"""
+
+        STEP_PROMPTS = {
+            "ask_name": "What's your *full name*?",
+            "ask_service": "What type of appointment do you need?\n\n1️⃣ Routine Checkup / Cleaning\n2️⃣ Root Canal / Filling\n3️⃣ Teeth Whitening / Smile Design\n4️⃣ Braces / Invisalign\n5️⃣ Tooth Pain / Emergency\n6️⃣ Other\n\n_Reply with a number_",
+            "ask_date": "📅 What *date* works for you?\n\n_Example: Monday 2 June or Tomorrow_",
+            "ask_time": "⏰ Preferred *time slot*?\n\n1️⃣ Morning (9am – 12pm)\n2️⃣ Afternoon (12pm – 4pm)\n3️⃣ Evening (4pm – 8pm)\n\n_Reply with 1, 2 or 3_",
+        }
+
+        # Detect if input is a question rather than a step answer
+        _is_question = (
+            "?" in text
+            or (step in ("ask_service", "ask_time") and text.strip() not in ("1","2","3","4","5","6"))
         )
-        if any(w in _tl for w in ("saturday", "sunday", "hours", "open", "closed", "timing", "time", "working day", "holiday")):
-            step_prompts = {
-                "ask_name": "What's your *full name*?",
-                "ask_service": "What type of appointment do you need?\n\n1️⃣ Routine Checkup / Cleaning\n2️⃣ Root Canal / Filling\n3️⃣ Teeth Whitening / Smile Design\n4️⃣ Braces / Invisalign\n5️⃣ Tooth Pain / Emergency\n6️⃣ Other\n\n_Reply with a number_",
-                "ask_date": "📅 What *date* works for you?\n\n_Example: Monday 2 June or Tomorrow_",
-                "ask_time": "⏰ Preferred *time slot*?\n\n1️⃣ Morning (9am – 12pm)\n2️⃣ Afternoon (12pm – 4pm)\n3️⃣ Evening (4pm – 8pm)\n\n_Reply with 1, 2 or 3_",
-            }
-            await wa_send_text(from_phone, _HOURS_FAQ + (step_prompts.get(step, "What's your *full name*?")))
+
+        if _is_question:
+            try:
+                resp = anthropic_client.messages.create(
+                    model="claude-haiku-4-5-20251001",
+                    max_tokens=200,
+                    system=(
+                        "You are a WhatsApp assistant for a dental clinic. "
+                        "Answer the patient's question using ONLY the knowledge base below. "
+                        "Be brief (2-3 sentences max), friendly, use WhatsApp formatting (*bold*). "
+                        "Never give medical advice or diagnoses.\n\n"
+                        f"KNOWLEDGE BASE:\n{DENTAL_KB}"
+                    ),
+                    messages=[{"role": "user", "content": text}]
+                )
+                answer = resp.content[0].text.strip()
+            except Exception as e:
+                print(f"[Dental FAQ] Claude error: {e}")
+                answer = "For accurate information please call 📞 *+91 9868018541*."
+            await wa_send_text(from_phone, answer + "\n\n" + STEP_PROMPTS.get(step, "What's your *full name*?"))
             return {"status": "ok"}
 
         try:
