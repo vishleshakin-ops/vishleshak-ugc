@@ -499,19 +499,18 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 .sample-overlay {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 100%);
-  transition: opacity 0.3s;
+  background: rgba(0,0,0,0.35);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
 }
-.sample-card.playing .sample-overlay { opacity: 0; }
-.sample-card.playing:hover .sample-overlay { opacity: 1; background: transparent; }
+.sample-card.paused .sample-overlay { opacity: 1; pointer-events: auto; }
 .sample-play {
-  width: 52px; height: 52px;
+  width: 54px; height: 54px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.18);
-  backdrop-filter: blur(8px);
-  border: 2px solid rgba(255,255,255,0.5);
-  color: white;
-  font-size: 18px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,255,255,0.6);
+  color: white; font-size: 20px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.2s, background 0.2s;
@@ -535,19 +534,17 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   bottom: 10px; right: 10px;
   width: 32px; height: 32px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.6);
   backdrop-filter: blur(6px);
-  border: 1.5px solid rgba(255,255,255,0.25);
-  color: white;
-  font-size: 14px;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  color: white; font-size: 14px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s, background 0.2s, transform 0.2s;
+  opacity: 1;
+  transition: background 0.2s, transform 0.2s;
   z-index: 10;
 }
-.sample-card:hover .sample-mute { opacity: 1; }
-.sample-mute:hover { background: rgba(124,58,237,0.7); transform: scale(1.1); }
+.sample-mute:hover { background: rgba(124,58,237,0.8); transform: scale(1.1); }
 .samples-cta { margin-top: 8px; }
 .samples-cta a {
   display: inline-flex; align-items: center; gap: 8px;
@@ -938,31 +935,31 @@ footer {
   <div class="samples-grid">
     <div class="sample-card featured">
       <span class="sample-tag">✨ Fashion</span>
-      <video src="/static/samples/sample2.mp4" playsinline preload="metadata" muted></video>
+      <video src="/static/samples/sample2.mp4" autoplay muted loop playsinline></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
     <div class="sample-card">
       <span class="sample-tag">💍 Jewelry</span>
-      <video src="/static/samples/sample3.mp4" playsinline preload="metadata" muted></video>
+      <video src="/static/samples/sample3.mp4" autoplay muted loop playsinline></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
     <div class="sample-card">
       <span class="sample-tag">👶 Kids Fashion</span>
-      <video src="/static/samples/sample4.mp4" playsinline preload="metadata" muted></video>
+      <video src="/static/samples/sample4.mp4" autoplay muted loop playsinline></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
     <div class="sample-card">
       <span class="sample-tag">👗 Ethnic Wear</span>
-      <video src="/static/samples/sample5.mp4" playsinline preload="metadata" muted></video>
+      <video src="/static/samples/sample5.mp4" autoplay muted loop playsinline></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
     <div class="sample-card">
       <span class="sample-tag">🛍️ Lifestyle</span>
-      <video src="/static/samples/sample6.mp4" playsinline preload="metadata" muted></video>
+      <video src="/static/samples/sample6.mp4" autoplay muted loop playsinline></video>
       <div class="sample-overlay"><button class="sample-play">▶</button></div>
       <button class="sample-mute" title="Unmute">🔇</button>
     </div>
@@ -1273,41 +1270,38 @@ footer {
   updateActive(); // run once on load
 })();
 
-// Sample video — play/pause on click, persistent mute toggle
+// Sample videos — autoplay+loop, click to pause/resume, always-visible mute toggle
 document.querySelectorAll('.sample-card').forEach(card => {
-  const video = card.querySelector('video');
+  const video   = card.querySelector('video');
   const muteBtn = card.querySelector('.sample-mute');
+  const overlay = card.querySelector('.sample-overlay');
+  const playBtn = card.querySelector('.sample-play');
 
-  video.muted = true; // start muted
-
-  // Click card → play / pause (ignore mute button clicks)
+  // Click card → pause / resume (ignore mute button clicks)
   card.addEventListener('click', e => {
     if (muteBtn.contains(e.target)) return;
     if (video.paused) {
-      document.querySelectorAll('.sample-card video').forEach(v => {
-        v.pause();
-        v.closest('.sample-card').classList.remove('playing');
-      });
       video.play();
-      card.classList.add('playing');
+      card.classList.remove('paused');
     } else {
       video.pause();
-      card.classList.remove('playing');
+      card.classList.add('paused');
     }
   });
 
-  // Mute button — simple permanent toggle, preference survives replays
+  // Play button inside overlay also resumes
+  playBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    video.play();
+    card.classList.remove('paused');
+  });
+
+  // Mute button — toggles sound, icon updates instantly
   muteBtn.addEventListener('click', e => {
     e.stopPropagation();
     video.muted = !video.muted;
     muteBtn.textContent = video.muted ? '🔇' : '🔊';
     muteBtn.title       = video.muted ? 'Unmute' : 'Mute';
-  });
-
-  // Video ended → reset to start, keep mute preference as-is
-  video.addEventListener('ended', () => {
-    video.currentTime = 0;
-    card.classList.remove('playing');
   });
 });
 
