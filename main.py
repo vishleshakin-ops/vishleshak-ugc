@@ -1826,17 +1826,31 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     )
                     return {"status": "ok"}
 
+                # Detect specific hour and slot from date input
+                _time_map_date = {
+                    "9am": 9, "9 am": 9, "10am": 10, "10 am": 10, "11am": 11, "11 am": 11,
+                    "12pm": 12, "12 pm": 12, "1pm": 13, "1 pm": 13, "2pm": 14, "2 pm": 14, "3pm": 15, "3 pm": 15,
+                    "4pm": 16, "4 pm": 16, "5pm": 17, "5 pm": 17, "6pm": 18, "6 pm": 18,
+                    "7pm": 19, "7 pm": 19, "8pm": 20, "8 pm": 20
+                }
                 _auto_slot = None
-                if any(w in _dl for w in ("morning", "9am", "9 am", "10am", "10 am", "11am", "11 am")):
+                _auto_hour = None
+                for t, h in _time_map_date.items():
+                    if t in _dl:
+                        _auto_hour = h
+                        break
+                if any(w in _dl for w in ("morning",)) or (_auto_hour and _auto_hour < 12):
                     _auto_slot = "Morning (9am–12pm)"
-                elif any(w in _dl for w in ("noon", "afternoon", "12pm", "12 pm", "1pm", "1 pm", "2pm", "2 pm", "3pm", "3 pm")):
+                elif any(w in _dl for w in ("noon", "afternoon")) or (_auto_hour and 12 <= _auto_hour < 16):
                     _auto_slot = "Afternoon (12pm–4pm)"
-                elif any(w in _dl for w in ("evening", "4pm", "4 pm", "5pm", "5 pm", "6pm", "6 pm", "7pm", "7 pm", "8pm", "8 pm")):
+                elif any(w in _dl for w in ("evening",)) or (_auto_hour and _auto_hour >= 16):
                     _auto_slot = "Evening (4pm–8pm)"
 
                 if _auto_slot:
                     # Time already specified — skip ask_time and book directly
                     dental["time"] = _auto_slot
+                    if _auto_hour:
+                        dental["gcal_hour"] = _auto_hour
                     owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
                     summary = (
                         f"🦷 *New Appointment Request*\n\n"
