@@ -101,7 +101,7 @@ def _format_date(date_str: str, hour: int | None = None) -> str:
     """Return a nicely formatted date string like 'Tuesday, 3 June 2026'."""
     try:
         dt = _parse_event_datetime(date_str, hour or 9)
-        return dt.strftime("%A, %-d %B %Y")
+        return f"{dt.strftime('%A')}, {dt.day} {dt.strftime('%B %Y')}"
     except Exception:
         return date_str
 
@@ -1787,11 +1787,16 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
         }
 
         # Normalise natural language time inputs at ask_time step
-        # Convert "2.30", "2:30" formats to "2 30pm" for easier matching
         import re as _re
         _tl = text.lower().strip()
-        _tl = _re.sub(r'(\d+)[\.:](\d{2})\s*(am|pm)', r'\1:\2\3', _tl)  # 2.30pm → 2:30pm
-        _tl = _re.sub(r'(\d+)[\.:](\d{2})(?!\d)', r'\1:\2pm', _tl)  # 2.30 → 2:30pm
+        # Normalise dot/colon notation: "2.30" → "2:30pm", "2:30pm" stays, "7.00" → "7:00pm"
+        _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _tl)
+        _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _tl)
+        # Bare hour numbers: "book for tuesday 5" or "at 5" → treat as pm if 1-8
+        def _bare_hour(m):
+            h = int(m.group(1))
+            return f"{h}pm" if 1 <= h <= 8 else f"{h}am"
+        _tl = _re.sub(r'\b(\d{1,2})\b(?!\s*(?:am|pm|:\d))', _bare_hour, _tl)
         if step == "ask_time":
             # Detect after-hours times and warn
             _after_hours = any(w in _tl for w in ("9pm", "9 pm", "10pm", "10 pm", "11pm", "11 pm", "12am", "midnight", "after 8", "after 9"))
