@@ -1871,6 +1871,10 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
 
         import re as _re
         _tl = text.lower().strip()
+        # Normalise EVERYWHERE: "4 PM" → "4pm", "10 AM" → "10am", "2.30" → "2:30pm"
+        _tl = _re.sub(r'\b(\d{1,2})\s+(am|pm)\b', r'\1\2', _tl)
+        _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _tl)
+        _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _tl)
 
         # Acknowledgment words — just re-prompt, don't treat as FAQ
         _ACK_WORDS = ("sorry", "ok", "okay", "thanks", "thank you", "got it", "alright", "fine", "sure", "noted")
@@ -2041,6 +2045,9 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 dental["date"] = text
                 # Try to extract time from the date input
                 _dl = text.lower()
+                _dl = _re.sub(r'\b(\d{1,2})\s+(am|pm)\b', r'\1\2', _dl)
+                _dl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _dl)
+                _dl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _dl)
 
                 # Warn about after-hours times in the date input
                 _after_hours_date = any(w in _dl for w in ("9pm", "9 pm", "10pm", "10 pm", "11pm", "11 pm", "12am", "midnight"))
