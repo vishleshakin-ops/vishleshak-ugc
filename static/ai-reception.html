@@ -332,15 +332,46 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.umd.js"></script>
 <script>
-  const RETELL_AGENT_ID = "agent_YOUR_RETELL_AGENT_ID_HERE";
+(function() {
+  const RETELL_AGENT_ID = "agent_3960e51a532483152f6be3f529";
   const openBtns = document.querySelectorAll('[id^="open-retell-btn"]');
-  const closeBtn = document.getElementById("close-retell-btn");
-  const modal    = document.getElementById("retell-modal");
-  openBtns.forEach(b => b.addEventListener("click", () => modal.classList.add("open")));
+  const closeBtn  = document.getElementById("close-retell-btn");
+  const modal     = document.getElementById("retell-modal");
+  const container = document.getElementById("retell-widget-container");
+
+  let retellLoaded = false;
+
+  function loadRetellWidget() {
+    if (retellLoaded) return;
+    retellLoaded = true;
+    const script = document.createElement('script');
+    script.src = 'https://cdn.retellai.com/sdk/web-client.js';
+    script.onload = function() {
+      if (window.RetellWebClient) {
+        const client = new window.RetellWebClient();
+        client.renderButton(container, {
+          agentId: RETELL_AGENT_ID,
+          btnText: "Start AI Call",
+          theme: "dark",
+        });
+      } else {
+        container.innerHTML = '<p style="color:rgba(255,255,255,0.5);font-size:13px">Could not load call widget. Please try again.</p>';
+      }
+    };
+    script.onerror = function() {
+      container.innerHTML = '<p style="color:rgba(255,255,255,0.5);font-size:13px">Could not load call widget. Please try again.</p>';
+    };
+    document.head.appendChild(script);
+  }
+
+  openBtns.forEach(b => b.addEventListener("click", function() {
+    modal.classList.add("open");
+    loadRetellWidget();
+  }));
   closeBtn.addEventListener("click", () => modal.classList.remove("open"));
   modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("open"); });
+})();
 </script>
 </body>
 </html>
