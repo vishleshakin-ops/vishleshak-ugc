@@ -1786,51 +1786,59 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             "ask_time": "⏰ Preferred *time slot*?\n\n1️⃣ Morning (9am – 12pm)\n2️⃣ Afternoon (12pm – 4pm)\n3️⃣ Evening (4pm – 8pm)\n\n_Reply with 1, 2 or 3_",
         }
 
-        # Normalise natural language time inputs at ask_time step
         import re as _re
         _tl = text.lower().strip()
-        # Normalise dot/colon notation: "2.30" → "2:30pm", "2:30pm" stays, "7.00" → "7:00pm"
-        _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _tl)
-        _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _tl)
-        # Bare hour numbers: "book for tuesday 5" or "at 5" → treat as pm if 1-8
-        def _bare_hour(m):
-            h = int(m.group(1))
-            return f"{h}pm" if 1 <= h <= 8 else f"{h}am"
-        _tl = _re.sub(r'\b(\d{1,2})\b(?!\s*(?:am|pm|:\d))', _bare_hour, _tl)
+
         if step == "ask_time":
-            # Detect after-hours times and warn
-            _after_hours = any(w in _tl for w in ("9pm", "9 pm", "10pm", "10 pm", "11pm", "11 pm", "12am", "midnight", "after 8", "after 9"))
-            _sat_after = any(w in _tl for w in ("7pm", "7 pm", "8pm", "8 pm")) and "saturday" in _tl
-            if _after_hours or _sat_after:
-                await wa_send_text(from_phone,
-                    "⚠️ Sorry, that time is *outside our working hours*.\n\n"
-                    "🕐 Mon–Fri: 9am–8pm | Sat: 9am–6pm\n\n"
-                    "⏰ Please choose a valid *time slot*:\n\n"
-                    "1️⃣ Morning (9am – 12pm)\n"
-                    "2️⃣ Afternoon (12pm – 4pm)\n"
-                    "3️⃣ Evening (4pm – 8pm)\n\n"
-                    "_Reply with 1, 2 or 3_"
-                )
-                return {"status": "ok"}
-            # Map to slot AND capture specific hour for calendar
-            _specific_hour = None
-            _time_map = {
-                "9am": 9, "9 am": 9, "9:00am": 9, "10am": 10, "10 am": 10, "10:30am": 10, "11am": 11, "11 am": 11, "11:30am": 11,
-                "12pm": 12, "12 pm": 12, "12:30pm": 12, "1pm": 13, "1 pm": 13, "1:30pm": 13, "2pm": 14, "2 pm": 14, "2:30pm": 14, "3pm": 15, "3 pm": 15, "3:30pm": 15,
-                "4pm": 16, "4 pm": 16, "4:30pm": 16, "5pm": 17, "5 pm": 17, "5:30pm": 17, "6pm": 18, "6 pm": 18, "6:30pm": 18, "7pm": 19, "7 pm": 19, "7:30pm": 19, "8pm": 20, "8 pm": 20
-            }
-            for t, h in _time_map.items():
-                if t in _tl:
-                    _specific_hour = h
-                    break
-            if _specific_hour:
-                dental["gcal_hour"] = _specific_hour
-            if any(w in _tl for w in ("morning", "9am", "9 am", "10am", "10 am", "11am", "11 am")):
-                text = "1"
-            elif any(w in _tl for w in ("afternoon", "noon", "12pm", "12 pm", "1pm", "1 pm", "2pm", "2 pm", "3pm", "3 pm")):
-                text = "2"
-            elif any(w in _tl for w in ("evening", "4pm", "4 pm", "5pm", "5 pm", "6pm", "6 pm", "7pm", "7 pm", "8pm", "8 pm")):
-                text = "3"
+            # If already a valid slot number, use directly — skip all normalisation
+            if text.strip() not in ("1", "2", "3"):
+                # Normalise dot/colon notation: "2.30"→"2:30pm", "7.00"→"7:00pm"
+                _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _tl)
+                _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _tl)
+                # Bare hour: "at 5", "book for 7" → "5pm", "7pm" (only 1–8 treated as pm)
+                def _bare_hour(m):
+                    h = int(m.group(1))
+                    return f"{h}pm" if 1 <= h <= 8 else m.group(0)
+                _tl = _re.sub(r'\b(\d{1,2})\b(?!\s*(?:am|pm|[:\.])\d?)', _bare_hour, _tl)
+
+                # Detect after-hours and warn
+                _after_hours = any(w in _tl for w in ("9pm","10pm","11pm","12am","midnight"))
+                _sat_after   = any(w in _tl for w in ("7pm","8pm")) and "saturday" in _tl
+                if _after_hours or _sat_after:
+                    await wa_send_text(from_phone,
+                        "⚠️ Sorry, that time is *outside our working hours*.\n\n"
+                        "🕐 Mon–Fri: 9am–8pm | Sat: 9am–6pm\n\n"
+                        "⏰ Please choose a valid *time slot*:\n\n"
+                        "1️⃣ Morning (9am – 12pm)\n"
+                        "2️⃣ Afternoon (12pm – 4pm)\n"
+                        "3️⃣ Evening (4pm – 8pm)\n\n"
+                        "_Reply with 1, 2 or 3_"
+                    )
+                    return {"status": "ok"}
+
+                # Lookup specific hour from normalised text
+                _time_map = {
+                    "9am":9,"9:00am":9,"10am":10,"10:30am":10,"11am":11,"11:30am":11,
+                    "12pm":12,"12:30pm":12,"1pm":13,"1:30pm":13,"2pm":14,"2:30pm":14,"3pm":15,"3:30pm":15,
+                    "4pm":16,"4:30pm":16,"5pm":17,"5:30pm":17,"6pm":18,"6:30pm":18,
+                    "7pm":19,"7:30pm":19,"8pm":20
+                }
+                _specific_hour = None
+                for t, h in _time_map.items():
+                    if t in _tl:
+                        _specific_hour = h
+                        break
+
+                # Map to slot number using specific hour (most reliable) or keyword
+                if _specific_hour is not None:
+                    dental["gcal_hour"] = _specific_hour
+                    text = "1" if _specific_hour < 12 else ("2" if _specific_hour < 16 else "3")
+                elif any(w in _tl for w in ("morning",)):
+                    text = "1"
+                elif any(w in _tl for w in ("afternoon","noon")):
+                    text = "2"
+                elif any(w in _tl for w in ("evening",)):
+                    text = "3"
 
         # Normalise natural language service inputs at ask_service step
         if step == "ask_service":
@@ -2006,11 +2014,12 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     return {"status": "ok"}
                 # Notify clinic owner
                 owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
+                _fmt_date = _format_date(dental['date'], dental.get('gcal_hour'))
                 summary = (
                     f"🦷 *New Appointment Request*\n\n"
                     f"👤 Name: {dental['name']}\n"
                     f"📋 Service: {dental['service']}\n"
-                    f"📅 Date: {dental['date']}\n"
+                    f"📅 Date: {_fmt_date}\n"
                     f"⏰ Time: {dental['time']}\n"
                     f"📞 WhatsApp: {from_phone}"
                 )
@@ -2027,7 +2036,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 await wa_send_text(from_phone,
                     f"✅ *Appointment Request Sent!*\n\n"
                     f"📋 *{dental['service']}*\n"
-                    f"📅 {dental['date']} · {dental['time']}{cal_line}\n\n"
+                    f"📅 {_fmt_date} · {dental['time']}{cal_line}\n\n"
                     f"The clinic will confirm your slot shortly.\n\n"
                     f"🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
                     f"📍 C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
