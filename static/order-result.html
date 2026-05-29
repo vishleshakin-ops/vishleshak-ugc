@@ -146,11 +146,36 @@
       { key: "processing_video",    label: "Export final MP4",          sub: "Re-encode at high quality" },
     ];
 
+    const CLOUDINARY_FALLBACK = `https://res.cloudinary.com/da9mechjr/raw/upload/vishleshak-orders/${orderId}.json`;
+
+    async function fetchFromCloudinary() {
+      try {
+        const resp = await fetch(CLOUDINARY_FALLBACK + "?t=" + Date.now());
+        if (!resp.ok) return null;
+        return await resp.json();
+      } catch (e) {
+        return null;
+      }
+    }
+
     async function poll() {
       try {
         const resp = await fetch(`/api/orders/${orderId}`);
-        if (!resp.ok) { renderError("Order not found. Please check your order ID."); return; }
+        if (!resp.ok) {
+          // Railway doesn't have the order — try Cloudinary persistent store
+          const saved = await fetchFromCloudinary();
+          if (saved && saved.status === "completed") { render(saved); clearInterval(pollTimer); }
+          else renderError("Order not found. Please check your order ID.");
+          return;
+        }
         const order = await resp.json();
+
+        // If Railway has the order but no video (e.g. after redeploy), check Cloudinary
+        if (order.status === "pending" || order.status === "failed") {
+          const saved = await fetchFromCloudinary();
+          if (saved && saved.status === "completed") { render(saved); clearInterval(pollTimer); return; }
+        }
+
         render(order);
         if (order.status === "completed" || order.status === "rejected" || order.status === "failed") {
           clearInterval(pollTimer);

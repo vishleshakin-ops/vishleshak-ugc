@@ -1074,10 +1074,27 @@ async def _delete_model_photos(order_id: str):
             pass  # Best-effort — not critical if it fails
 
 
-async def _push_result_to_railway(order_id: str, video_url: str, image_url: str, script: str):
-    """After local generation, push the completed result back to Railway so the customer result page updates."""
-    if not RAILWAY_URL:
+async def _persist_result_to_cloudinary(order_id: str, payload: dict):
+    """Upload order result as a raw JSON to Cloudinary so it survives Railway redeploys."""
+    if not _CLOUDINARY_READY:
         return
+    try:
+        import cloudinary.uploader as _cup
+        data_bytes = json.dumps(payload).encode("utf-8")
+        _cup.upload(
+            data_bytes,
+            resource_type="raw",
+            public_id=f"vishleshak-orders/{order_id}",
+            overwrite=True,
+            format="json",
+        )
+        print(f"[Cloudinary persist] saved order result for {order_id[:8]}")
+    except Exception as e:
+        print(f"[Cloudinary persist] failed: {e}")
+
+
+async def _push_result_to_railway(order_id: str, video_url: str, image_url: str, script: str):
+    """After local generation, push completed result to Railway AND persist to Cloudinary."""
     # Build absolute public URL using ngrok PUBLIC_URL
     def make_public(url: str) -> str:
         if not url:
@@ -1093,12 +1110,37 @@ async def _push_result_to_railway(order_id: str, video_url: str, image_url: str,
         "image_url": make_public(image_url),
         "script": script,
     }
+
+    # Always persist to Cloudinary first — survives Railway redeploys
+    await asyncio.to_thread(_persist_result_to_cloudinary_sync, order_id, payload)
+
+    if not RAILWAY_URL:
+        return
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(f"{RAILWAY_URL}/api/order-result", json=payload)
             print(f"[Railway sync] {resp.status_code}: {resp.text[:100]}")
     except Exception as e:
         print(f"[Railway sync] failed: {e}")
+
+
+def _persist_result_to_cloudinary_sync(order_id: str, payload: dict):
+    """Sync wrapper for Cloudinary raw upload."""
+    if not _CLOUDINARY_READY:
+        return
+    try:
+        import cloudinary.uploader as _cup
+        data_bytes = json.dumps(payload).encode("utf-8")
+        _cup.upload(
+            data_bytes,
+            resource_type="raw",
+            public_id=f"vishleshak-orders/{order_id}",
+            overwrite=True,
+            format="json",
+        )
+        print(f"[Cloudinary persist] saved result for {order_id[:8]}")
+    except Exception as e:
+        print(f"[Cloudinary persist] failed: {e}")
 
 
 async def _send_whatsapp_notification(order: dict):
