@@ -701,6 +701,34 @@ async def sync_order(request: Request):
     return {"status": "synced"}
 
 
+@app.post("/api/resync-railway")
+async def resync_railway():
+    """Push all locally completed orders to Railway — use after Railway redeploys wipe its orders.json."""
+    if not RAILWAY_URL:
+        return {"status": "error", "msg": "RAILWAY_URL not configured"}
+    orders = load_orders()
+    completed = [o for o in orders if o.get("status") == "completed" and o.get("video_url")]
+    pushed = []
+    failed = []
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        for o in completed:
+            try:
+                resp = await client.post(f"{RAILWAY_URL}/api/order-result", json={
+                    "order_id": o["id"],
+                    "status": "completed",
+                    "video_url": o["video_url"],
+                    "image_url": o.get("image_url", ""),
+                    "script": o.get("script", o.get("custom_script", "")),
+                    "job_id": o.get("job_id", ""),
+                    "customer_name": o.get("customer_name", ""),
+                    "customer_phone": o.get("customer_phone", ""),
+                })
+                pushed.append(o["id"][:8])
+            except Exception as e:
+                failed.append(f"{o['id'][:8]}: {e}")
+    return {"status": "done", "pushed": len(pushed), "failed": failed}
+
+
 @app.post("/api/recover-veo3")
 async def recover_veo3(request: Request):
     """Admin endpoint: fetch a completed Veo3 video from kie.ai by task ID,

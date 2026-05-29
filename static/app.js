@@ -1249,9 +1249,30 @@ async function initAppMode() {
 
 function addSyncButton(railwayUrl) {
   const btn = $("sync-railway-btn");
-  if (!btn) return;
-  btn.style.display = "inline-block";
-  btn.addEventListener("click", () => syncRailwayOrders(railwayUrl));
+  if (btn) {
+    btn.style.display = "inline-block";
+    btn.addEventListener("click", () => syncRailwayOrders(railwayUrl));
+  }
+  const pushBtn = $("push-railway-btn");
+  if (pushBtn) {
+    pushBtn.style.display = "inline-block";
+    pushBtn.addEventListener("click", pushToRailway);
+  }
+}
+
+async function pushToRailway() {
+  try {
+    showToast("⬆️ Pushing completed orders to Railway…");
+    const resp = await fetch("/api/resync-railway", {method: "POST"});
+    const data = await resp.json();
+    if (data.status === "done") {
+      showToast(`✅ Pushed ${data.pushed} order(s) to Railway!`, 4000);
+    } else {
+      showToast("❌ " + (data.msg || "Push failed"), 5000);
+    }
+  } catch(e) {
+    showToast("Push failed: " + e.message);
+  }
 }
 
 async function syncRailwayOrders(railwayUrl) {
