@@ -53,7 +53,7 @@
     }
     .hero-inner {
       max-width: 1100px; margin: 0 auto;
-      display: grid; grid-template-columns: 1fr 420px; gap: 64px; align-items: center;
+      display: grid; grid-template-columns: 1fr 280px; gap: 64px; align-items: center;
       position: relative; z-index: 1;
     }
     .eyebrow {
@@ -556,7 +556,16 @@ let mi = 0;
 
 function addMsg() {
   if (mi >= messages.length) {
-    setTimeout(() => { chat.innerHTML = '<div class="pchat bot">👋 Hi! Welcome to Bite Tongue Tingling.<br/>Type <b>menu</b> to see today\'s specials!</div>'; mi = 0; setTimeout(addMsg, 2000); }, 3000);
+    setTimeout(() => {
+      chat.style.transition = 'opacity 0.5s';
+      chat.style.opacity = '0';
+      setTimeout(() => {
+        chat.innerHTML = '<div class="pchat bot">👋 Hi! Welcome to Bite Tongue Tingling.<br/>Type <b>menu</b> to see today\'s specials!</div>';
+        mi = 0;
+        chat.style.opacity = '1';
+        setTimeout(addMsg, 1500);
+      }, 500);
+    }, 3000);
     return;
   }
   const m = messages[mi++];
