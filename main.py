@@ -1702,9 +1702,11 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
         }
 
         # Detect if input is a question rather than a step answer
+        _tl = text.lower()
         _is_question = (
             "?" in text
             or (step in ("ask_service", "ask_time") and text.strip() not in ("1","2","3","4","5","6"))
+            or (step == "ask_date" and any(w in _tl for w in ("sunday", "closed", "holiday", "open", "hours", "timing")))
         )
 
         if _is_question:
