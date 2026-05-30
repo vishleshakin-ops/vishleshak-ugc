@@ -128,8 +128,9 @@ def _extract_appointment_time(value: str) -> dict | None:
         return None
 
     hour = int(match.group(1))
-    minute = int(match.group(2) or 0)
-    period = match.group(3).lower() if explicit else None
+    minute_text = match.group(2) if match.lastindex and match.lastindex >= 2 else None
+    minute = int(minute_text or 0)
+    period = explicit.group(3).lower() if explicit else None
 
     if period == "am":
         hour24 = 0 if hour == 12 else hour
@@ -2171,7 +2172,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             "?" in text
             or (step == "ask_service" and text.strip() not in ("1","2","3","4","5","6"))
             or (step == "ask_time" and not _looks_like_time_answer(text))
-            or (step == "ask_date" and any(w in _tl for w in ("sunday", "closed", "holiday", "open", "hours", "timing")))
+            or (step == "ask_date" and not _extract_appointment_time(text) and any(w in _tl for w in ("sunday", "closed", "holiday", "open", "hours", "timing")))
         )
 
         if _is_question:
@@ -2301,12 +2302,12 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
                     _fmt_date = _format_date(dental["date"], dental.get("gcal_hour"))
                     summary = (
-                        f"ðŸ¦· *New Appointment Request*\n\n"
-                        f"ðŸ‘¤ Name: {dental['name']}\n"
-                        f"ðŸ“‹ Service: {dental['service']}\n"
-                        f"ðŸ“… Date: {_fmt_date}\n"
-                        f"â° Time: {dental['time']}\n"
-                        f"ðŸ“ž WhatsApp: {from_phone}"
+                        f"*New Appointment Request*\n\n"
+                        f"Name: {dental['name']}\n"
+                        f"Service: {dental['service']}\n"
+                        f"Date: {_fmt_date}\n"
+                        f"Time: {dental['time']}\n"
+                        f"WhatsApp: {from_phone}"
                     )
                     cal_link = await create_gcal_event(
                         dental["name"], dental["service"], dental["date"], dental["time"], from_phone, dental.get("gcal_hour")
@@ -2315,15 +2316,15 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         await wa_send_text(owner_wa, summary)
                     except Exception as e:
                         print(f"[Dental] Failed to notify owner: {e}")
-                    cal_line = f"\nðŸ“† *Calendar:* {cal_link}" if cal_link else ""
+                    cal_line = f"\nCalendar: {cal_link}" if cal_link else ""
                     await wa_send_text(from_phone,
-                        f"âœ… *Appointment Request Sent!*\n\n"
-                        f"ðŸ“‹ *{dental['service']}*\n"
-                        f"ðŸ“… {_fmt_date} Â· {dental['time']}{cal_line}\n\n"
+                        f"*Appointment Request Sent!*\n\n"
+                        f"*{dental['service']}*\n"
+                        f"{_fmt_date} - {dental['time']}{cal_line}\n\n"
                         f"The clinic will confirm your slot shortly.\n\n"
-                        f"ðŸ¦· *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
-                        f"ðŸ“ C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
-                        f"ðŸ“ž +91 9868018541\n\n"
+                        f"*Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
+                        f"C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
+                        f"+91 9868018541\n\n"
                         f"_Type *hi* to go back to the main menu._"
                     )
                     _dental_sessions.pop(from_phone, None)
@@ -2400,27 +2401,27 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         return {"status": "ok"}
                     owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
                     summary = (
-                        f"🦷 *New Appointment Request*\n\n"
-                        f"👤 Name: {dental['name']}\n"
-                        f"📋 Service: {dental['service']}\n"
-                        f"📅 Date: {_format_date(dental['date'], dental.get('gcal_hour'))}\n"
-                        f"⏰ Time: {dental['time']}\n"
-                        f"📞 WhatsApp: {from_phone}"
+                        f"*New Appointment Request*\n\n"
+                        f"Name: {dental['name']}\n"
+                        f"Service: {dental['service']}\n"
+                        f"Date: {_format_date(dental['date'], dental.get('gcal_hour'))}\n"
+                        f"Time: {dental['time']}\n"
+                        f"WhatsApp: {from_phone}"
                     )
                     cal_link = await create_gcal_event(dental['name'], dental['service'], dental['date'], dental['time'], from_phone, dental.get('gcal_hour'))
                     try:
                         await wa_send_text(owner_wa, summary)
                     except Exception as e:
                         print(f"[Dental] Failed to notify owner: {e}")
-                    cal_line = f"\n📆 *Calendar:* {cal_link}" if cal_link else ""
+                    cal_line = f"\nCalendar: {cal_link}" if cal_link else ""
                     await wa_send_text(from_phone,
-                        f"✅ *Appointment Request Sent!*\n\n"
-                        f"📋 *{dental['service']}*\n"
-                        f"📅 {_format_date(dental['date'], dental.get('gcal_hour'))} · {dental['time']}{cal_line}\n\n"
+                        f"*Appointment Request Sent!*\n\n"
+                        f"*{dental['service']}*\n"
+                        f"{_format_date(dental['date'], dental.get('gcal_hour'))} - {dental['time']}{cal_line}\n\n"
                         f"The clinic will confirm your slot shortly.\n\n"
-                        f"🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
-                        f"📍 C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
-                        f"📞 +91 9868018541\n\n"
+                        f"*Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
+                        f"C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
+                        f"+91 9868018541\n\n"
                         f"_Type *hi* to go back to the main menu._"
                     )
                     _dental_sessions.pop(from_phone, None)
@@ -2464,12 +2465,12 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
                 _fmt_date = _format_date(dental['date'], dental.get('gcal_hour'))
                 summary = (
-                    f"🦷 *New Appointment Request*\n\n"
-                    f"👤 Name: {dental['name']}\n"
-                    f"📋 Service: {dental['service']}\n"
-                    f"📅 Date: {_fmt_date}\n"
-                    f"⏰ Time: {dental['time']}\n"
-                    f"📞 WhatsApp: {from_phone}"
+                    f"*New Appointment Request*\n\n"
+                    f"Name: {dental['name']}\n"
+                    f"Service: {dental['service']}\n"
+                    f"Date: {_fmt_date}\n"
+                    f"Time: {dental['time']}\n"
+                    f"WhatsApp: {from_phone}"
                 )
                 # Create Google Calendar event
                 cal_link = await create_gcal_event(
@@ -2480,15 +2481,15 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 except Exception as e:
                     print(f"[Dental] Failed to notify owner: {e}")
                 # Confirm to patient
-                cal_line = f"\n📆 *Calendar:* {cal_link}" if cal_link else ""
+                cal_line = f"\nCalendar: {cal_link}" if cal_link else ""
                 await wa_send_text(from_phone,
-                    f"✅ *Appointment Request Sent!*\n\n"
-                    f"📋 *{dental['service']}*\n"
-                    f"📅 {_fmt_date} · {dental['time']}{cal_line}\n\n"
+                    f"*Appointment Request Sent!*\n\n"
+                    f"*{dental['service']}*\n"
+                    f"{_fmt_date} - {dental['time']}{cal_line}\n\n"
                     f"The clinic will confirm your slot shortly.\n\n"
-                    f"🦷 *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
-                    f"📍 C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
-                    f"📞 +91 9868018541\n\n"
+                    f"*Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
+                    f"C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
+                    f"+91 9868018541\n\n"
                     f"_Type *hi* to go back to the main menu._"
                 )
                 _dental_sessions.pop(from_phone, None)
