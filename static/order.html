@@ -1204,6 +1204,366 @@
       .drop-zone { grid-template-columns: 1fr; text-align: center; }
       .preview-box { margin: 0 auto; }
     }
+
+    /* Chatbot-page aligned redesign */
+    :root {
+      --order-bg: #0d0640;
+      --order-panel: rgba(255,255,255,0.06);
+      --order-panel-strong: rgba(255,255,255,0.09);
+      --order-border: rgba(255,255,255,0.11);
+      --order-text: rgba(255,255,255,0.74);
+      --order-muted: rgba(255,255,255,0.46);
+      --order-white: #ffffff;
+      --order-green: #25D366;
+    }
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      color: var(--order-white);
+      background: linear-gradient(145deg, #0d0640 0%, #1a0a40 40%, #2d1b8a 70%, #1e0a4e 100%);
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 60% at 30% 18%, rgba(124,58,237,0.22), transparent 65%),
+        radial-gradient(ellipse 50% 50% at 82% 20%, rgba(37,99,235,0.12), transparent 60%);
+      pointer-events: none;
+    }
+    .page {
+      width: 100%;
+      margin: 0;
+      padding: 0 48px 72px;
+    }
+    .intro {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      padding: 80px 0 72px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 64px;
+      align-items: center;
+      background: transparent;
+      border-radius: 0;
+      overflow: visible;
+    }
+    .intro h1 {
+      margin: 0 0 20px;
+      max-width: 620px;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+    }
+    .intro-copy {
+      max-width: 480px;
+      margin-top: 0;
+      color: var(--order-text);
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+    .eyebrow {
+      min-height: auto;
+      margin-bottom: 20px;
+      padding: 5px 14px;
+      gap: 8px;
+      border-radius: 100px;
+      background: rgba(124,58,237,0.2);
+      border: 1px solid rgba(124,58,237,0.4);
+      color: #c4b5fd;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+    }
+    .ugc-visual {
+      width: 280px;
+      min-height: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+    }
+    .ugc-phone {
+      width: 260px;
+      margin: 0;
+      padding: 46px 10px 12px;
+      border-radius: 44px;
+      background: #0f0a28;
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,0.12),
+        0 0 0 6px rgba(124,58,237,0.25),
+        0 40px 80px rgba(0,0,0,0.5);
+    }
+    .ugc-phone-notch {
+      width: 70px;
+      height: 12px;
+      background: #0f0a28;
+    }
+    .ugc-phone-top {
+      padding: 10px 14px;
+      border-radius: 24px 24px 0 0;
+      background: #075e54;
+      font-size: 0.82rem;
+      gap: 10px;
+    }
+    .ugc-creative-screen {
+      height: 340px;
+      border-radius: 0 0 24px 24px;
+      background: #0d1117;
+    }
+    .ugc-home-bar {
+      width: 80px;
+      height: 4px;
+      bottom: 8px;
+      background: rgba(255,255,255,0.25);
+    }
+    .ugc-info-card { display: none; }
+    .form-cue {
+      width: min(1100px, 100%);
+      margin: -36px auto 28px;
+    }
+    .form-cue .hero-cue {
+      color: var(--order-text);
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--order-border);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .layout {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 24px;
+      align-items: start;
+      min-width: 0;
+    }
+    .layout > *,
+    .form-grid > *,
+    .field,
+    .panel { min-width: 0; }
+    .panel {
+      background: var(--order-panel);
+      border: 1px solid var(--order-border);
+      border-radius: 20px;
+      box-shadow: none;
+      backdrop-filter: blur(16px);
+    }
+    .form-card { padding: 0; }
+    .section {
+      padding: 26px 28px;
+      border-top: 1px solid var(--order-border);
+    }
+    .section:first-child { border-top: 0; }
+    .section-head { margin-bottom: 18px; }
+    .section-kicker {
+      color: #c4b5fd;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+    }
+    .section-title {
+      margin-top: 6px;
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+    .section-note,
+    .required-note,
+    .optional,
+    .helper,
+    .sidebar-note {
+      color: var(--order-muted);
+    }
+    .field label {
+      color: rgba(255,255,255,0.84);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .field input,
+    .field textarea {
+      border: 1px solid var(--order-border);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+    .field input::placeholder,
+    .field textarea::placeholder { color: rgba(255,255,255,0.34); }
+    .field input:focus,
+    .field textarea:focus {
+      border-color: rgba(167,139,250,0.7);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.22);
+      background: rgba(255,255,255,0.1);
+    }
+    .phone-prefix {
+      border-color: var(--order-border);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      border-radius: 10px 0 0 10px;
+    }
+    .phone-row input { border-radius: 0 10px 10px 0; }
+    .choice-card,
+    .seg button {
+      border: 1px solid var(--order-border);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      border-radius: 12px;
+    }
+    .choice-card:hover,
+    .seg button:hover {
+      background: rgba(255,255,255,0.11);
+      border-color: rgba(255,255,255,0.2);
+    }
+    .choice-card.active,
+    .seg button.active {
+      background: rgba(124,58,237,0.24);
+      border-color: rgba(167,139,250,0.58);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.16);
+    }
+    .choice-card strong { color: #fff; font-size: 0.9rem; }
+    .choice-card span,
+    .summary-row span,
+    .summary-row strong,
+    .check-item {
+      color: var(--order-text);
+    }
+    .drop-zone {
+      min-height: 118px;
+      border-color: rgba(167,139,250,0.34);
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+    }
+    .drop-zone:hover {
+      background: rgba(124,58,237,0.13);
+      border-color: rgba(167,139,250,0.62);
+    }
+    .preview-box {
+      border-color: var(--order-border);
+      background: rgba(255,255,255,0.08);
+    }
+    .drop-zone-text,
+    .drop-zone-text strong { color: rgba(255,255,255,0.8); }
+    .notes-ai-btn,
+    .mic-btn,
+    .model-thumb-change,
+    .edit-btn,
+    .modal-cancel {
+      border-color: rgba(167,139,250,0.25);
+      background: rgba(255,255,255,0.08);
+      color: #c4b5fd;
+    }
+    .submit-row {
+      padding: 0 28px 28px;
+    }
+    .submit-btn {
+      min-height: 50px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+    .summary,
+    .checklist,
+    .script-card,
+    .success-card { padding: 22px; }
+    .summary h2,
+    .script-title,
+    .success-card h2,
+    .checklist strong { color: #fff; }
+    .summary-list { padding: 14px 0; }
+    .summary-row { border-color: var(--order-border); }
+    .price-box {
+      border: 1px solid rgba(37,211,102,0.3);
+      background: linear-gradient(135deg, rgba(37,211,102,0.12), rgba(37,211,102,0.06));
+      border-radius: 16px;
+    }
+    .price-box span { color: rgba(255,255,255,0.62); }
+    .price-box strong { color: #fff; font-size: 1.8rem; }
+    .check-item::before { color: var(--order-green); }
+    .script-card p,
+    .success-card p { color: var(--order-text); }
+    .script-card textarea {
+      border-color: var(--order-border);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border-radius: 12px;
+    }
+    .modal-box {
+      background: #130b36;
+      border: 1px solid var(--order-border);
+      color: #fff;
+    }
+    .modal-sub,
+    .modal-preview-name { color: var(--order-text); }
+
+    @media (max-width: 960px) {
+      .page { padding: 0 28px 56px; }
+      .intro {
+        grid-template-columns: 1fr;
+        gap: 42px;
+        padding: 56px 0 54px;
+      }
+      .ugc-visual { justify-self: center; }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+    }
+    @media (max-width: 720px) {
+      nav { padding: 12px 16px; }
+      .back-btn {
+        max-width: 86px;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .page { padding: 0 16px 44px; }
+      .intro {
+        width: 100%;
+        padding: 42px 0 38px;
+        gap: 34px;
+      }
+      .intro-copy {
+        max-width: 100%;
+        font-size: 0.98rem;
+      }
+      .form-cue,
+      .layout { width: 100%; }
+      .intro h1 {
+        font-size: clamp(2rem, 12vw, 2.8rem);
+        letter-spacing: -1px;
+      }
+      .layout,
+      .form-grid,
+      .choice-grid,
+      .choice-grid.four,
+      .sidebar {
+        grid-template-columns: 1fr;
+      }
+      .section,
+      .summary,
+      .checklist,
+      .script-card,
+      .success-card { padding: 20px; }
+      .submit-row { padding: 0 20px 20px; }
+      .ugc-phone { width: 260px; }
+    }
+    @media (max-width: 430px) {
+      .page { padding-left: 12px; padding-right: 12px; }
+      .intro h1 { font-size: clamp(1.9rem, 11vw, 2.65rem); }
+      .section,
+      .summary,
+      .checklist,
+      .script-card,
+      .success-card { padding: 18px; }
+      .ugc-visual { width: 100%; }
+      .ugc-phone { width: min(260px, calc(100vw - 72px)); }
+    }
   </style>
 </head>
 <body>
@@ -1347,7 +1707,7 @@
               <div class="field full" id="style-field">
                 <label>Video style</label>
                 <div class="choice-grid" id="style-group">
-                  <button type="button" class="choice-card active" data-style="kling">
+                  <button type="button" class="choice-card active" data-style="talking">
                     <strong>Talking ad</strong>
                     <span>Human presenter style with direct selling script.</span>
                   </button>
@@ -1444,11 +1804,11 @@
               </div>
               <div class="field" id="duration-field">
                 <label>Duration</label>
-                <div class="seg three" id="duration-group">
-                  <button type="button" class="active" data-duration="5">5 sec</button>
-                  <button type="button" data-duration="10">10 sec</button>
-                  <button type="button" data-duration="15">15 sec</button>
+                <div class="seg" id="duration-group">
+                  <button type="button" class="active" data-duration="5">Short Ad<br /><small>4-6 sec</small></button>
+                  <button type="button" data-duration="10">Standard Ad<br /><small>8-10 sec</small></button>
                 </div>
+                <small class="helper">Need a longer video? We will review the product, script, and cost before confirming.</small>
               </div>
             </div>
           </section>
@@ -1498,7 +1858,7 @@
             <div class="summary-row"><span>Language</span><strong id="summary-language">English</strong></div>
             <div class="summary-row"><span>Platform</span><strong id="summary-platform">Instagram - Video 9:16</strong></div>
             <div class="summary-row"><span>Model</span><strong id="summary-presenter">AI generated</strong></div>
-            <div class="summary-row"><span>Duration</span><strong id="summary-duration">5 sec</strong></div>
+            <div class="summary-row"><span>Duration</span><strong id="summary-duration">Short Ad, 4-6 sec</strong></div>
           </div>
           <div class="price-box">
             <span>Estimated starting price</span>
@@ -1536,7 +1896,7 @@
 
   <script>
     let selectedLang = "english";
-    let selectedStyle = "kling";
+    let selectedStyle = "talking";
     let selectedOutput = "video";
     let selectedDuration = "5";
     const selectedQuality = "standard";
@@ -1548,10 +1908,11 @@
 
     const labels = {
       output: { video: "UGC video ad", image: "AI product image" },
-      style: { kling: "Talking ad", cinematic: "Cinematic ad" },
+      style: { talking: "Talking ad", cinematic: "Cinematic ad" },
       lang: { hindi: "Hindi", english: "English", hinglish: "Hinglish" },
       platform: { instagram: "Instagram", facebook: "Facebook", youtube: "YouTube", x: "X" },
-      presenter: { ai: "AI generated", uploaded: "Reference image" }
+      presenter: { ai: "AI generated", uploaded: "Reference image" },
+      duration: { "5": "Short Ad, 4-6 sec", "10": "Standard Ad, 8-10 sec" }
     };
 
     function wireSegmented(groupId, onChange) {
@@ -1590,7 +1951,6 @@
       if (selectedOutput === "image") return 99;
       let price = selectedStyle === "cinematic" ? 599 : 499;
       if (selectedDuration === "10") price += 200;
-      if (selectedDuration === "15") price += 400;
       if (selectedPresenter === "uploaded") price += 100;
       return price;
     }
@@ -1601,7 +1961,7 @@
       document.getElementById("summary-language").textContent = selectedOutput === "image" ? "Not required" : (labels.lang[selectedLang] || selectedLang);
       document.getElementById("summary-platform").textContent = platformFormatLabel();
       document.getElementById("summary-presenter").textContent = labels.presenter[selectedPresenter] || selectedPresenter;
-      document.getElementById("summary-duration").textContent = selectedOutput === "image" ? "Not required" : `${selectedDuration} sec`;
+      document.getElementById("summary-duration").textContent = selectedOutput === "image" ? "Not required" : (labels.duration[selectedDuration] || "Short Ad, 4-6 sec");
       document.getElementById("summary-price").textContent = `Rs. ${estimatePrice()}`;
     }
 
