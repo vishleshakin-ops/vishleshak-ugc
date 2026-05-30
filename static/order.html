@@ -181,7 +181,7 @@
       display: grid;
       place-items: center;
       width: min(380px, 100%);
-      min-height: 270px;
+      min-height: 310px;
       flex: 0 0 360px;
     }
     .ugc-phone {
@@ -320,15 +320,24 @@
       font-weight: 900;
       white-space: nowrap;
     }
-    .chip-format { top: 30px; right: 0; }
-    .chip-delivery { left: 0; bottom: 36px; animation-delay: 0.35s; }
+    .chip-format {
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .chip-delivery {
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      animation-delay: 0.35s;
+    }
     @keyframes float-preview {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-8px); }
     }
     @keyframes chip-float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
+      0%, 100% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, -6px); }
     }
     @keyframes preview-shine {
       0%, 44% { transform: translateX(0) rotate(18deg); opacity: 0; }
@@ -1115,7 +1124,7 @@
       .intro-status { width: 100%; flex: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .ugc-visual {
         width: min(390px, 100%);
-        min-height: 270px;
+        min-height: 310px;
         align-self: center;
         grid-template-columns: none;
       }
@@ -1136,8 +1145,9 @@
         min-height: 320px;
         width: min(100%, 360px);
       }
-      .chip-format { top: 0; right: 0; }
-      .chip-delivery { left: 0; bottom: 0; }
+      .float-chip {
+        min-width: min(230px, 92%);
+      }
       .form-card,
       .script-card,
       .success-card { padding: 18px; }
