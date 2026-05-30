@@ -7,8 +7,10 @@ import subprocess
 import tempfile
 import io
 import smtplib
+import random
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from urllib.parse import quote
 import httpx
 import fal_client
 import threading
@@ -477,6 +479,9 @@ def save_order(order: dict):
 MODEL_DIR  = os.path.join(os.path.dirname(__file__), "model")
 VIDEOS_DIR = os.path.join(os.path.dirname(__file__), "static", "videos")
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
+VIDEO_EXTS = {".mp4", ".mov", ".webm", ".m4v"}
+SAMPLE_IMAGES_DIR = os.getenv("SAMPLE_IMAGES_DIR", r"D:\Sample Images")
+SAMPLE_VIDEOS_DIR = os.getenv("SAMPLE_VIDEOS_DIR", r"D:\Sample Videos")
 
 # "admin" on local machine, "client" on Railway (set APP_MODE=client env var)
 APP_MODE = os.getenv("APP_MODE", "admin")
@@ -486,6 +491,58 @@ HISTORY_FILE = os.path.join(os.path.dirname(__file__), "video_history.json")
 
 os.makedirs(VIDEOS_DIR, exist_ok=True)
 os.makedirs(MODEL_DIR, exist_ok=True)
+
+def _sample_media_files(kind: str) -> list[dict]:
+    """Return sample media from the external library, falling back to bundled files."""
+    base_dir = SAMPLE_IMAGES_DIR if kind == "image" else SAMPLE_VIDEOS_DIR
+    fallback_dir = os.path.join(os.path.dirname(__file__), "static", "images" if kind == "image" else "samples")
+    extensions = IMAGE_EXTS if kind == "image" else VIDEO_EXTS
+
+    if os.path.isdir(base_dir):
+        items = []
+        for name in os.listdir(base_dir):
+            path = os.path.join(base_dir, name)
+            if os.path.isfile(path) and os.path.splitext(name)[1].lower() in extensions:
+                items.append({
+                    "name": name,
+                    "url": f"/api/sample-media/{kind}/{quote(name)}",
+                    "source": "library",
+                })
+        if items:
+            return sorted(items, key=lambda item: item["name"].lower())
+
+    items = []
+    if os.path.isdir(fallback_dir):
+        static_folder = "images" if kind == "image" else "samples"
+        for name in os.listdir(fallback_dir):
+            path = os.path.join(fallback_dir, name)
+            if os.path.isfile(path) and os.path.splitext(name)[1].lower() in extensions:
+                items.append({
+                    "name": name,
+                    "url": f"/static/{static_folder}/{quote(name)}",
+                    "source": "bundled",
+                })
+    return sorted(items, key=lambda item: item["name"].lower())
+
+
+def _sample_caption(filename: str) -> str:
+    base = os.path.splitext(filename)[0]
+    cleaned = " ".join(base.replace("_", " ").replace("-", " ").split())
+    if cleaned.lower().startswith("vishleshak ugc"):
+        return "UGC Sample"
+    if cleaned.lower().startswith("kie ai"):
+        return "AI Video Sample"
+    return cleaned[:40] or "Sample"
+
+
+def _sample_media_payload(kind: str, count: int = 6) -> dict:
+    items = _sample_media_files(kind)
+    random.SystemRandom().shuffle(items)
+    count = max(1, min(count, 24))
+    selected = items[:count]
+    for item in selected:
+        item["caption"] = _sample_caption(item["name"])
+    return {"items": selected, "count": len(selected)}
 
 
 # ── History helpers ────────────────────────────────────────────────────────────
@@ -1338,6 +1395,32 @@ async def reload_model_from_folder():
 @app.get("/api/config")
 async def get_config():
     return {"mode": APP_MODE, "railway_url": RAILWAY_URL}
+
+
+@app.get("/api/sample-media/list/{kind}")
+async def sample_media_list(kind: str, count: int = 6):
+    if kind not in ("image", "video"):
+        raise HTTPException(status_code=400, detail="kind must be image or video")
+    return _sample_media_payload(kind, count)
+
+
+@app.get("/api/sample-media/{kind}/{filename:path}")
+async def sample_media_file(kind: str, filename: str):
+    if kind not in ("image", "video"):
+        raise HTTPException(status_code=400, detail="kind must be image or video")
+
+    base_dir = SAMPLE_IMAGES_DIR if kind == "image" else SAMPLE_VIDEOS_DIR
+    extensions = IMAGE_EXTS if kind == "image" else VIDEO_EXTS
+    safe_name = os.path.basename(filename)
+    path = os.path.abspath(os.path.join(base_dir, safe_name))
+    base_abs = os.path.abspath(base_dir)
+
+    if not path.startswith(base_abs + os.sep):
+        raise HTTPException(status_code=400, detail="Invalid sample path")
+    if not os.path.isfile(path) or os.path.splitext(path)[1].lower() not in extensions:
+        raise HTTPException(status_code=404, detail="Sample not found")
+    return FileResponse(path)
+
 
 @app.get("/api/model-status")
 async def model_status():

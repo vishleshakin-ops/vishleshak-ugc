@@ -1253,11 +1253,11 @@
     .intro {
       width: min(1100px, 100%);
       margin: 0 auto;
-      padding: 64px 0 48px;
+      padding: 80px 0 40px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) 280px;
       gap: 64px;
-      align-items: center;
+      align-items: start;
       background: transparent;
       border-radius: 0;
       overflow: visible;
@@ -1357,23 +1357,31 @@
       transform: translateY(-1px);
     }
     .hero-actions .btn-wa-order {
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
+      border-color: rgba(167,139,250,0.36);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(124,58,237,0.35);
+    }
+    .hero-actions .btn-wa-order:hover {
+      background: linear-gradient(135deg, #6D28D9, #1D4ED8);
+      border-color: rgba(167,139,250,0.5);
+      box-shadow: 0 8px 32px rgba(124,58,237,0.45);
+    }
+    .hero-actions .btn-outline-order {
       background: var(--order-green);
       border-color: var(--order-green);
+      text-decoration: none;
       color: #fff;
       box-shadow: 0 4px 24px rgba(37,211,102,0.35);
     }
-    .hero-actions .btn-wa-order:hover {
+    .hero-actions .btn-outline-order:hover {
       background: #22c55e;
       border-color: #22c55e;
       box-shadow: 0 8px 32px rgba(37,211,102,0.45);
     }
-    .hero-actions .btn-outline-order {
-      text-decoration: none;
-      color: #fff;
-    }
     .order-stats {
       width: min(1100px, 100%);
-      margin: -4px auto 36px;
+      margin: 0 auto 24px;
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
@@ -1404,6 +1412,41 @@
       font-size: 0.88rem;
       font-weight: 600;
       line-height: 1.35;
+    }
+    .form-cue {
+      display: flex;
+      justify-content: center;
+      width: min(1100px, 100%);
+      margin: 0 auto 28px;
+    }
+    .form-cue .hero-cue {
+      min-height: 46px;
+      padding: 0 20px 0 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 800;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.18);
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    }
+    .form-cue .hero-cue:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.24);
+      transform: translateY(-1px);
+    }
+    .form-cue .hero-cue span {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(124,58,237,0.34);
+      border: 1px solid rgba(167,139,250,0.42);
+      color: #c4b5fd;
+      font-size: 1.15rem;
+      line-height: 1;
     }
     .layout {
       width: min(1100px, 100%);
@@ -1584,7 +1627,7 @@
       .ugc-visual { justify-self: center; }
       .order-stats {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        margin-top: -16px;
+        margin-top: 0;
       }
       .layout { grid-template-columns: 1fr; }
       .sidebar {
@@ -1626,7 +1669,7 @@
       }
       .order-stats {
         gap: 12px;
-        margin: -10px 0 24px;
+        margin: 0 0 20px;
       }
       .order-stat-card {
         min-height: 86px;
@@ -1703,7 +1746,7 @@
     </section>
     <section class="order-stats" aria-label="Order benefits">
       <div class="order-stat-card">
-        <strong>6 cr</strong>
+        <strong>6 credits</strong>
         <span>Typical image preview</span>
       </div>
       <div class="order-stat-card">
@@ -1715,10 +1758,16 @@
         <span>Notes improved first</span>
       </div>
       <div class="order-stat-card">
-        <strong>WA</strong>
+        <strong>WhatsApp</strong>
         <span>Delivery updates</span>
       </div>
     </section>
+    <div class="form-cue">
+      <button class="hero-cue" id="scroll-to-form-cue" type="button">
+        <span aria-hidden="true">&#8595;</span>
+        Fill the form
+      </button>
+    </div>
 <div class="layout">
       <div>
         <form class="panel form-card" id="order-form-card">
@@ -2092,14 +2141,17 @@
     updateSelectedRatio();
     updateSummary();
 
-    const heroUgcImages = [
+    const heroUgcImage = document.getElementById("hero-ugc-image");
+    const defaultHeroUgcImages = [
       "/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg",
       "/static/images/7509d168-018e-4020-bf22-2e60669c98e8.jpg",
       "/static/images/86dde3ab-d088-4dad-a72b-9360124e7622.jpg",
       "/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg"
     ];
-    const heroUgcImage = document.getElementById("hero-ugc-image");
-    if (heroUgcImage && heroUgcImages.length > 1 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const startHeroImageCycle = heroUgcImages => {
+      if (!heroUgcImage || heroUgcImages.length < 1) return;
+      heroUgcImage.src = heroUgcImages[0];
+      if (heroUgcImages.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       heroUgcImages.slice(1).forEach(src => {
         const img = new Image();
         img.src = src;
@@ -2113,20 +2165,29 @@
           heroUgcImage.style.opacity = "1";
         }, 260);
       }, 3600);
-    }
+    };
+    fetch("/api/sample-media/list/image?count=8")
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        const urls = data && Array.isArray(data.items) ? data.items.map(item => item.url).filter(Boolean) : [];
+        startHeroImageCycle(urls.length ? urls : defaultHeroUgcImages);
+      })
+      .catch(() => startHeroImageCycle(defaultHeroUgcImages));
 
     document.getElementById("order-form-card").addEventListener("submit", event => {
       event.preventDefault();
     });
 
-    document.getElementById("scroll-to-form-btn").addEventListener("click", event => {
+    const scrollToForm = event => {
       event.preventDefault();
       const form = document.getElementById("order-form-card");
       const nav = document.querySelector("nav");
       const navOffset = nav ? nav.getBoundingClientRect().height : 0;
       const targetY = window.scrollY + form.getBoundingClientRect().top - navOffset - 36;
       window.scrollTo({ top: Math.max(targetY, 0), behavior: "smooth" });
-    });
+    };
+    document.getElementById("scroll-to-form-btn").addEventListener("click", scrollToForm);
+    document.getElementById("scroll-to-form-cue").addEventListener("click", scrollToForm);
 
     const micBtn = document.getElementById("mic-btn");
     const micStatus = document.getElementById("mic-status");

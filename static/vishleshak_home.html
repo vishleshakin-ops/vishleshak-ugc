@@ -1297,11 +1297,11 @@ footer {
 </footer>
 
 <script>
-// Hero phone: cycle all 6 sample videos in random order, never repeat back-to-back
+// Hero phone: cycle sample videos in random order, never repeat back-to-back
 (function() {
   const heroVideo = document.getElementById('hero-video');
   if (!heroVideo) return;
-  const samples = [
+  let samples = [
     '/static/samples/sample2.mp4',
     '/static/samples/sample3.mp4',
     '/static/samples/sample4.mp4',
@@ -1310,6 +1310,7 @@ footer {
   ];
 
   function playRandom(excludeIndex) {
+    if (!samples.length) return -1;
     let next;
     do { next = Math.floor(Math.random() * samples.length); } while (next === excludeIndex);
     heroVideo.src = samples[next];
@@ -1324,6 +1325,20 @@ footer {
   heroVideo.addEventListener('ended', () => {
     lastIndex = playRandom(lastIndex);
   });
+
+  fetch('/api/sample-media/list/video?count=6')
+    .then(response => response.ok ? response.json() : null)
+    .then(data => {
+      const urls = data && Array.isArray(data.items) ? data.items.map(item => item.url).filter(Boolean) : [];
+      if (!urls.length) return;
+      samples = urls;
+      lastIndex = playRandom(-1);
+      document.querySelectorAll('.sample-video-wrap video').forEach((video, index) => {
+        video.src = samples[index % samples.length];
+        video.load();
+      });
+    })
+    .catch(() => {});
 })();
 
 // Scroll-spy: highlight active nav link
