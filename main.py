@@ -104,15 +104,20 @@ def _same_weekday_date_options(date_text: str) -> dict | None:
         return None
 
     today = _clinic_now()
-    if text != _DAY_NAMES[today.weekday()]:
-        return None
+    days_ahead = (_DAY_NAMES.index(text) - today.weekday()) % 7
+    first_match = today + timedelta(days=days_ahead)
+    following_match = first_match + timedelta(days=7)
 
-    next_week = today + timedelta(days=7)
+    if days_ahead == 0:
+        today_label = _display_date_option(first_match, "Today, ")
+    else:
+        today_label = _display_date_option(first_match)
+
     return {
-        "today_value": today.strftime("%d %B %Y"),
-        "today_label": _display_date_option(today, "Today, "),
-        "next_value": next_week.strftime("%d %B %Y"),
-        "next_label": _display_date_option(next_week),
+        "today_value": first_match.strftime("%d %B %Y"),
+        "today_label": today_label,
+        "next_value": following_match.strftime("%d %B %Y"),
+        "next_label": _display_date_option(following_match),
     }
 
 
