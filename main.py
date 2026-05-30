@@ -1704,6 +1704,21 @@ COMBINED_WELCOME = (
 
 # Dental appointment sessions: { phone: { "step": str, "name": str, "service": str, "date": str } }
 _dental_sessions: dict = {}
+DENTAL_KB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dental_kb.md")
+
+
+def _load_dental_kb() -> str:
+    try:
+        with open(DENTAL_KB_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        print(f"[Dental] Failed to load KB file: {e}")
+        return (
+            "Business Name: Dr Akshay Midha Multi Speciality Dental Clinic\n"
+            "Phone Number: +91 9868018541\n"
+            "Address: C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi, Delhi 110015\n"
+            "Hours: Monday-Friday 9:00 AM-8:00 PM, Saturday 9:00 AM-6:00 PM, Sunday Closed\n"
+        )
 
 
 async def notify_wa_on_complete(job_id: str, order_id: str, wa_from: str, product_name: str):
@@ -1876,11 +1891,24 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
         _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _tl)
         _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _tl)
 
+        def _looks_like_time_answer(value: str) -> bool:
+            v = value.lower().strip()
+            v = _re.sub(r'\b(\d{1,2})\s+(am|pm)\b', r'\1\2', v)
+            return (
+                v in ("1", "2", "3")
+                or any(w in v for w in ("am", "pm", "morning", "afternoon", "evening", "noon"))
+                or bool(_re.search(r'\b(?:[1-9]|1[0-2])[\.:]\d{2}\b', v))
+                or bool(_re.fullmatch(r'(?:[4-9]|1[0-2])', v))
+            )
+
         # Acknowledgment words — just re-prompt, don't treat as FAQ
-        _ACK_WORDS = ("sorry", "ok", "okay", "thanks", "thank you", "got it", "alright", "fine", "sure", "noted")
+        _ACK_WORDS = ("sorry", "ok", "okay", "thanks", "thank you", "got it", "alright", "fine", "sure", "noted", "yes", "yep")
         if _tl in _ACK_WORDS and step in STEP_PROMPTS:
             await wa_send_text(from_phone, STEP_PROMPTS[step])
             return {"status": "ok"}
+
+        if step == "ask_time":
+            dental["_raw_time_text"] = text.strip()
 
         if step == "ask_time":
             # If alt_slots exist, handle carefully
@@ -1898,6 +1926,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                             if _m.group(2) == "pm" and _ph != 12:
                                 _ph += 12
                             dental["gcal_hour"] = _ph
+                        dental["time_label"] = _picked
                         dental["alt_slots"] = []
                         text = _picked
                         _tl = _picked.lower()
@@ -1926,13 +1955,25 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         _dental_sessions[from_phone] = dental
 
             # If already a valid slot number (no alt_slots), use directly — skip normalisation
-            if text.strip() in ("1", "2", "3") and not dental.get("alt_slots"):
+            if not dental.get("alt_slots") and _looks_like_time_answer(text):
+                _slot_labels = {
+                    "1": "Morning (9am-12pm)",
+                    "2": "Afternoon (12pm-4pm)",
+                    "3": "Evening (4pm-8pm)",
+                }
+                if text.strip() in _slot_labels:
+                    dental["time_label"] = _slot_labels[text.strip()]
+                    dental["gcal_hour"] = {"1": 9, "2": 12, "3": 16}[text.strip()]
                 # Normalise dot/colon notation: "2.30"→"2:30pm", "7.00"→"7:00pm"
                 _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\s*(am|pm)\b', r'\1:\2\3', _tl)
                 _tl = _re.sub(r'\b(\d{1,2})[\.:](\d{2})\b', r'\1:\2pm', _tl)
                 # Bare hour: "at 5", "book for 7" → "5pm", "7pm" (only 1–8 treated as pm)
                 def _bare_hour(m):
+                    if text.strip() in ("1", "2", "3"):
+                        return m.group(0)
                     h = int(m.group(1))
+                    if 9 <= h <= 12:
+                        return f"{h}am"
                     return f"{h}pm" if 1 <= h <= 8 else m.group(0)
                 _tl = _re.sub(r'\b(\d{1,2})\b(?!\s*(?:am|pm|[:\.])\d?)', _bare_hour, _tl)
 
@@ -1965,14 +2006,20 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         break
 
                 # Map to slot number using specific hour (most reliable) or keyword
-                if _specific_hour is not None:
+                if _specific_hour is not None and text.strip() not in ("1", "2", "3"):
                     dental["gcal_hour"] = _specific_hour
+                    dental["time_label"] = dental.get("_raw_time_text") or text
                     text = "1" if _specific_hour < 12 else ("2" if _specific_hour < 16 else "3")
+                elif text.strip() in ("1", "2", "3"):
+                    pass
                 elif any(w in _tl for w in ("morning",)):
+                    dental["time_label"] = "Morning (9am-12pm)"
                     text = "1"
                 elif any(w in _tl for w in ("afternoon","noon")):
+                    dental["time_label"] = "Afternoon (12pm-4pm)"
                     text = "2"
                 elif any(w in _tl for w in ("evening",)):
+                    dental["time_label"] = "Evening (4pm-8pm)"
                     text = "3"
 
         # Normalise natural language service inputs at ask_service step
@@ -1991,7 +2038,8 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
         # Detect if input is a question rather than a step answer
         _is_question = (
             "?" in text
-            or (step in ("ask_service", "ask_time") and text.strip() not in ("1","2","3","4","5","6"))
+            or (step == "ask_service" and text.strip() not in ("1","2","3","4","5","6"))
+            or (step == "ask_time" and not _looks_like_time_answer(text))
             or (step == "ask_date" and any(w in _tl for w in ("sunday", "closed", "holiday", "open", "hours", "timing")))
         )
 
@@ -2005,7 +2053,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         "Answer the patient's question using ONLY the knowledge base below. "
                         "Be brief (2-3 sentences max), friendly, use WhatsApp formatting (*bold*). "
                         "Never give medical advice or diagnoses.\n\n"
-                        f"KNOWLEDGE BASE:\n{DENTAL_KB}"
+                        f"KNOWLEDGE BASE:\n{_load_dental_kb()}"
                     ),
                     messages=[{"role": "user", "content": text}]
                 )
@@ -2135,7 +2183,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         "🕐 Clinic hours: Mon–Fri 9am–8pm | Sat 9am–6pm"
                     )
             elif step == "ask_time":
-                dental["time"] = text  # Use the exact time user gave
+                dental["time"] = dental.pop("time_label", None) or dental.pop("_raw_time_text", None) or text
                 _check_hour = dental.get("gcal_hour") or 9
                 # Check for conflicts before booking
                 _conflicts = await check_gcal_conflict(dental['date'], _check_hour)
