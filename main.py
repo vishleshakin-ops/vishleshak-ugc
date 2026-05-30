@@ -463,10 +463,14 @@ def load_orders() -> list:
     except Exception:
         return []
 
+def sort_orders_latest_first(orders: list) -> list:
+    return sorted(orders, key=lambda o: o.get("created_at") or "", reverse=True)
+
 def save_order(order: dict):
     all_orders = load_orders()
     all_orders = [o for o in all_orders if o.get("id") != order.get("id")]
     all_orders.insert(0, order)
+    all_orders = sort_orders_latest_first(all_orders)
     with open(ORDERS_FILE, "w", encoding="utf-8") as f:
         json.dump(all_orders, f, ensure_ascii=False, indent=2)
 
@@ -611,6 +615,84 @@ SKIN_DESCRIPTORS = {
     "dark":     "deep dark brown skin tone",
 }
 
+PRODUCT_ACTION_GUIDE = (
+    "  - Necklace/bridal set -> necklace sits ON collarbone/skin, model touches pendant gently, slow elegant neck turn, no floating jewelry\n"
+    "  - Ring -> close-up hand pose, model rotates fingers under light, ring worn correctly on finger, sparkle visible\n"
+    "  - Earrings -> model tucks hair behind ear, turns head slowly, earrings attached to earlobes naturally\n"
+    "  - Bangles/bracelet -> model adjusts bangles on wrist, soft hand movement, jewelry rests on wrist naturally\n"
+    "  - Watch -> close-up wrist shot, model fastens strap, checks time, confident wrist turn toward camera\n"
+    "  - Wallet -> model opens wallet, shows premium finish, places card or cash inside, slips it into pocket or bag\n"
+    "  - Handbag/purse/tote/clutch -> carries on shoulder or forearm, opens and peeks inside, poses with bag at side\n"
+    "  - Sunglasses -> model wears sunglasses, adjusts frame with both hands, slight head turn, confident smile\n"
+    "  - Perfume -> model sprays on wrist or neck, smells wrist, smiles elegantly, bottle label visible\n"
+    "  - Clothing/saree/lehenga/dress -> model wears it, walks or twirls once, shows fabric and fit naturally\n"
+    "  - Footwear/shoes/sandals/heels -> model walks, crosses legs or points toe, footwear clearly visible\n"
+    "  - Phone/gadget/electronics -> model holds device naturally, taps or uses it, reacts with satisfaction\n"
+    "  - Beauty/skincare -> model applies small amount on cheek/hand, gentle massage, glowing smile\n"
+    "  - Makeup -> model applies product with mirror-like gaze, smiles confidently, product visible in hand\n"
+    "  - Food/snacks -> model presents pack/plate, picks one piece, smiles warmly, no messy eating\n"
+    "  - Beverage -> model holds cup/bottle, brings close to lips, enjoys aroma/taste, label visible\n"
+    "  - Home decor -> model places product carefully, steps back, admires the room styling\n"
+    "  - Fitness/sports equipment -> model demonstrates use briefly, energetic pose, product in action\n"
+    "  - Kids product -> child or parent presents product playfully, safe joyful motion, big smile\n"
+    "  - Stationery/books -> model opens/flips pages, holds cover to camera, thoughtful nod\n"
+    "  - Organic/herbal -> model holds jar/bottle, opens and smells, nods approvingly, natural setting\n"
+    "  - Other -> model holds product at chest level, looks at product then camera, confident smile"
+)
+
+PRODUCT_TYPE_LIST = (
+    "'necklace','ring','earrings','bangle','watch','wallet','handbag','sunglasses','perfume',"
+    "'clothing','footwear','electronics','skincare','makeup','food','beverage','home_decor',"
+    "'fitness','sports_equipment','kids','stationery','organic','jewelry','bag','accessory','other'"
+)
+
+PRODUCT_FALLBACK_PROMPTS = {
+    "necklace": "wearing necklace on collarbone, touches pendant gently, turns neck elegantly, smiles",
+    "ring": "wearing ring on finger, rotates hand under light, shows sparkle close to camera",
+    "earrings": "wearing earrings, tucks hair behind ear, turns head slowly, smiles elegantly",
+    "bangle": "adjusts bangles on wrist, soft hand movement, jewelry resting naturally",
+    "watch": "fastens watch strap, checks time, turns wrist confidently toward camera",
+    "wallet": "opens wallet, places card inside, shows premium finish, slips it into pocket",
+    "handbag": "carries handbag on shoulder, opens and peeks inside with smile, poses confidently",
+    "sunglasses": "wears sunglasses, adjusts frame with both hands, slight head turn, confident smile",
+    "perfume": "sprays perfume on wrist, smells wrist, smiles elegantly with bottle visible",
+    "jewelry": "wearing jewelry, turns head slowly to show, touches gently with fingertips, smiles elegantly",
+    "clothing": "wearing outfit, twirls once showing fabric, strikes confident pose, smiles at camera",
+    "bag": "carries bag on shoulder, opens and peeks inside with smile, poses confidently",
+    "footwear": "walks elegantly showing footwear, crosses legs to show shoes, smiles at camera",
+    "accessory": "wears accessory confidently, adjusts with both hands, poses and smiles",
+    "skincare": "applies product on cheek with fingertip, gently massages in, glows and smiles",
+    "makeup": "applies makeup product, looks in imaginary mirror, smiles confidently at camera",
+    "food": "gestures toward food with open hand, picks one piece and holds it up, smiles warmly",
+    "beverage": "holds cup with both hands, brings close to lips, closes eyes enjoying the aroma",
+    "electronics": "holds device naturally, uses it confidently, reacts with excitement",
+    "home_decor": "places product carefully, steps back, tilts head admiring it with warm smile",
+    "fitness": "holds product with energy, demonstrates use briefly, looks strong and motivated",
+    "sports_equipment": "uses sports product in action, energetic pose, confident game-ready expression",
+    "kids": "holds product up playfully, shows with joy and big smile, waves at camera",
+    "stationery": "opens and flips pages, holds up cover facing camera, nods thoughtfully",
+    "organic": "holds bottle or jar up, opens and smells with delight, nods approvingly",
+    "other": "holds product naturally at chest level, looks at it then at camera, smiles confidently",
+}
+
+VIDEO_ACTION_GUIDE = {
+    "sports_equipment": "keeps the sports product close to camera, performs a small controlled demo move, then celebrates while the product remains visible",
+    "sports": "keeps the sports product close to camera, performs a small controlled demo move, then celebrates while the product remains visible",
+    "jewelry": "gently turns toward the light and touches the jewelry so it catches highlights without changing design",
+    "necklace": "gently turns toward the light and touches the necklace so it catches highlights without changing design",
+    "ring": "slowly raises the hand close to camera and rotates slightly so the ring stays sharp and visible",
+    "earrings": "slowly turns the head and smiles so the earrings stay visible and sparkling",
+    "watch": "raises the wrist close to camera, gently rotates it, and smiles confidently",
+    "wallet": "holds the wallet close to camera, opens it slightly, then presents it clearly",
+    "handbag": "carries the handbag naturally, then lifts it slightly toward camera so the shape stays clear",
+    "perfume": "holds the bottle close to camera and makes a soft spray gesture while the bottle remains visible",
+    "clothing": "makes a small pose and fabric-detail gesture while the clothing stays clearly visible",
+    "electronics": "holds the device close, taps once, and looks impressed while the device remains visible",
+    "food": "holds the food close, smiles, and makes a small tasting gesture without hiding the product",
+    "beverage": "holds the drink label-facing, takes a small sip, and smiles while the packaging remains visible",
+    "other": "presents the product close to camera with small natural movement while keeping it visible",
+}
+
 
 async def generate_model_with_product(
     model_url: str,
@@ -635,8 +717,9 @@ async def generate_model_with_product(
     custom_instr     = c.get("custom_instructions", "").strip()
     aspect_ratio     = c.get("aspect_ratio", "9:16")
 
-    # Map aspect ratio to kie.ai 4o Image size param and prompt frame description
-    _SIZE_MAP = {"9:16": "9:16", "16:9": "16:9", "1:1": "1:1"}
+    # KIE's 4o Image endpoint rejects raw video ratios like 9:16.
+    # Use provider-safe still-image ratios, then FFmpeg handles final video padding.
+    _SIZE_MAP = {"9:16": "2:3", "16:9": "3:2", "1:1": "1:1"}
     _FRAME_MAP = {
         "9:16": "Vertical 9:16 portrait frame",
         "16:9": "Horizontal 16:9 landscape frame",
@@ -666,6 +749,12 @@ async def generate_model_with_product(
         gender_adj  = "Indian female model"
 
     EYES_OPEN = "eyes fully open, making direct eye contact with camera, bright and alert expression."
+    PRODUCT_LOCK = (
+        "Critical product identity rule: reproduce the exact product from the uploaded product image, "
+        "including its color, shape, logo/markings, texture, proportions, and visible details. "
+        "Do not substitute it with a generic object, different ball, different jewelry, different packaging, "
+        "or a similar-looking product. The product must remain the hero object and be clearly visible."
+    )
 
     def build_prompt(base_action: str) -> str:
         action = model_action if model_action else base_action
@@ -676,6 +765,7 @@ async def generate_model_with_product(
                 f"naturally beautiful with subtle makeup, styled hair, wearing a stylish casual Indian outfit. "
                 f"Action: {action}. "
                 f"The product from the uploaded image must be clearly visible, held or worn naturally — not floating, not pasted on. "
+                f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
                 f"Shot on Sony A7III, 85mm f/1.8 lens, shallow depth of field, soft bokeh background. "
                 f"Soft diffused lighting with natural skin highlights. "
@@ -688,6 +778,7 @@ async def generate_model_with_product(
                 f"Using the first image as the model and the second image as the product, "
                 f"generate a photorealistic image of this exact {gender_word} ({gender_adj}, {skin_desc}) "
                 f"{action}. "
+                f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
                 f"Keep the model's face and distinguishing features identical. {EYES_OPEN} High quality."
             )
@@ -696,6 +787,7 @@ async def generate_model_with_product(
         return p
 
     INTERACTION_PROMPTS = {
+        **{key: build_prompt(action) for key, action in PRODUCT_FALLBACK_PROMPTS.items()},
         "jewelry": build_prompt(
             "wearing this jewelry naturally — necklace/bracelet/earrings properly placed on the body, "
             "sitting ON the skin, not floating"
@@ -746,19 +838,25 @@ async def generate_model_with_product(
         model_kie_url = await upload_image_to_kie(local_model_bytes, "model.jpg", "image/jpeg")
         files_url = [model_kie_url, product_kie_url]
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        resp = await client.post(
-            "https://api.kie.ai/api/v1/gpt4o-image/generate",
-            headers={"Authorization": f"Bearer {KIE_API_KEY}", "Content-Type": "application/json"},
-            json={
-                "prompt": prompt,
-                "size": kie_image_size,
-                "nVariants": 1,
-                "isEnhance": False,
-                "filesUrl": files_url,
-            },
-        )
-    data = resp.json()
+    async def submit_image_task(size: str) -> dict:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                "https://api.kie.ai/api/v1/gpt4o-image/generate",
+                headers={"Authorization": f"Bearer {KIE_API_KEY}", "Content-Type": "application/json"},
+                json={
+                    "prompt": prompt,
+                    "size": size,
+                    "nVariants": 1,
+                    "isEnhance": False,
+                    "filesUrl": files_url,
+                },
+            )
+        return resp.json()
+
+    data = await submit_image_task(kie_image_size)
+    if data.get("code") != 200 and "size" in str(data.get("msg", "")).lower() and kie_image_size != "2:3":
+        print(f"[4o-image] size {kie_image_size} rejected, retrying with 2:3")
+        data = await submit_image_task("2:3")
     if data.get("code") != 200:
         raise Exception(f"4o Image API error: {data.get('msg')}")
 
@@ -946,6 +1044,71 @@ async def generate_script_endpoint(
         "product_type": product_type,
         "ai_settings": ai_settings,
     }
+
+
+@app.post("/api/improve-creative-notes")
+async def improve_creative_notes_endpoint(
+    image: UploadFile = File(...),
+    notes: str = Form(""),
+    output_type: str = Form("video"),
+    video_style: str = Form("kling"),
+    platform: str = Form("instagram"),
+    aspect_ratio: str = Form("9:16"),
+    language: str = Form("english"),
+):
+    """Rewrite rough customer notes into a product-safe generation brief."""
+    if not image.content_type or not image.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    image_data = await image.read()
+    if len(image_data) > 15 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image must be under 15MB")
+
+    raw_notes = (notes or "").strip()
+    if not raw_notes:
+        raw_notes = "Create a premium UGC creative that highlights the uploaded product clearly."
+
+    image_b64 = base64.b64encode(image_data).decode("utf-8")
+    instructions = (
+        "Look at the uploaded product image and rewrite the customer's rough creative notes into a better production brief.\n"
+        "Reply with ONLY valid JSON, no markdown, in this format: {\"improved_notes\":\"...\"}\n\n"
+        f"Customer notes: {raw_notes}\n"
+        f"Output type: {output_type}\n"
+        f"Video style: {video_style}\n"
+        f"Platform: {platform}\n"
+        f"Aspect ratio: {aspect_ratio}\n"
+        f"Language: {language}\n\n"
+        "Rules:\n"
+        "- Keep the customer's main idea and mood, but make it safer for AI generation.\n"
+        "- Make the uploaded product the hero object and keep it clearly visible.\n"
+        "- Preserve exact product color, shape, markings/logo, texture, proportions, and packaging/details.\n"
+        "- Avoid scene jumps, product swaps, extreme action that hides the product, subtitles, captions, watermarks, or on-screen text.\n"
+        "- For cinematic video, prefer small realistic motion and product-first camera direction.\n"
+        "- If the customer asks for a big story scene, convert it into a controlled product ad moment.\n"
+        "- Write 2 to 4 concise sentences that can be used directly as generation instructions."
+    )
+    try:
+        message = anthropic_client.messages.create(
+            model="claude-opus-4-7",
+            max_tokens=350,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "image", "source": {"type": "base64", "media_type": image.content_type, "data": image_b64}},
+                    {"type": "text", "text": instructions},
+                ],
+            }],
+        )
+        raw = message.content[0].text.strip()
+        try:
+            data = json.loads(raw)
+            improved = data.get("improved_notes", "").strip()
+        except Exception:
+            improved = raw.strip().strip("`")
+        if not improved:
+            improved = raw_notes
+        return {"improved_notes": improved}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/order-result")
@@ -1574,7 +1737,9 @@ async def list_orders():
     if changed:
         for o in orders:
             save_order(o)
-    return orders
+        orders = load_orders()
+    visible_orders = [o for o in orders if o.get("status") != "rejected"]
+    return sort_orders_latest_first(visible_orders)
 
 
 @app.get("/api/orders/{order_id}")
@@ -2747,7 +2912,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
         # Ask Claude to decide everything
         json_schema = (
             '{"script":"...","avatar_prompt":"...","product_type":"...",'
-            '"auto_gender":"female or male",'
+            '"auto_gender":"female or male or girl_kid or boy_kid",'
             '"auto_skin_tone":"fair or wheatish or dusky or dark",'
             '"auto_scene":"studio or beach or ramp or cafe or garden or outdoor"}'
         )
@@ -2764,6 +2929,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             f"{json_schema}\n\n"
             f"script: {script_lang_instr}\n\n"
             "avatar_prompt: Describe exactly how the model interacts with this product. Under 20 words. "
+            f"Prefer this detailed product handling guide when applicable:\n{PRODUCT_ACTION_GUIDE}\n"
             "Focus on natural, realistic body movement — avoid floating objects or impossible physics.\n"
             "  - Jewellery (necklace/earrings/bangles/ring/maang tikka) → wearing it, turns head slowly to show, touches gently with fingertips, admires elegantly\n"
             "  - Clothing (dress/saree/lehenga/kurti/top/jeans) → wearing it, twirls once showing fabric, strikes confident pose, walks gracefully on ramp\n"
@@ -2781,7 +2947,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             "  - Stationery/books (notebook/pen/planner) → opens and flips pages, holds up cover facing camera, nods thoughtfully\n"
             "  - Organic/natural products (honey/seeds/oils/herbal) → holds up bottle/jar, opens and smells with delight, nods approvingly\n"
             "  - Other → holds product naturally at chest level, looks at it then at camera, smiles confidently\n\n"
-            "product_type: best matching category from: 'food','beverage','clothing','jewelry','footwear','bag','accessory','skincare','makeup','electronics','home_decor','fitness','kids','stationery','organic','other'\n\n"
+            f"product_type: best matching category from: {PRODUCT_TYPE_LIST}\n\n"
             "auto_gender: Study the product image carefully. Who is this product MADE FOR? Choose exactly one: 'female', 'male', 'girl_kid', 'boy_kid'.\n"
             "  Think like a smart Indian marketer — look at the product size, design, colors, style, branding, and intended user. Do not guess randomly.\n\n"
             "auto_skin_tone: Choose the skin tone that best matches the target audience and product aesthetic "
@@ -2820,7 +2986,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             "  - Stationery/books (notebook/pen/planner) → opens and flips pages, holds up cover facing camera, nods thoughtfully\n"
             "  - Organic/natural products (honey/seeds/oils/herbal) → holds up bottle/jar, opens and smells with delight, nods approvingly\n"
             "  - Other → holds product naturally at chest level, looks at it then at camera, smiles confidently\n\n"
-            "product_type: best matching category from: 'food','beverage','clothing','jewelry','footwear','bag','accessory','skincare','makeup','electronics','home_decor','fitness','kids','stationery','organic','other'."
+            f"product_type: best matching category from: {PRODUCT_TYPE_LIST}."
             + extra
         )
 
@@ -2837,6 +3003,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
     )
 
     FALLBACK_PROMPTS = {
+        **PRODUCT_FALLBACK_PROMPTS,
         "jewelry":     "wearing jewelry, turns head slowly to show, touches gently with fingertips, smiles elegantly",
         "clothing":    "wearing outfit, twirls once showing fabric, strikes confident pose, smiles at camera",
         "bag":         "carries bag on shoulder, opens and peeks inside with smile, poses confidently",
@@ -3298,18 +3465,19 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
         # Veo3 always 6s fixed (valid values: 4, 6, 8)
         veo3_duration = 6
 
-        # Step 1: Script via Claude Vision
+        # Step 1: Script/product analysis via Claude Vision.
+        # Even with a custom script, keep the vision pass so product_type and handling are anchored to the uploaded image.
         jobs[job_id]["step"] = "analyzing"
+        image_b64 = base64.b64encode(image_data).decode("utf-8")
+        analyzed_script, analyzed_avatar_prompt, product_type, ai_settings = await asyncio.to_thread(
+            generate_script, image_b64, content_type, c
+        )
         if custom_script:
             script = custom_script
-            avatar_prompt = c.get("model_action", "").strip() or "model presenting product elegantly, looking at camera"
-            product_type  = "other"
-            ai_settings   = {}
+            avatar_prompt = c.get("model_action", "").strip() or analyzed_avatar_prompt or "model presenting product elegantly, looking at camera"
         else:
-            image_b64 = base64.b64encode(image_data).decode("utf-8")
-            script, avatar_prompt, product_type, ai_settings = await asyncio.to_thread(
-                generate_script, image_b64, content_type, c
-            )
+            script = analyzed_script
+            avatar_prompt = analyzed_avatar_prompt
         jobs[job_id]["script"] = script
 
         if c.get("auto_mode") and ai_settings:
@@ -3324,9 +3492,16 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
 
         # Step 3: Veo 3 Fast — visual motion only, no text/subtitles burned in
         jobs[job_id]["step"] = "generating_video"
+        safe_motion = VIDEO_ACTION_GUIDE.get(product_type, VIDEO_ACTION_GUIDE["other"])
         veo3_prompt = (
-            f"{avatar_prompt}. Cinematic lifestyle video, smooth natural motion, "
-            f"elegant movement. No text, no subtitles, no captions, no watermark."
+            "Animate the provided reference image as the exact first frame. "
+            "Preserve the same person, same product, same product color, same markings/logo, same shape, and same outfit. "
+            "The uploaded product must stay clearly visible as the hero object throughout the video; do not replace it with a generic object or a different product. "
+            f"Product category: {product_type}. "
+            f"Product-safe motion: {safe_motion}. "
+            f"Creative direction to respect only if it does not conflict with product preservation: {avatar_prompt}. "
+            "Use small realistic camera movement and natural body motion only. "
+            "No scene jump, no product swap, no different team, no new main object, no text, no subtitles, no captions, no watermark."
         )
         task_id = await create_veo3_via_kie(composite_url, veo3_prompt, aspect_ratio, veo3_duration, "720p")
         jobs[job_id]["kie_task_id"] = task_id  # store so admin can recover if poll fails

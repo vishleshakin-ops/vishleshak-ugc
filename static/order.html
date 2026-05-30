@@ -591,7 +591,25 @@
       font-weight: 800;
     }
     .notes-wrap { position: relative; }
-    .notes-wrap textarea { padding-right: 46px; }
+    .notes-wrap textarea { padding-right: 142px; }
+    .notes-ai-btn {
+      position: absolute;
+      top: 8px;
+      right: 48px;
+      height: 32px;
+      border: 1px solid rgba(124, 58, 237, 0.28);
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      padding: 0 10px;
+      font-size: 0.76rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .notes-ai-btn:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
     .mic-btn {
       position: absolute;
       top: 8px;
@@ -1295,9 +1313,11 @@
                 <label for="notes">Creative notes <span class="optional">Optional</span></label>
                 <div class="notes-wrap">
                   <textarea id="notes" placeholder="Example: premium bridal look, highlight sparkle, festive sale, clean background, reference style or product angle"></textarea>
+                  <button class="notes-ai-btn" id="improve-notes-btn" type="button" title="Rewrite notes into a product-safe AI brief">AI improve</button>
                   <button class="mic-btn" id="mic-btn" type="button" title="Dictate notes">Mic</button>
                 </div>
                 <small id="mic-status" class="helper" style="display:none"></small>
+                <small id="notes-ai-status" class="helper" style="display:none"></small>
               </div>
             </div>
           </section>
@@ -1755,6 +1775,61 @@
       };
     }
 
+    async function improveCreativeNotes(options = {}) {
+      const requireNotes = options.requireNotes === true;
+      const btn = document.getElementById("improve-notes-btn");
+      const status = document.getElementById("notes-ai-status");
+      const currentNotes = notesArea.value.trim();
+      if (requireNotes && !currentNotes) {
+        showError("Please write a rough idea first, then AI can improve it.");
+        return false;
+      }
+      if (!productFile) {
+        showError("Please upload a product photo first.");
+        return false;
+      }
+      const oldText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Writing...";
+      status.textContent = "AI is rewriting the notes into a product-safe brief...";
+      status.style.display = "block";
+      try {
+        const fd = new FormData();
+        fd.append("image", productFile);
+        fd.append("notes", currentNotes);
+        fd.append("output_type", selectedOutput);
+        fd.append("video_style", selectedStyle);
+        fd.append("platform", selectedPlatform);
+        fd.append("aspect_ratio", selectedRatio);
+        fd.append("language", selectedLang);
+        const resp = await fetch("/api/improve-creative-notes", { method: "POST", body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "AI note improvement failed.");
+        if (data.improved_notes) {
+          notesArea.value = data.improved_notes;
+          notesArea.dataset.aiImproved = "true";
+          status.textContent = "Creative notes improved for product-safe generation.";
+          return true;
+        }
+        status.textContent = "AI returned no change.";
+        return false;
+      } catch (error) {
+        status.textContent = error.message || "AI note improvement failed.";
+        return false;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }
+    }
+
+    document.getElementById("improve-notes-btn").addEventListener("click", () => {
+      improveCreativeNotes({ requireNotes: true });
+    });
+
+    notesArea.addEventListener("input", () => {
+      notesArea.dataset.aiImproved = "false";
+    });
+
     document.getElementById("preview-btn").addEventListener("click", async () => {
       const fields = validateForm();
       if (!fields) return;
@@ -1764,14 +1839,20 @@
       const label = document.getElementById("preview-btn-text");
       btn.disabled = true;
       spinner.style.display = "block";
-      label.textContent = "Generating script...";
+      label.textContent = "Improving notes...";
       try {
+        if (notesArea.dataset.aiImproved !== "true") {
+          await improveCreativeNotes({ requireNotes: false });
+        }
+        label.textContent = "Generating script...";
         const fd = new FormData();
         fd.append("image", productFile);
         fd.append("auto_mode", "true");
         fd.append("language", selectedLang);
         fd.append("presenter_source", selectedPresenter);
         fd.append("model_gender", "female");
+        fd.append("model_action", notesArea.value.trim());
+        fd.append("custom_instructions", notesArea.value.trim());
         const resp = await fetch("/api/generate-script", { method: "POST", body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.detail || "Script generation failed.");
