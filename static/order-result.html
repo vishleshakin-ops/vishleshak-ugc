@@ -140,7 +140,7 @@
       border-radius: 20px;
       background: rgba(255,255,255,0.07);
       box-shadow: 0 28px 80px rgba(0,0,0,0.34);
-      overflow: visible;
+      overflow: hidden;
       backdrop-filter: blur(16px);
     }
     .status-card-inner {
@@ -199,27 +199,13 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
-    }
-    .status-card-inner.result-ready .action-row {
-      position: absolute;
-      right: -82px;
-      top: 54%;
-      z-index: 4;
-      width: 188px;
-      grid-template-columns: 1fr;
-      gap: 8px;
+      width: min(100%, 330px);
+      margin: 10px 0 0 auto;
       padding: 10px;
       border: 1px solid rgba(229,224,245,0.95);
       border-radius: 14px;
-      background: rgba(255,255,255,0.96);
-      box-shadow: 0 20px 46px rgba(15,23,42,0.22);
-      backdrop-filter: blur(14px);
-      transform: translateY(-50%);
-    }
-    .status-card-inner.result-ready .btn {
-      min-height: 40px;
-      border-radius: 10px;
-      font-size: 0.84rem;
+      background: rgba(248,247,255,0.92);
+      box-shadow: 0 14px 34px rgba(15,23,42,0.08);
     }
     .platform-share {
       display: none;
@@ -390,20 +376,12 @@
       .hero { padding: 34px 18px 44px; }
       .hero-inner { grid-template-columns: 1fr; gap: 30px; }
       .hero-sub { max-width: none; }
-      .status-card-inner.result-ready .action-row {
-        position: static;
-        width: auto;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        margin-top: 10px;
-        transform: none;
-      }
     }
     @media (max-width: 520px) {
       .back-btn { font-size: 0.78rem; }
       h1 { font-size: 2rem; }
       .status-card-inner { padding: 16px; }
       .action-row { grid-template-columns: 1fr; }
-      .status-card-inner.result-ready .action-row { grid-template-columns: 1fr; }
       .platform-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
   </style>
@@ -543,7 +521,6 @@
       const card = document.getElementById("status-card");
       const status = order.status;
       const safeId = escapeHtml(order.id || orderId);
-      card.classList.toggle("result-ready", status === "completed");
 
       if (status === "pending") {
         card.innerHTML = `
@@ -600,6 +577,7 @@
         const downloadName = isVideo ? "vishleshak-ugc.mp4" : "vishleshak-ugc.jpg";
         const scriptHtml = order.script ? `<div class="script-box">${escapeHtml(order.script)}</div>` : "";
         const readyLabel = isVideo ? "Your video is ready" : "Your image is ready";
+        const downloadLabel = isVideo ? "Download Video" : "Download Image";
         const readySub = isVideo
           ? "Download your video or copy the caption below."
           : "Download your image or copy the caption below.";
@@ -614,7 +592,7 @@
           ${mediaHtml}
           ${scriptHtml}
           <div class="action-row">
-            <button class="btn btn-primary" onclick="blobDownload('${escapeHtml(downloadUrl)}','${downloadName}')">Download</button>
+            <button class="btn btn-primary" onclick="blobDownload('${escapeHtml(downloadUrl)}','${downloadName}')">${downloadLabel}</button>
             ${order.script ? `<button class="btn btn-secondary" id="copy-caption-btn" type="button">Copy Caption</button>` : ""}
           </div>
           <div class="order-id-row">Order ID: ${safeId}</div>`;
