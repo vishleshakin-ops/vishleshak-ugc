@@ -1284,6 +1284,14 @@ async def get_status(job_id: str):
 async def serve_root():
     return FileResponse("static/index.html")
 
+@app.get("/favicon.svg")
+async def serve_favicon_svg():
+    return FileResponse("static/favicon.svg", media_type="image/svg+xml")
+
+@app.get("/favicon.ico")
+async def serve_favicon_ico():
+    return FileResponse("static/favicon.ico", media_type="image/x-icon")
+
 @app.get("/pitch")
 async def serve_pitch():
     return FileResponse("static/pitch.html")

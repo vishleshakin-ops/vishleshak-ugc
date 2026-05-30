@@ -1056,7 +1056,7 @@ function startOrderNotificationPolling(railwayUrl) {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("🛍️ New Order — Vishleshak UGC", {
           body: `${newOrders.length} new order(s) waiting for your approval`,
-          icon: "/static/favicon.ico",
+          icon: "/favicon.ico",
         });
       }
       showToast(`🛍️ ${newOrders.length} new order(s) synced from Railway!`);

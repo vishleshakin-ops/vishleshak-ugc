@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Order UGC Video - Vishleshak AI</title>
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
-  <link rel="shortcut icon" href="/static/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+  <link rel="alternate icon" href="/favicon.ico" />
+  <link rel="shortcut icon" href="/favicon.ico" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -158,6 +159,11 @@
       font-weight: 800;
       max-width: 760px;
       color: #fff;
+    }
+    h1 .accent {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     .intro-copy {
       margin-top: 12px;
@@ -882,8 +888,8 @@
     <section class="intro">
       <div>
         <span class="eyebrow">UGC Order</span>
-        <h1>Create product ads.</h1>
-        <p class="intro-copy">Choose image or video, select the platform format, review the script, and submit.</p>
+        <h1>Your Product.<br><span class="accent">Ready to Sell.</span></h1>
+        <p class="intro-copy">Create platform-ready image and video ads from one product photo.</p>
       </div>
       <div class="intro-status" aria-label="Order process summary">
         <div class="status-row"><span>Formats</span><strong>Image + Video</strong></div>
@@ -946,9 +952,9 @@
                 </div>
               </div>
               <div class="field full">
-                <label for="notes">Creative notes <span class="optional">Optional</span></label>
+                <label for="notes">Creative notes for image/video <span class="optional">Optional</span></label>
                 <div class="notes-wrap">
-                  <textarea id="notes" placeholder="Example: premium bridal look, highlight sparkle, festive sale, simple Hindi voiceover"></textarea>
+                  <textarea id="notes" placeholder="Example: premium bridal look, highlight sparkle, festive sale, clean background, Hindi voiceover for video"></textarea>
                   <button class="mic-btn" id="mic-btn" type="button" title="Dictate notes">Mic</button>
                 </div>
                 <small id="mic-status" class="helper" style="display:none"></small>
@@ -1027,11 +1033,44 @@
             </div>
           </section>
 
+          <section class="section" id="presenter-section">
+            <div class="section-head">
+              <div>
+                <div class="section-kicker">5. Model</div>
+                <h2 class="section-title">Choose AI generated or reference image.</h2>
+                <p class="section-note">Works for both image and video outputs.</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field full">
+                <label>Model source</label>
+                <div class="choice-grid" id="presenter-group">
+                  <button type="button" class="choice-card active" data-presenter="ai">
+                    <strong>AI generated</strong>
+                    <span>AI selects a suitable model for the product.</span>
+                  </button>
+                  <button type="button" class="choice-card" data-presenter="uploaded" id="use-model-btn">
+                    <strong>Reference image</strong>
+                    <span>Upload a face, model, or presenter reference.</span>
+                  </button>
+                </div>
+                <div class="model-thumb-row" id="model-thumb-row">
+                  <img id="model-thumb-img" src="" alt="Model reference" />
+                  <div class="model-thumb-info">
+                    <strong id="model-thumb-name">Uploaded file</strong>
+                    <span>Reference image selected</span>
+                  </div>
+                  <button class="model-thumb-change" type="button" id="model-change-btn">Change</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section class="section" id="video-options-section">
             <div class="section-head">
               <div>
-                <div class="section-kicker">5. Video details</div>
-                <h2 class="section-title">Set language, presenter, and quality.</h2>
+                <div class="section-kicker">6. Video details</div>
+                <h2 class="section-title">Set language, duration, and quality.</h2>
               </div>
             </div>
             <div class="form-grid">
@@ -1057,27 +1096,6 @@
                   <button type="button" data-quality="standard">Standard</button>
                   <button type="button" class="active" data-quality="high">High</button>
                   <button type="button" data-quality="ultra">Ultra</button>
-                </div>
-              </div>
-              <div class="field full">
-                <label>Presenter</label>
-                <div class="choice-grid" id="presenter-group">
-                  <button type="button" class="choice-card active" data-presenter="ai">
-                    <strong>AI chooses presenter</strong>
-                    <span>Best match is selected based on product and script.</span>
-                  </button>
-                  <button type="button" class="choice-card" data-presenter="uploaded" id="use-model-btn">
-                    <strong>Upload presenter reference</strong>
-                    <span>Use a clear person photo or reference clip.</span>
-                  </button>
-                </div>
-                <div class="model-thumb-row" id="model-thumb-row">
-                  <img id="model-thumb-img" src="" alt="Presenter reference" />
-                  <div class="model-thumb-info">
-                    <strong id="model-thumb-name">Uploaded file</strong>
-                    <span>Presenter reference selected</span>
-                  </div>
-                  <button class="model-thumb-change" type="button" id="model-change-btn">Change</button>
                 </div>
               </div>
             </div>
@@ -1127,6 +1145,7 @@
             <div class="summary-row"><span>Style</span><strong id="summary-style">Talking ad</strong></div>
             <div class="summary-row"><span>Language</span><strong id="summary-language">English</strong></div>
             <div class="summary-row"><span>Platform</span><strong id="summary-platform">Instagram - Video 9:16</strong></div>
+            <div class="summary-row"><span>Model</span><strong id="summary-presenter">AI generated</strong></div>
             <div class="summary-row"><span>Duration</span><strong id="summary-duration">5 sec</strong></div>
             <div class="summary-row"><span>Quality</span><strong id="summary-quality">High</strong></div>
           </div>
@@ -1147,8 +1166,8 @@
 
     <div class="modal-backdrop" id="model-modal">
       <div class="modal-box">
-        <p class="modal-title">Upload presenter reference</p>
-        <p class="modal-sub">Add a clear photo or short video of the presenter style you want.</p>
+        <p class="modal-title">Upload reference image</p>
+        <p class="modal-sub">Add a clear photo or short video of the face, model, or presenter style you want to use.</p>
         <div class="modal-drop" id="modal-drop">
           <input type="file" id="modal-model-file" accept="image/*,video/*" />
           <div class="modal-drop-icon">+</div>
@@ -1181,6 +1200,7 @@
       style: { kling: "Talking ad", cinematic: "Cinematic ad" },
       lang: { hindi: "Hindi", english: "English", hinglish: "Hinglish" },
       platform: { instagram: "Instagram", facebook: "Facebook", youtube: "YouTube", x: "X" },
+      presenter: { ai: "AI generated", uploaded: "Reference image" },
       quality: { standard: "Standard", high: "High", ultra: "Ultra" }
     };
 
@@ -1221,6 +1241,7 @@
       let price = selectedStyle === "cinematic" ? 599 : 499;
       if (selectedDuration === "10") price += 200;
       if (selectedDuration === "15") price += 400;
+      if (selectedQuality === "standard") price -= 100;
       if (selectedQuality === "ultra") price += 300;
       if (selectedPresenter === "uploaded") price += 100;
       return price;
@@ -1231,6 +1252,7 @@
       document.getElementById("summary-style").textContent = selectedOutput === "image" ? "Static product creative" : (labels.style[selectedStyle] || selectedStyle);
       document.getElementById("summary-language").textContent = selectedOutput === "image" ? "Not required" : (labels.lang[selectedLang] || selectedLang);
       document.getElementById("summary-platform").textContent = platformFormatLabel();
+      document.getElementById("summary-presenter").textContent = labels.presenter[selectedPresenter] || selectedPresenter;
       document.getElementById("summary-duration").textContent = selectedOutput === "image" ? "Not required" : `${selectedDuration} sec`;
       document.getElementById("summary-quality").textContent = selectedOutput === "image" ? "Image ready" : (labels.quality[selectedQuality] || selectedQuality);
       document.getElementById("summary-price").textContent = `Rs. ${estimatePrice()}`;
