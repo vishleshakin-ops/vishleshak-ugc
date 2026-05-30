@@ -1162,7 +1162,7 @@
             <div class="section-head">
               <div>
                 <div class="section-kicker">6. Video details</div>
-                <h2 class="section-title">Set language, duration, and quality.</h2>
+                <h2 class="section-title">Set language and duration.</h2>
               </div>
             </div>
             <div class="form-grid">
@@ -1180,14 +1180,6 @@
                   <button type="button" class="active" data-duration="5">5 sec</button>
                   <button type="button" data-duration="10">10 sec</button>
                   <button type="button" data-duration="15">15 sec</button>
-                </div>
-              </div>
-              <div class="field" id="quality-field">
-                <label>Quality</label>
-                <div class="seg three" id="quality-group">
-                  <button type="button" class="active" data-quality="standard">Standard</button>
-                  <button type="button" data-quality="high">High</button>
-                  <button type="button" data-quality="ultra">Ultra</button>
                 </div>
               </div>
             </div>
@@ -1239,7 +1231,6 @@
             <div class="summary-row"><span>Platform</span><strong id="summary-platform">Instagram - Video 9:16</strong></div>
             <div class="summary-row"><span>Model</span><strong id="summary-presenter">AI generated</strong></div>
             <div class="summary-row"><span>Duration</span><strong id="summary-duration">5 sec</strong></div>
-            <div class="summary-row"><span>Quality</span><strong id="summary-quality">Standard</strong></div>
           </div>
           <div class="price-box">
             <span>Estimated starting price</span>
@@ -1280,7 +1271,7 @@
     let selectedStyle = "kling";
     let selectedOutput = "video";
     let selectedDuration = "5";
-    let selectedQuality = "standard";
+    const selectedQuality = "standard";
     let selectedPresenter = "ai";
     let selectedPlatform = "instagram";
     let selectedRatio = "9:16";
@@ -1292,8 +1283,7 @@
       style: { kling: "Talking ad", cinematic: "Cinematic ad" },
       lang: { hindi: "Hindi", english: "English", hinglish: "Hinglish" },
       platform: { instagram: "Instagram", facebook: "Facebook", youtube: "YouTube", x: "X" },
-      presenter: { ai: "AI generated", uploaded: "Reference image" },
-      quality: { standard: "Standard", high: "High", ultra: "Ultra" }
+      presenter: { ai: "AI generated", uploaded: "Reference image" }
     };
 
     function wireSegmented(groupId, onChange) {
@@ -1330,11 +1320,9 @@
 
     function estimatePrice() {
       if (selectedOutput === "image") return 99;
-      let price = selectedStyle === "cinematic" ? 699 : 599;
+      let price = selectedStyle === "cinematic" ? 599 : 499;
       if (selectedDuration === "10") price += 200;
       if (selectedDuration === "15") price += 400;
-      if (selectedQuality === "standard") price -= 100;
-      if (selectedQuality === "ultra") price += 300;
       if (selectedPresenter === "uploaded") price += 100;
       return price;
     }
@@ -1346,7 +1334,6 @@
       document.getElementById("summary-platform").textContent = platformFormatLabel();
       document.getElementById("summary-presenter").textContent = labels.presenter[selectedPresenter] || selectedPresenter;
       document.getElementById("summary-duration").textContent = selectedOutput === "image" ? "Not required" : `${selectedDuration} sec`;
-      document.getElementById("summary-quality").textContent = selectedOutput === "image" ? "Image ready" : (labels.quality[selectedQuality] || selectedQuality);
       document.getElementById("summary-price").textContent = `Rs. ${estimatePrice()}`;
     }
 
@@ -1366,7 +1353,6 @@
     });
     wireSegmented("lang-group", btn => { selectedLang = btn.dataset.lang; });
     wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
-    wireSegmented("quality-group", btn => { selectedQuality = btn.dataset.quality; });
 
     updateVideoVisibility();
     updateSelectedRatio();
