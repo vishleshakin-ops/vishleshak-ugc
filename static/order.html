@@ -881,12 +881,12 @@
   <main class="page">
     <section class="intro">
       <div>
-        <span class="eyebrow">UGC Video Order</span>
-        <h1>Brief your product video in a few clean steps.</h1>
-        <p class="intro-copy">Upload the product photo, choose the ad format, review the AI script, and submit the order for production.</p>
+        <span class="eyebrow">UGC Order</span>
+        <h1>Create product ads.</h1>
+        <p class="intro-copy">Choose image or video, select the platform format, review the script, and submit.</p>
       </div>
       <div class="intro-status" aria-label="Order process summary">
-        <div class="status-row"><span>Default format</span><strong>Video ad</strong></div>
+        <div class="status-row"><span>Formats</span><strong>Image + Video</strong></div>
         <div class="status-row"><span>Delivery update</span><strong>WhatsApp</strong></div>
       </div>
     </section>
@@ -959,9 +959,9 @@
           <section class="section">
             <div class="section-head">
               <div>
-                <div class="section-kicker">3. Format</div>
-                <h2 class="section-title">Choose what needs to be produced.</h2>
-                <p class="section-note">Video is selected by default for UGC orders. Image output remains available when needed.</p>
+                <div class="section-kicker">3. Output</div>
+                <h2 class="section-title">Choose image or video.</h2>
+                <p class="section-note">Both formats are available. Video is selected by default.</p>
               </div>
             </div>
             <div class="form-grid">
@@ -970,11 +970,11 @@
                 <div class="choice-grid" id="output-group">
                   <button type="button" class="choice-card active" data-output="video">
                     <strong>UGC video ad</strong>
-                    <span>Presenter, script, product pitch, platform-ready format.</span>
+                    <span>Presenter, script, product pitch, platform-ready video.</span>
                   </button>
                   <button type="button" class="choice-card" data-output="image">
                     <strong>AI product image</strong>
-                    <span>Clean static product visual for catalog or social post.</span>
+                    <span>Static product creative for catalog, post, or thumbnail.</span>
                   </button>
                 </div>
               </div>
@@ -994,11 +994,44 @@
             </div>
           </section>
 
+          <section class="section" id="platform-section">
+            <div class="section-head">
+              <div>
+                <div class="section-kicker">4. Platform</div>
+                <h2 class="section-title">Choose platform and format.</h2>
+                <p class="section-note">The output ratio updates automatically for image or video.</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field full">
+                <label>Platform</label>
+                <div class="choice-grid four" id="platform-group">
+                  <button type="button" class="choice-card active" data-platform="instagram" data-video-ratio="9:16" data-image-ratio="1:1">
+                    <strong>Instagram</strong>
+                    <span>Video 9:16, image 1:1</span>
+                  </button>
+                  <button type="button" class="choice-card" data-platform="facebook" data-video-ratio="16:9" data-image-ratio="1:1">
+                    <strong>Facebook</strong>
+                    <span>Video 16:9, image 1:1</span>
+                  </button>
+                  <button type="button" class="choice-card" data-platform="youtube" data-video-ratio="16:9" data-image-ratio="16:9">
+                    <strong>YouTube</strong>
+                    <span>Video 16:9, image 16:9</span>
+                  </button>
+                  <button type="button" class="choice-card" data-platform="x" data-video-ratio="16:9" data-image-ratio="16:9">
+                    <strong>X</strong>
+                    <span>Video 16:9, image 16:9</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section class="section" id="video-options-section">
             <div class="section-head">
               <div>
-                <div class="section-kicker">4. Video details</div>
-                <h2 class="section-title">Set language, platform, presenter, and quality.</h2>
+                <div class="section-kicker">5. Video details</div>
+                <h2 class="section-title">Set language, presenter, and quality.</h2>
               </div>
             </div>
             <div class="form-grid">
@@ -1008,15 +1041,6 @@
                   <button type="button" class="active" data-lang="english">English</button>
                   <button type="button" data-lang="hindi">Hindi</button>
                   <button type="button" data-lang="hinglish">Hinglish</button>
-                </div>
-              </div>
-              <div class="field">
-                <label>Platform</label>
-                <div class="seg four" id="platform-group">
-                  <button type="button" class="active" data-platform="instagram" data-ratio="9:16">Instagram</button>
-                  <button type="button" data-platform="facebook" data-ratio="16:9">Facebook</button>
-                  <button type="button" data-platform="youtube" data-ratio="16:9">YouTube</button>
-                  <button type="button" data-platform="x" data-ratio="16:9">X</button>
                 </div>
               </div>
               <div class="field" id="duration-field">
@@ -1102,7 +1126,7 @@
             <div class="summary-row"><span>Output</span><strong id="summary-output">UGC video ad</strong></div>
             <div class="summary-row"><span>Style</span><strong id="summary-style">Talking ad</strong></div>
             <div class="summary-row"><span>Language</span><strong id="summary-language">English</strong></div>
-            <div class="summary-row"><span>Platform</span><strong id="summary-platform">Instagram 9:16</strong></div>
+            <div class="summary-row"><span>Platform</span><strong id="summary-platform">Instagram - Video 9:16</strong></div>
             <div class="summary-row"><span>Duration</span><strong id="summary-duration">5 sec</strong></div>
             <div class="summary-row"><span>Quality</span><strong id="summary-quality">High</strong></div>
           </div>
@@ -1116,7 +1140,7 @@
           <strong>Before you submit</strong>
           <div class="check-item">Use one clear product image with minimal background clutter.</div>
           <div class="check-item">Mention offer, audience, or tone in creative notes if important.</div>
-          <div class="check-item">Review the AI script before final submission.</div>
+          <div class="check-item">Platform format is applied automatically for image or video.</div>
         </section>
       </aside>
     </div>
@@ -1179,6 +1203,19 @@
       document.getElementById("video-options-section").classList.toggle("field-hidden", isImage);
     }
 
+    function updateSelectedRatio() {
+      const activePlatform = document.querySelector("#platform-group button.active");
+      if (!activePlatform) return;
+      selectedRatio = selectedOutput === "image"
+        ? activePlatform.dataset.imageRatio
+        : activePlatform.dataset.videoRatio;
+    }
+
+    function platformFormatLabel() {
+      const typeLabel = selectedOutput === "image" ? "Image" : "Video";
+      return `${labels.platform[selectedPlatform] || selectedPlatform} - ${typeLabel} ${selectedRatio}`;
+    }
+
     function estimatePrice() {
       if (selectedOutput === "image") return 199;
       let price = selectedStyle === "cinematic" ? 599 : 499;
@@ -1193,7 +1230,7 @@
       document.getElementById("summary-output").textContent = labels.output[selectedOutput] || selectedOutput;
       document.getElementById("summary-style").textContent = selectedOutput === "image" ? "Static product creative" : (labels.style[selectedStyle] || selectedStyle);
       document.getElementById("summary-language").textContent = selectedOutput === "image" ? "Not required" : (labels.lang[selectedLang] || selectedLang);
-      document.getElementById("summary-platform").textContent = `${labels.platform[selectedPlatform] || selectedPlatform} ${selectedRatio}`;
+      document.getElementById("summary-platform").textContent = platformFormatLabel();
       document.getElementById("summary-duration").textContent = selectedOutput === "image" ? "Not required" : `${selectedDuration} sec`;
       document.getElementById("summary-quality").textContent = selectedOutput === "image" ? "Image ready" : (labels.quality[selectedQuality] || selectedQuality);
       document.getElementById("summary-price").textContent = `Rs. ${estimatePrice()}`;
@@ -1201,6 +1238,7 @@
 
     wireSegmented("output-group", btn => {
       selectedOutput = btn.dataset.output;
+      updateSelectedRatio();
       updateVideoVisibility();
     });
     wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; });
@@ -1210,13 +1248,14 @@
     });
     wireSegmented("platform-group", btn => {
       selectedPlatform = btn.dataset.platform;
-      selectedRatio = btn.dataset.ratio;
+      updateSelectedRatio();
     });
     wireSegmented("lang-group", btn => { selectedLang = btn.dataset.lang; });
     wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
     wireSegmented("quality-group", btn => { selectedQuality = btn.dataset.quality; });
 
     updateVideoVisibility();
+    updateSelectedRatio();
     updateSummary();
 
     document.getElementById("order-form-card").addEventListener("submit", event => {
