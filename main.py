@@ -1792,11 +1792,11 @@ async def serve_order_upload(filename: str):
 
 @app.get("/order")
 async def serve_order_page():
-    return FileResponse("static/order.html")
+    return FileResponse("static/order.html", headers={"Cache-Control": "no-store"})
 
 @app.get("/order/result/{order_id}")
 async def serve_order_result_page(order_id: str):
-    return FileResponse("static/order-result.html")
+    return FileResponse("static/order-result.html", headers={"Cache-Control": "no-store"})
 
 
 # ── WhatsApp Webhook ──────────────────────────────────────────────────────────
