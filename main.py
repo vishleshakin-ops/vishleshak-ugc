@@ -98,6 +98,57 @@ def _display_date_option(dt: datetime, prefix: str = "") -> str:
     return f"{prefix}{label}" if prefix else label
 
 
+def _format_hour_value(hour_value: int | float) -> str:
+    hour = int(hour_value)
+    minute = 30 if isinstance(hour_value, float) and hour_value % 1 else 0
+    period = "AM" if hour < 12 else "PM"
+    display_hour = hour if 1 <= hour <= 12 else (hour - 12 if hour > 12 else 12)
+    if minute:
+        return f"{display_hour}:{minute:02d} {period}"
+    return f"{display_hour} {period}"
+
+
+def _extract_appointment_time(value: str) -> dict | None:
+    import re
+
+    raw = value.strip()
+    explicit = re.search(r'\b(\d{1,2})(?:[\.:](\d{2}))?\s*(am|pm)\b', raw, re.IGNORECASE)
+    bare = None
+    if not explicit:
+        bare = re.search(r'\b([1-9]|1[0-2])[\.:](\d{2})\b', raw)
+        month_names = (
+            "jan", "january", "feb", "february", "mar", "march", "apr", "april",
+            "may", "jun", "june", "jul", "july", "aug", "august", "sep",
+            "sept", "september", "oct", "october", "nov", "november", "dec", "december",
+        )
+        if not bare and not any(m in raw.lower() for m in month_names):
+            bare = re.search(r'\b([1-9]|1[0-2])\b', raw)
+    match = explicit or bare
+    if not match:
+        return None
+
+    hour = int(match.group(1))
+    minute = int(match.group(2) or 0)
+    period = match.group(3).lower() if explicit else None
+
+    if period == "am":
+        hour24 = 0 if hour == 12 else hour
+    elif period == "pm":
+        hour24 = 12 if hour == 12 else hour + 12
+    elif 9 <= hour <= 12:
+        hour24 = hour
+    else:
+        hour24 = hour + 12
+
+    hour_value = hour24 + (0.5 if minute >= 30 else 0)
+    label = _format_hour_value(hour_value)
+    date_text = (raw[:match.start()] + " " + raw[match.end():]).strip()
+    date_text = re.sub(r'\b(?:at|for|on)\b', ' ', date_text, flags=re.IGNORECASE)
+    date_text = re.sub(r'\s+', ' ', date_text).strip(" ,.-")
+
+    return {"hour": hour_value, "label": label, "date_text": date_text}
+
+
 def _same_weekday_date_options(date_text: str) -> dict | None:
     text = date_text.lower().strip()
     if text not in _DAY_NAMES:
@@ -120,21 +171,27 @@ def _same_weekday_date_options(date_text: str) -> dict | None:
 def _parse_event_datetime(date_str: str, hour: int) -> datetime:
     """Parse date string and return datetime with given hour. Always returns a future date."""
     from dateutil import parser as dateparser
-    today = datetime.now().date()
+    now = _clinic_now()
+    today = now.date()
+    dl = date_str.lower().strip()
     try:
-        event_date = dateparser.parse(date_str, dayfirst=True)
+        if dl in ("today", "aaj"):
+            event_date = now
+        elif dl in ("tomorrow", "tmrw", "kal"):
+            event_date = now + timedelta(days=1)
+        else:
+            event_date = dateparser.parse(date_str, dayfirst=True)
         if not event_date:
-            event_date = datetime.now() + timedelta(days=1)
+            event_date = now + timedelta(days=1)
         elif event_date.date() < today:
             # If user said a weekday name (e.g. "Tuesday") and it parsed to the past,
             # roll forward to next occurrence of that day
-            dl = date_str.lower()
             if any(d in dl for d in _DAY_NAMES):
                 event_date += timedelta(days=7)
             else:
-                event_date = datetime.now() + timedelta(days=1)
+                event_date = now + timedelta(days=1)
     except Exception:
-        event_date = datetime.now() + timedelta(days=1)
+        event_date = now + timedelta(days=1)
     minute = 30 if isinstance(hour, float) and hour % 1 else 0
     return event_date.replace(hour=int(hour), minute=minute, second=0, microsecond=0)
 
@@ -145,6 +202,25 @@ def _format_date(date_str: str, hour: int | None = None) -> str:
         return f"{dt.strftime('%A')}, {dt.day} {dt.strftime('%B %Y')}"
     except Exception:
         return date_str
+
+
+def _clinic_hours_issue(date_str: str, hour_value: int | float) -> str | None:
+    appt_dt = _parse_event_datetime(date_str, hour_value)
+    now = _clinic_now()
+    if appt_dt.tzinfo is None and now.tzinfo is not None:
+        now = now.replace(tzinfo=None)
+    if appt_dt <= now:
+        return "That time has already passed. Please choose a future time."
+
+    is_sunday = appt_dt.weekday() == 6
+    is_saturday = appt_dt.weekday() == 5
+    close_hour = 18 if is_saturday else 20
+
+    if is_sunday:
+        return "The clinic is closed on Sunday. Please choose Monday to Saturday."
+    if hour_value < 9 or hour_value >= close_hour:
+        return "Sorry, that time is *outside our working hours*."
+    return None
 
 
 async def get_available_slots(date_str: str, max_slots: int = 6, period: str = "all") -> list[str]:
@@ -2034,10 +2110,10 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
 
                 # Lookup specific hour from normalised text
                 _time_map = {
-                    "9am":9,"9:00am":9,"10am":10,"10:30am":10,"11am":11,"11:30am":11,
-                    "12pm":12,"12:30pm":12,"1pm":13,"1:30pm":13,"2pm":14,"2:30pm":14,"3pm":15,"3:30pm":15,
-                    "4pm":16,"4:30pm":16,"5pm":17,"5:30pm":17,"6pm":18,"6:30pm":18,
-                    "7pm":19,"7:30pm":19,"8pm":20
+                    "9am":9,"9:00am":9,"10am":10,"10:30am":10.5,"11am":11,"11:30am":11.5,
+                    "12pm":12,"12:30pm":12.5,"1pm":13,"1:30pm":13.5,"2pm":14,"2:30pm":14.5,"3pm":15,"3:30pm":15.5,
+                    "4pm":16,"4:30pm":16.5,"5pm":17,"5:30pm":17.5,"6pm":18,"6:30pm":18.5,
+                    "7pm":19,"7:30pm":19.5,"8pm":20
                 }
                 _specific_hour = None
                 for t, h in _time_map.items():
@@ -2051,7 +2127,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     _raw_time = dental.get("_raw_time_text") or text
                     _bare_time = _re.fullmatch(r'(\d{1,2})(?:[\.:](\d{2}))?', _raw_time.strip())
                     if _bare_time:
-                        _display_hour = _specific_hour if _specific_hour <= 12 else _specific_hour - 12
+                        _display_hour = int(_specific_hour) if _specific_hour <= 12 else int(_specific_hour) - 12
                         _display_minute = _bare_time.group(2)
                         _display_period = "AM" if _specific_hour < 12 else "PM"
                         if _display_minute:
@@ -2180,6 +2256,75 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     )
                     return {"status": "ok"}
 
+                combined_time = _extract_appointment_time(text)
+                if combined_time and not combined_time["date_text"]:
+                    await wa_send_text(from_phone,
+                        "Please include the date as well.\n\n"
+                        "_Example: Today 4 PM, Tomorrow 11 AM, or Friday 4:30 PM_"
+                    )
+                    return {"status": "ok"}
+
+                if combined_time and combined_time["date_text"]:
+                    dental["date"] = combined_time["date_text"]
+                    dental["time"] = combined_time["label"]
+                    dental["gcal_hour"] = combined_time["hour"]
+
+                    hours_issue = _clinic_hours_issue(dental["date"], dental["gcal_hour"])
+                    if hours_issue:
+                        await wa_send_text(from_phone,
+                            f"{hours_issue}\n\n"
+                            "Clinic hours: Mon-Fri 9am-8pm | Sat 9am-6pm\n\n"
+                            "Please choose another *date and time*:\n\n"
+                            "_Example: Monday 2 June or Tuesday 5 PM_"
+                        )
+                        return {"status": "ok"}
+
+                    _conflicts = await check_gcal_conflict(dental["date"], dental["gcal_hour"])
+                    if _conflicts:
+                        emojis = ["1.", "2.", "3."]
+                        alts = "\n".join([f"{emojis[i]} {a}" for i, a in enumerate(_conflicts)])
+                        dental["alt_slots"] = _conflicts
+                        dental["step"] = "ask_time"
+                        _dental_sessions[from_phone] = dental
+                        await wa_send_text(from_phone,
+                            f"Sorry, *{dental['time']}* on that day is already booked.\n\n"
+                            f"Available slots:\n{alts}\n\n"
+                            f"_Reply with 1, 2 or 3 to pick a slot, or type another time._"
+                        )
+                        return {"status": "ok"}
+
+                    owner_wa = os.getenv("CLINIC_OWNER_WA", "919953910987")
+                    _fmt_date = _format_date(dental["date"], dental.get("gcal_hour"))
+                    summary = (
+                        f"ðŸ¦· *New Appointment Request*\n\n"
+                        f"ðŸ‘¤ Name: {dental['name']}\n"
+                        f"ðŸ“‹ Service: {dental['service']}\n"
+                        f"ðŸ“… Date: {_fmt_date}\n"
+                        f"â° Time: {dental['time']}\n"
+                        f"ðŸ“ž WhatsApp: {from_phone}"
+                    )
+                    cal_link = await create_gcal_event(
+                        dental["name"], dental["service"], dental["date"], dental["time"], from_phone, dental.get("gcal_hour")
+                    )
+                    try:
+                        await wa_send_text(owner_wa, summary)
+                    except Exception as e:
+                        print(f"[Dental] Failed to notify owner: {e}")
+                    cal_line = f"\nðŸ“† *Calendar:* {cal_link}" if cal_link else ""
+                    await wa_send_text(from_phone,
+                        f"âœ… *Appointment Request Sent!*\n\n"
+                        f"ðŸ“‹ *{dental['service']}*\n"
+                        f"ðŸ“… {_fmt_date} Â· {dental['time']}{cal_line}\n\n"
+                        f"The clinic will confirm your slot shortly.\n\n"
+                        f"ðŸ¦· *Dr. Akshay Midha Multi Speciality Dental Clinic*\n"
+                        f"ðŸ“ C 156, near Moti Nagar Rd, behind Govt Hospital, New Delhi 110015\n"
+                        f"ðŸ“ž +91 9868018541\n\n"
+                        f"_Type *hi* to go back to the main menu._"
+                    )
+                    _dental_sessions.pop(from_phone, None)
+                    _router_sessions.pop(from_phone, None)
+                    return {"status": "ok"}
+
                 dental["date"] = text
                 # Try to extract time from the date input
                 _dl = text.lower()
@@ -2203,7 +2348,10 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     "9am": 9, "9 am": 9, "10am": 10, "10 am": 10, "11am": 11, "11 am": 11,
                     "12pm": 12, "12 pm": 12, "1pm": 13, "1 pm": 13, "2pm": 14, "2 pm": 14, "3pm": 15, "3 pm": 15,
                     "4pm": 16, "4 pm": 16, "5pm": 17, "5 pm": 17, "6pm": 18, "6 pm": 18,
-                    "7pm": 19, "7 pm": 19, "8pm": 20, "8 pm": 20
+                    "7pm": 19, "7 pm": 19, "8pm": 20, "8 pm": 20,
+                    "10:30am": 10.5, "11:30am": 11.5, "12:30pm": 12.5, "1:30pm": 13.5,
+                    "2:30pm": 14.5, "3:30pm": 15.5, "4:30pm": 16.5, "5:30pm": 17.5,
+                    "6:30pm": 18.5, "7:30pm": 19.5
                 }
                 _auto_slot = None
                 _auto_hour = None
@@ -2223,6 +2371,15 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     dental["time"] = _auto_slot
                     if _auto_hour:
                         dental["gcal_hour"] = _auto_hour
+                    hours_issue = _clinic_hours_issue(dental['date'], dental.get('gcal_hour') or 9)
+                    if hours_issue:
+                        await wa_send_text(from_phone,
+                            f"{hours_issue}\n\n"
+                            "Clinic hours: Mon-Fri 9am-8pm | Sat 9am-6pm\n\n"
+                            "Please choose another *date and time*:\n\n"
+                            "_Example: Monday 2 June or Tuesday 5 PM_"
+                        )
+                        return {"status": "ok"}
                     _conflicts = await check_gcal_conflict(dental['date'], _auto_hour or 9)
                     if _conflicts:
                         emojis = ["1.", "2.", "3."]
@@ -2231,7 +2388,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         dental["step"] = "ask_time"
                         _dental_sessions[from_phone] = dental
                         await wa_send_text(from_phone,
-                            f"Sorry, *{_auto_hour % 12 or 12}:00 {'AM' if _auto_hour < 12 else 'PM'}* on that day is already booked.\n\n"
+                            f"Sorry, *{_format_hour_value(_auto_hour)}* on that day is already booked.\n\n"
                             f"Available slots:\n{alts}\n\n"
                             f"_Reply with 1, 2 or 3 to pick a slot, or type another time._"
                         )
@@ -2275,6 +2432,15 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             elif step == "ask_time":
                 dental["time"] = dental.pop("time_label", None) or dental.pop("_raw_time_text", None) or text
                 _check_hour = dental.get("gcal_hour") or 9
+                hours_issue = _clinic_hours_issue(dental['date'], _check_hour)
+                if hours_issue:
+                    await wa_send_text(from_phone,
+                        f"{hours_issue}\n\n"
+                        "Clinic hours: Mon-Fri 9am-8pm | Sat 9am-6pm\n\n"
+                        "What time works for you?\n\n"
+                        "_e.g. 10:30 AM, 2 PM, 4:30 PM_"
+                    )
+                    return {"status": "ok"}
                 # Check for conflicts before booking
                 _conflicts = await check_gcal_conflict(dental['date'], _check_hour)
                 if _conflicts:
