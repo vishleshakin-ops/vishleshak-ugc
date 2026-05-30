@@ -105,17 +105,13 @@ def _same_weekday_date_options(date_text: str) -> dict | None:
 
     today = _clinic_now()
     days_ahead = (_DAY_NAMES.index(text) - today.weekday()) % 7
-    first_match = today + timedelta(days=days_ahead)
-    following_match = first_match + timedelta(days=7)
+    if days_ahead != 0:
+        return None
 
-    if days_ahead == 0:
-        today_label = _display_date_option(first_match, "Today, ")
-    else:
-        today_label = _display_date_option(first_match)
-
+    following_match = today + timedelta(days=7)
     return {
-        "today_value": first_match.strftime("%d %B %Y"),
-        "today_label": today_label,
+        "today_value": today.strftime("%d %B %Y"),
+        "today_label": _display_date_option(today, "Today, "),
         "next_value": following_match.strftime("%d %B %Y"),
         "next_label": _display_date_option(following_match),
     }
@@ -1925,7 +1921,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             "ask_name": "What's your *full name*?",
             "ask_service": "What type of appointment do you need?\n\n1️⃣ Routine Checkup / Cleaning\n2️⃣ Root Canal / Filling\n3️⃣ Teeth Whitening / Smile Design\n4️⃣ Braces / Invisalign\n5️⃣ Tooth Pain / Emergency\n6️⃣ Other\n\n_Reply with a number_",
             "ask_date": "📅 What *date* works for you?\n\n_Example: Monday 2 June or Tomorrow_",
-            "ask_time": "⏰ What time works for you? e.g. *2 PM*, *10:30 AM*, *4:30 PM*",
+            "ask_time": "What time works for you? e.g. *2 PM*, *10:30 AM*, *4:30 PM*",
         }
 
         import re as _re
@@ -1986,7 +1982,7 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     _has_time = any(w in _try_tl for w in ["am","pm","morning","afternoon","evening"])
                     if not _has_time:
                         # Not a recognizable time — remind them
-                        emojis = ["1️⃣","2️⃣","3️⃣"]
+                        emojis = ["1.", "2.", "3."]
                         alts = "\n".join([f"{emojis[i]} {a}" for i, a in enumerate(_alt_slots)])
                         await wa_send_text(from_phone,
                             f"Please pick one of the available slots:\n{alts}\n\n"
@@ -2026,12 +2022,12 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 _sat_after   = any(w in _tl for w in ("7pm","8pm")) and "saturday" in _tl
                 if _after_hours or _sat_after:
                     await wa_send_text(from_phone,
-                        "⚠️ Sorry, that time is *outside our working hours*.\n\n"
-                        "🕐 Mon–Fri: 9am–8pm | Sat: 9am–6pm\n\n"
-                        "⏰ Please choose a valid *time slot*:\n\n"
-                        "1️⃣ Morning (9am – 12pm)\n"
-                        "2️⃣ Afternoon (12pm – 4pm)\n"
-                        "3️⃣ Evening (4pm – 8pm)\n\n"
+                        "Sorry, that time is *outside our working hours*.\n\n"
+                        "Clinic hours: Mon-Fri 9am-8pm | Sat 9am-6pm\n\n"
+                        "Please choose a valid *time slot*:\n\n"
+                        "1. Morning (9am-12pm)\n"
+                        "2. Afternoon (12pm-4pm)\n"
+                        "3. Evening (4pm-8pm)\n\n"
                         "_Reply with 1, 2 or 3_"
                     )
                     return {"status": "ok"}
@@ -2166,9 +2162,9 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 dental["step"] = "ask_time"
                 _dental_sessions[from_phone] = dental
                 await wa_send_text(from_phone,
-                    "â° What time works for you?\n\n"
+                    "What time works for you?\n\n"
                     "_e.g. 10:30 AM, 2 PM, 4:30 PM_\n\n"
-                    "ðŸ• Clinic hours: Monâ€“Fri 9amâ€“8pm | Sat 9amâ€“6pm"
+                    "Clinic hours: Mon-Fri 9am-8pm | Sat 9am-6pm\n\n"
                 )
             elif step == "ask_date":
                 date_options = _same_weekday_date_options(text)
@@ -2195,9 +2191,9 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 _after_hours_date = any(w in _dl for w in ("9pm", "9 pm", "10pm", "10 pm", "11pm", "11 pm", "12am", "midnight"))
                 if _after_hours_date:
                     await wa_send_text(from_phone,
-                        "⚠️ *9 PM and later is outside our working hours.*\n\n"
-                        "🕐 Mon–Fri: 9am–8pm | Sat: 9am–6pm\n\n"
-                        "📅 Please choose another *date and time*:\n\n"
+                        "*9 PM and later is outside our working hours.*\n\n"
+                        "Clinic hours: Mon-Fri 9am-8pm | Sat 9am-6pm\n\n"
+                        "Please choose another *date and time*:\n\n"
                         "_Example: Monday 2 June or Tuesday 5 PM_"
                     )
                     return {"status": "ok"}
@@ -2229,13 +2225,13 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         dental["gcal_hour"] = _auto_hour
                     _conflicts = await check_gcal_conflict(dental['date'], _auto_hour or 9)
                     if _conflicts:
-                        emojis = ["1️⃣","2️⃣","3️⃣"]
+                        emojis = ["1.", "2.", "3."]
                         alts = "\n".join([f"{emojis[i]} {a}" for i, a in enumerate(_conflicts)])
                         dental["alt_slots"] = _conflicts
                         dental["step"] = "ask_time"
                         _dental_sessions[from_phone] = dental
                         await wa_send_text(from_phone,
-                            f"⚠️ Sorry, *{_auto_hour % 12 or 12}:00 {'AM' if _auto_hour < 12 else 'PM'}* on that day is already booked.\n\n"
+                            f"Sorry, *{_auto_hour % 12 or 12}:00 {'AM' if _auto_hour < 12 else 'PM'}* on that day is already booked.\n\n"
                             f"Available slots:\n{alts}\n\n"
                             f"_Reply with 1, 2 or 3 to pick a slot, or type another time._"
                         )
@@ -2272,9 +2268,9 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     dental["step"] = "ask_time"
                     _dental_sessions[from_phone] = dental
                     await wa_send_text(from_phone,
-                        "⏰ What time works for you?\n\n"
+                        "What time works for you?\n\n"
                         "_e.g. 10:30 AM, 2 PM, 4:30 PM_\n\n"
-                        "🕐 Clinic hours: Mon–Fri 9am–8pm | Sat 9am–6pm"
+                        "Clinic hours: Mon-Fri 9am-8pm | Sat 9am-6pm\n\n"
                     )
             elif step == "ask_time":
                 dental["time"] = dental.pop("time_label", None) or dental.pop("_raw_time_text", None) or text
@@ -2282,13 +2278,13 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 # Check for conflicts before booking
                 _conflicts = await check_gcal_conflict(dental['date'], _check_hour)
                 if _conflicts:
-                    emojis = ["1️⃣","2️⃣","3️⃣"]
+                    emojis = ["1.", "2.", "3."]
                     alts = "\n".join([f"{emojis[i]} {a}" for i, a in enumerate(_conflicts)])
                     dental["alt_slots"] = _conflicts
                     dental["step"] = "ask_time"
                     _dental_sessions[from_phone] = dental
                     await wa_send_text(from_phone,
-                        f"⚠️ Sorry, that slot is already *booked*.\n\n"
+                        f"Sorry, that slot is already *booked*.\n\n"
                         f"Available slots:\n{alts}\n\n"
                         f"_Reply with 1, 2 or 3 to pick a slot, or type another time._"
                     )
