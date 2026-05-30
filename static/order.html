@@ -3,610 +3,1468 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Order UGC Video — Vishleshak AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <title>Order UGC Video - Vishleshak AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --purple: #7C3AED;
-      --blue: #2563EB;
-      --text: rgba(255,255,255,0.72);
-      --muted: rgba(255,255,255,0.42);
-      --card: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.11);
-      --green: #25D366;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --text: #172033;
+      --muted: #657084;
+      --faint: #8d97a8;
+      --line: #d9e0ea;
+      --line-strong: #bac6d6;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --accent-soft: #e4f5f2;
+      --blue: #2563eb;
+      --danger: #dc2626;
+      --warning: #b45309;
+      --shadow: 0 18px 45px rgba(23, 32, 51, 0.10);
+      --radius: 8px;
     }
     html { scroll-behavior: smooth; }
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: linear-gradient(145deg, #0d0640 0%, #1a0a40 40%, #2d1b8a 70%, #1e0a4e 100%);
-      min-height: 100vh; color: #fff;
-      overflow-x: hidden; -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, rgba(228, 245, 242, 0.64), rgba(245, 247, 251, 0) 280px),
+        var(--bg);
+      -webkit-font-smoothing: antialiased;
     }
-    /* NAV */
-    nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 48px;
-      background: rgba(13,6,64,0.8); backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      position: sticky; top: 0; z-index: 100;
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid rgba(217, 224, 234, 0.82);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
     }
-    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .logo-icon { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg,#7C3AED,#2563EB); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 17px; }
-    .logo-name { font-size: 1rem; font-weight: 700; color: #fff; }
-    .logo-sub { font-size: 0.67rem; color: var(--muted); display: block; margin-top: -2px; }
-    .back-btn { color: var(--text); font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: color 0.15s; }
-    .back-btn:hover { color: #fff; }
-    /* HERO */
-    .hero-banner {
-      text-align: center; padding: 28px 20px 18px;
+    .topbar-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
     }
-    .hero-banner h1 {
-      font-size: 1.8rem; font-weight: 900; letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #a78bfa, #60a5fa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      min-width: 0;
     }
-    .hero-banner p { font-size: 0.92rem; color: var(--muted); margin-top: 6px; }
-    /* PAGE */
-    .page { max-width: 680px; margin: 0 auto; padding: 0 20px 60px; }
-    /* FORM CARD */
-    .form-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 20px; padding: 32px;
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #111827;
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: 0;
+      flex: 0 0 auto;
     }
-    .form-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 20px; }
-    /* GRID */
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 20px; }
-    .form-grid .full { grid-column: 1 / -1; }
-    /* FIELD */
+    .logo-copy { min-width: 0; }
+    .logo-name {
+      display: block;
+      color: var(--text);
+      font-size: 0.98rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .logo-sub {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 1.1;
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.86rem;
+      font-weight: 700;
+      background: #fff;
+    }
+    .nav-link:hover { border-color: var(--line-strong); color: var(--text); }
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+    .intro {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin-top: 12px;
+      font-size: clamp(1.85rem, 4vw, 3.25rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+      font-weight: 800;
+      max-width: 760px;
+    }
+    .intro-copy {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 660px;
+    }
+    .intro-status {
+      display: grid;
+      gap: 10px;
+      width: min(360px, 100%);
+      flex: 0 0 320px;
+    }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.78);
+      padding: 12px 14px;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+    .status-row strong { color: var(--text); font-weight: 800; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 20px;
+      align-items: start;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .form-card { padding: 24px; }
+    .section {
+      padding: 22px 0;
+      border-top: 1px solid var(--line);
+    }
+    .section:first-child { padding-top: 0; border-top: 0; }
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+    .section-kicker {
+      color: var(--accent-strong);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .section-title {
+      margin-top: 4px;
+      color: var(--text);
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+    .section-note {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      max-width: 620px;
+    }
+    .required-note {
+      color: var(--faint);
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .field.full { grid-column: 1 / -1; }
     .field label {
-      display: block; font-size: 0.72rem; font-weight: 600; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 7px;
+      color: #344057;
+      font-size: 0.84rem;
+      font-weight: 800;
     }
-    .field input, .field textarea {
-      width: 100%; border: 1px solid var(--border); border-radius: 10px;
-      padding: 11px 14px; font-size: 0.88rem; color: #fff;
-      background: rgba(255,255,255,0.06); outline: none;
-      transition: border-color 0.15s;
+    .optional {
+      color: var(--faint);
+      font-size: 0.74rem;
+      font-weight: 700;
     }
-    .field input:focus, .field textarea:focus {
-      border-color: var(--purple); background: rgba(255,255,255,0.1);
+    .field input,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      padding: 12px 13px;
+      font-size: 0.94rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
     }
-    .field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,0.3); }
-    .field textarea { resize: none; min-height: 44px; }
-    /* Phone prefix */
-    .phone-row { display: flex; }
+    .field textarea {
+      min-height: 104px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+    .field input::placeholder,
+    .field textarea::placeholder { color: #a4adbb; }
+    .phone-row { display: flex; min-width: 0; }
     .phone-prefix {
-      padding: 11px 12px; background: rgba(255,255,255,0.08);
-      border: 1px solid var(--border); border-right: 0;
-      border-radius: 10px 0 0 10px; font-size: 0.88rem; font-weight: 600;
-      color: var(--text); white-space: nowrap; display: flex; align-items: center;
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-right: 0;
+      border-radius: var(--radius) 0 0 var(--radius);
+      background: var(--surface-soft);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      white-space: nowrap;
     }
-    .phone-row input { border-radius: 0 8px 8px 0 !important; flex: 1; min-width: 0; }
-    /* SEGMENTED */
-    .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+    .phone-row input { border-radius: 0 var(--radius) var(--radius) 0; min-width: 0; }
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .choice-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .choice-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .seg button,
+    .choice-card {
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 12px;
+      text-align: left;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s, transform 0.15s;
+    }
+    .seg button:hover,
+    .choice-card:hover {
+      border-color: var(--line-strong);
+      background: var(--surface-soft);
+    }
+    .seg button.active,
+    .choice-card.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+    .choice-card {
+      display: grid;
+      gap: 4px;
+    }
+    .choice-card strong {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+    .choice-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .seg.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .seg.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .seg button {
-      flex: 1; min-width: 60px; padding: 9px 10px;
-      border: 1px solid var(--border); border-radius: 9px;
-      background: rgba(255,255,255,0.05); font-size: 0.78rem; font-weight: 600;
-      color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+      text-align: center;
+      font-size: 0.86rem;
+      font-weight: 800;
     }
-    .seg button:hover:not(.active) { border-color: rgba(124,58,237,0.4); }
-    .seg button.active {
-      border-color: var(--purple); background: linear-gradient(135deg, #7C3AED, #2563EB);
-      color: #fff; box-shadow: 0 2px 8px rgba(124,58,237,0.3);
-    }
-    /* DROP ZONE */
     .drop-zone {
-      border: 1.5px dashed var(--border); border-radius: 12px;
-      padding: 20px 14px; text-align: center; cursor: pointer;
-      background: rgba(255,255,255,0.04); position: relative;
-      transition: border-color 0.15s;
+      position: relative;
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 14px;
+      align-items: center;
+      min-height: 118px;
+      border: 1.5px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
     }
-    .drop-zone:hover { border-color: var(--purple); }
-    .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .drop-zone-icon { font-size: 20px; margin-bottom: 4px; }
-    .drop-zone-text { font-size: 0.7rem; color: var(--muted); }
-    .drop-zone-text strong { color: #a78bfa; }
-    .preview-img { max-width: 100%; max-height: 100px; border-radius: 8px; object-fit: contain; display: none; margin: 0 auto; }
+    .drop-zone:hover { border-color: var(--accent); background: #f2fbf9; }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .preview-box {
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      overflow: hidden;
+    }
+    .drop-zone-icon {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 900;
+      font-size: 1.2rem;
+    }
+    .preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .drop-zone-text {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+    .drop-zone-text strong {
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+    .notes-wrap { position: relative; }
+    .notes-wrap textarea { padding-right: 46px; }
+    .mic-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--accent-strong);
+      display: grid;
+      place-items: center;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+    .mic-btn.listening {
+      background: #fee2e2;
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+    .helper {
+      display: block;
+      margin-top: 6px;
+      color: var(--faint);
+      font-size: 0.76rem;
+      line-height: 1.4;
+    }
+    .model-thumb-row {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      border: 1px solid rgba(15, 118, 110, 0.28);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+      padding: 8px;
+    }
+    .model-thumb-row img {
+      width: 42px;
+      height: 42px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #fff;
+    }
+    .model-thumb-info { min-width: 0; flex: 1; }
+    .model-thumb-info strong,
+    .model-thumb-info span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .model-thumb-info strong { font-size: 0.82rem; color: var(--text); }
+    .model-thumb-info span { margin-top: 2px; font-size: 0.74rem; color: var(--muted); }
+    .model-thumb-change,
+    .edit-btn,
+    .modal-cancel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 9px 12px;
+    }
     .field-hidden { display: none !important; }
-    /* SUBMIT */
+    .submit-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
+    }
     .submit-btn {
-      width: 100%; padding: 14px;
-      background: linear-gradient(135deg, #7C3AED, #2563EB);
-      color: #fff; border: none; border-radius: 10px;
-      font-size: 0.92rem; font-weight: 700; cursor: pointer;
-      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
-      transition: transform 0.15s, box-shadow 0.15s;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      padding: 0 18px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
     }
-    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,58,237,0.5); }
-    .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    .submit-btn:hover {
+      background: var(--accent-strong);
+      box-shadow: 0 10px 25px rgba(15, 118, 110, 0.22);
+      transform: translateY(-1px);
+    }
+    .submit-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.68;
+      transform: none;
+      box-shadow: none;
+    }
+    .submit-btn.wide { width: 100%; }
+    .spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.42);
+      border-top-color: #fff;
+      border-radius: 999px;
+      animation: spin 0.7s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .error-msg { color: #f87171; font-size: 0.78rem; margin-top: 8px; display: none; text-align: center; }
-    .helper { color: rgba(167,139,250,0.6); font-size: 0.65rem; margin-top: 3px; display: block; }
-    /* SUCCESS */
+    .error-msg {
+      display: none;
+      color: var(--danger);
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      line-height: 1.45;
+      margin-top: 12px;
+    }
+    .sidebar {
+      position: sticky;
+      top: 84px;
+      display: grid;
+      gap: 14px;
+    }
+    .summary { padding: 18px; }
+    .summary h2 {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .summary-list {
+      display: grid;
+      gap: 9px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 0;
+    }
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+    .summary-row strong {
+      color: var(--text);
+      font-size: 0.84rem;
+      font-weight: 800;
+      text-align: right;
+    }
+    .price-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: var(--radius);
+      background: #111827;
+      color: #fff;
+    }
+    .price-box span {
+      display: block;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+    .price-box strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.7rem;
+      font-weight: 800;
+    }
+    .sidebar-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+    .checklist {
+      padding: 16px 18px;
+      display: grid;
+      gap: 9px;
+    }
+    .checklist strong {
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+    .check-item {
+      display: flex;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+    .check-item::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-top: 6px;
+      border-radius: 99px;
+      background: var(--accent);
+      flex: 0 0 auto;
+    }
+    .script-card,
     .success-card {
-      display: none; text-align: center;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 20px; padding: 32px 24px; margin-top: 16px;
+      display: none;
+      padding: 24px;
+      margin-top: 20px;
     }
-    .success-icon { font-size: 48px; margin-bottom: 12px; }
-    .success-card h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
-    .success-card p { font-size: 0.88rem; color: var(--text); }
-    .order-id-box {
-      margin: 16px auto 12px; padding: 12px 16px;
-      background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
-      border-radius: 10px; display: inline-block;
+    .script-title,
+    .success-card h2 {
+      font-size: 1.22rem;
+      font-weight: 800;
+      margin-bottom: 8px;
     }
-    .order-id-box strong { display: block; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-    .order-id-box span { font-size: 1rem; font-weight: 800; color: #a78bfa; font-family: monospace; }
-    .track-btn {
-      display: inline-block; margin-top: 12px; padding: 10px 24px;
-      background: linear-gradient(135deg, #7C3AED, #2563EB);
-      color: #fff; border-radius: 10px; text-decoration: none;
-      font-size: 0.88rem; font-weight: 700;
-    }
-    /* MODAL */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center; z-index: 999;
-    }
-    .modal-box {
-      background: #1a1040; border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 20px; padding: 24px; width: min(400px, calc(100vw - 32px));
-    }
-    .modal-title { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
-    .modal-sub { font-size: 0.78rem; color: var(--text); margin-bottom: 14px; }
-    .modal-drop {
-      border: 1.5px dashed var(--border); border-radius: 10px;
-      padding: 20px; text-align: center; cursor: pointer;
-      background: rgba(255,255,255,0.04); position: relative;
-    }
-    .modal-drop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .modal-drop-icon { font-size: 28px; margin-bottom: 6px; }
-    .modal-drop-text { font-size: 0.72rem; color: var(--muted); }
-    .modal-preview { max-width: 100%; max-height: 120px; border-radius: 8px; object-fit: contain; display: none; margin: 0 auto; }
-    .modal-preview-name { font-size: 0.72rem; color: #a78bfa; font-weight: 600; text-align: center; margin-top: 6px; display: none; }
-    .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
-    .modal-confirm { flex: 1; padding: 10px; background: linear-gradient(135deg,#7C3AED,#2563EB); color: #fff; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
-    .modal-cancel { padding: 10px 16px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
-    .model-thumb-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(124,58,237,0.1); border: 1px solid var(--purple); border-radius: 8px; margin-top: 6px; display: none; }
-    .model-thumb-row img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; }
-    .model-thumb-info { flex: 1; }
-    .model-thumb-info strong { font-size: 0.72rem; color: #fff; display: block; }
-    .model-thumb-info span { font-size: 0.65rem; color: var(--muted); }
-    .model-thumb-change { background: none; border: 1px solid var(--border); color: var(--muted); padding: 4px 10px; border-radius: 6px; font-size: 0.68rem; cursor: pointer; }
-    /* SCRIPT PREVIEW */
-    .script-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 20px; padding: 24px; margin-top: 16px; display: none;
+    .script-card p,
+    .success-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
     }
     .script-card textarea {
-      width: 100%; min-height: 120px; border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px; font-size: 0.82rem; color: #fff; background: rgba(255,255,255,0.06);
-      resize: vertical; font-family: inherit; line-height: 1.6; outline: none;
+      width: 100%;
+      min-height: 210px;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      padding: 14px;
+      resize: vertical;
+      outline: none;
+      line-height: 1.6;
     }
-    .script-card textarea:focus { border-color: var(--purple); }
-    .script-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .script-card textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+    .script-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
     .script-actions .submit-btn { flex: 1; }
-    .edit-btn { padding: 10px 16px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 10px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
-    /* MIC */
-    .notes-wrap { position: relative; }
-    .notes-wrap textarea { padding-right: 36px; }
-    .mic-btn {
-      position: absolute; top: 6px; right: 6px;
-      width: 26px; height: 26px; border-radius: 50%; border: none;
-      background: rgba(124,58,237,0.2); color: #a78bfa;
-      font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    .success-card {
+      text-align: center;
+      max-width: 660px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .mic-btn.listening { background: #fee2e2; color: #ef4444; animation: pulse-mic 1s infinite; }
-    @keyframes pulse-mic { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)} 50%{box-shadow:0 0 0 4px rgba(239,68,68,0)} }
-    /* Tablet breakpoint */
-    @media (max-width: 768px) {
-      .form-card { padding: 24px 20px; }
-      .form-grid { gap: 14px 16px; }
+    .success-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 14px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-size: 1.8rem;
+      font-weight: 900;
     }
-    /* Mobile breakpoint */
-    @media (max-width: 600px) {
-      nav { padding: 12px 16px; }
-      .hero-banner h1 { font-size: 1.35rem; }
-      .form-grid { grid-template-columns: 1fr; }
-      .page { padding: 0 12px 32px; }
-      .phone-row { min-width: 0; }
-      .phone-row input { min-width: 0; }
-      .phone-prefix { padding: 11px 10px; font-size: 0.82rem; }
-      .seg { flex-wrap: wrap; }
+    .order-id-box {
+      display: inline-grid;
+      gap: 4px;
+      margin: 18px auto 4px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      padding: 12px 16px;
+    }
+    .order-id-box strong {
+      color: var(--muted);
+      font-size: 0.74rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .order-id-box span {
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+    .track-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      margin-top: 16px;
+      padding: 0 18px;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 800;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(17, 24, 39, 0.66);
+      backdrop-filter: blur(8px);
+    }
+    .modal-box {
+      width: min(440px, 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: 0 26px 80px rgba(0, 0, 0, 0.26);
+      padding: 20px;
+    }
+    .modal-title {
+      font-size: 1.08rem;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+    .modal-sub {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .modal-drop {
+      position: relative;
+      display: grid;
+      gap: 8px;
+      place-items: center;
+      min-height: 150px;
+      border: 1.5px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .modal-drop input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .modal-drop-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 900;
+    }
+    .modal-drop-text {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.4;
+    }
+    .modal-drop-text strong { color: var(--text); }
+    .modal-preview {
+      display: none;
+      width: 100%;
+      max-height: 220px;
+      margin-top: 12px;
+      border-radius: var(--radius);
+      object-fit: contain;
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+    }
+    .modal-preview-name {
+      display: none;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 14px;
+    }
+    .modal-confirm {
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.86rem;
+      font-weight: 800;
+      padding: 10px 14px;
+    }
+    @media (max-width: 960px) {
+      .intro { align-items: flex-start; flex-direction: column; }
+      .intro-status { width: 100%; flex: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .topbar-inner, .page { width: min(100% - 24px, 1180px); }
+      .nav-actions .nav-link:first-child { display: none; }
+      .page { padding-top: 20px; }
+      .intro-status,
+      .form-grid,
+      .choice-grid,
+      .choice-grid.three,
+      .choice-grid.four,
+      .sidebar { grid-template-columns: 1fr; }
+      .form-card,
+      .script-card,
+      .success-card { padding: 18px; }
+      .section { padding: 20px 0; }
+      .section-head { display: block; }
+      .required-note { display: inline-block; margin-top: 8px; }
+      .seg,
+      .seg.three,
+      .seg.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .drop-zone { grid-template-columns: 74px 1fr; min-height: 96px; }
+      .preview-box { width: 74px; height: 74px; }
+      .script-actions,
+      .submit-row { flex-direction: column; align-items: stretch; }
+    }
+    @media (max-width: 430px) {
+      .topbar-inner { gap: 10px; }
+      .logo-sub { display: none; }
+      .nav-link { padding: 0 10px; font-size: 0.8rem; }
+      .seg,
+      .seg.three,
+      .seg.four { grid-template-columns: 1fr; }
+      .phone-prefix { padding: 0 9px; }
+      .drop-zone { grid-template-columns: 1fr; text-align: center; }
+      .preview-box { margin: 0 auto; }
     }
   </style>
 </head>
 <body>
-
-<nav>
-  <a class="logo" href="https://vishleshak.in">
-    <div class="logo-icon">V</div>
-    <div>
-      <span class="logo-name">Vishleshak</span>
-      <span class="logo-sub">An AI Studio</span>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="logo" href="https://vishleshak.in">
+        <span class="logo-mark">V</span>
+        <span class="logo-copy">
+          <span class="logo-name">Vishleshak</span>
+          <span class="logo-sub">AI content studio</span>
+        </span>
+      </a>
+      <div class="nav-actions">
+        <a class="nav-link" href="https://vishleshak.in/">Home</a>
+        <a class="nav-link" href="/order">New order</a>
+      </div>
     </div>
-  </a>
-  <a class="back-btn" href="https://vishleshak.in">← Back to Home</a>
-</nav>
+  </header>
 
-<div class="hero-banner">
-  <h1>Order Your AI Video Ad</h1>
-  <p>AI-Powered UGC Video Ads for Your Products</p>
-</div>
+  <main class="page">
+    <section class="intro">
+      <div>
+        <span class="eyebrow">UGC Video Order</span>
+        <h1>Brief your product video in a few clean steps.</h1>
+        <p class="intro-copy">Upload the product photo, choose the ad format, review the AI script, and submit the order for production.</p>
+      </div>
+      <div class="intro-status" aria-label="Order process summary">
+        <div class="status-row"><span>Default format</span><strong>Video ad</strong></div>
+        <div class="status-row"><span>Delivery update</span><strong>WhatsApp</strong></div>
+      </div>
+    </section>
 
-<div class="page">
-  <div class="form-card" id="order-form-card">
-    <div class="form-grid">
-      <!-- Row 1: Name + Phone -->
-      <div class="field">
-        <label>Full Name *</label>
-        <input type="text" id="customer-name" placeholder="Your full name" required />
-      </div>
-      <div class="field">
-        <label>WhatsApp Number *</label>
-        <div class="phone-row">
-          <span class="phone-prefix">🇮🇳 +91</span>
-          <input type="tel" id="customer-phone" placeholder="98765 43210" required />
-        </div>
-      </div>
+    <div class="layout">
+      <div>
+        <form class="panel form-card" id="order-form-card">
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <div class="section-kicker">1. Customer</div>
+                <h2 class="section-title">Where should we send the finished order?</h2>
+                <p class="section-note">WhatsApp is used for updates and delivery confirmation.</p>
+              </div>
+              <span class="required-note">* Required</span>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="customer-name">Full name *</label>
+                <input type="text" id="customer-name" placeholder="Kamal Arora" autocomplete="name" required />
+              </div>
+              <div class="field">
+                <label for="customer-phone">WhatsApp number *</label>
+                <div class="phone-row">
+                  <span class="phone-prefix">+91</span>
+                  <input type="tel" id="customer-phone" placeholder="98765 43210" inputmode="numeric" autocomplete="tel" required />
+                </div>
+              </div>
+              <div class="field full">
+                <label for="customer-email">Email <span class="optional">Optional</span></label>
+                <input type="email" id="customer-email" placeholder="you@example.com" autocomplete="email" />
+              </div>
+            </div>
+          </section>
 
-      <!-- Row 2: Email + Product Photo inline -->
-      <div class="field">
-        <label>Email <span style="color:var(--muted);text-transform:none;font-weight:400">(optional)</span></label>
-        <input type="email" id="customer-email" placeholder="you@example.com" />
-      </div>
-      <div class="field">
-        <label>Product Photo *</label>
-        <div class="drop-zone" id="drop-zone" style="display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px">
-          <input type="file" id="product-file" accept="image/*" />
-          <img class="preview-img" id="preview-img" alt="Preview" style="max-height:40px;max-width:40px;border-radius:6px" />
-          <div id="drop-placeholder" style="display:flex;align-items:center;gap:10px">
-            <span class="drop-zone-icon" style="font-size:24px;margin:0">📷</span>
-            <span class="drop-zone-text"><strong>Click or drag</strong> · JPG, PNG, WEBP</span>
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <div class="section-kicker">2. Product</div>
+                <h2 class="section-title">Upload the product and describe the angle.</h2>
+                <p class="section-note">A clear product image gives the best script and final output.</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field full">
+                <label for="product-file">Product photo *</label>
+                <div class="drop-zone" id="drop-zone">
+                  <input type="file" id="product-file" accept="image/*" />
+                  <div class="preview-box">
+                    <img class="preview-img" id="preview-img" alt="Product preview" />
+                    <span class="drop-zone-icon" id="drop-placeholder">+</span>
+                  </div>
+                  <span class="drop-zone-text">
+                    <strong>Click or drag the product image here</strong>
+                    <span>JPG, PNG, or WEBP. Keep the product well lit and uncropped.</span>
+                  </span>
+                </div>
+              </div>
+              <div class="field full">
+                <label for="notes">Creative notes <span class="optional">Optional</span></label>
+                <div class="notes-wrap">
+                  <textarea id="notes" placeholder="Example: premium bridal look, highlight sparkle, festive sale, simple Hindi voiceover"></textarea>
+                  <button class="mic-btn" id="mic-btn" type="button" title="Dictate notes">Mic</button>
+                </div>
+                <small id="mic-status" class="helper" style="display:none"></small>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <div class="section-kicker">3. Format</div>
+                <h2 class="section-title">Choose what needs to be produced.</h2>
+                <p class="section-note">Video is selected by default for UGC orders. Image output remains available when needed.</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field full">
+                <label>Output type</label>
+                <div class="choice-grid" id="output-group">
+                  <button type="button" class="choice-card active" data-output="video">
+                    <strong>UGC video ad</strong>
+                    <span>Presenter, script, product pitch, platform-ready format.</span>
+                  </button>
+                  <button type="button" class="choice-card" data-output="image">
+                    <strong>AI product image</strong>
+                    <span>Clean static product visual for catalog or social post.</span>
+                  </button>
+                </div>
+              </div>
+              <div class="field full" id="style-field">
+                <label>Video style</label>
+                <div class="choice-grid" id="style-group">
+                  <button type="button" class="choice-card active" data-style="kling">
+                    <strong>Talking ad</strong>
+                    <span>Human presenter style with direct selling script.</span>
+                  </button>
+                  <button type="button" class="choice-card" data-style="cinematic">
+                    <strong>Cinematic product ad</strong>
+                    <span>More product-first, premium, visual and polished.</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" id="video-options-section">
+            <div class="section-head">
+              <div>
+                <div class="section-kicker">4. Video details</div>
+                <h2 class="section-title">Set language, platform, presenter, and quality.</h2>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field" id="lang-field">
+                <label>Language</label>
+                <div class="seg three" id="lang-group">
+                  <button type="button" class="active" data-lang="hindi">Hindi</button>
+                  <button type="button" data-lang="english">English</button>
+                  <button type="button" data-lang="hinglish">Hinglish</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Platform</label>
+                <div class="seg four" id="platform-group">
+                  <button type="button" class="active" data-platform="instagram" data-ratio="9:16">Instagram</button>
+                  <button type="button" data-platform="facebook" data-ratio="16:9">Facebook</button>
+                  <button type="button" data-platform="youtube" data-ratio="16:9">YouTube</button>
+                  <button type="button" data-platform="x" data-ratio="16:9">X</button>
+                </div>
+              </div>
+              <div class="field" id="duration-field">
+                <label>Duration</label>
+                <div class="seg three" id="duration-group">
+                  <button type="button" class="active" data-duration="5">5 sec</button>
+                  <button type="button" data-duration="10">10 sec</button>
+                  <button type="button" data-duration="15">15 sec</button>
+                </div>
+              </div>
+              <div class="field" id="quality-field">
+                <label>Quality</label>
+                <div class="seg three" id="quality-group">
+                  <button type="button" data-quality="standard">Standard</button>
+                  <button type="button" class="active" data-quality="high">High</button>
+                  <button type="button" data-quality="ultra">Ultra</button>
+                </div>
+              </div>
+              <div class="field full">
+                <label>Presenter</label>
+                <div class="choice-grid" id="presenter-group">
+                  <button type="button" class="choice-card active" data-presenter="ai">
+                    <strong>AI chooses presenter</strong>
+                    <span>Best match is selected based on product and script.</span>
+                  </button>
+                  <button type="button" class="choice-card" data-presenter="uploaded" id="use-model-btn">
+                    <strong>Upload presenter reference</strong>
+                    <span>Use a clear person photo or reference clip.</span>
+                  </button>
+                </div>
+                <div class="model-thumb-row" id="model-thumb-row">
+                  <img id="model-thumb-img" src="" alt="Presenter reference" />
+                  <div class="model-thumb-info">
+                    <strong id="model-thumb-name">Uploaded file</strong>
+                    <span>Presenter reference selected</span>
+                  </div>
+                  <button class="model-thumb-change" type="button" id="model-change-btn">Change</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="submit-row">
+            <button class="submit-btn wide" id="preview-btn" type="button">
+              <span class="spinner" id="preview-spinner"></span>
+              <span id="preview-btn-text">Preview script</span>
+            </button>
           </div>
-        </div>
-      </div>
+          <div class="error-msg" id="error-msg"></div>
+        </form>
 
-      <!-- Row 3: Output Type + Video Style -->
-      <div class="field">
-        <label>Output Type</label>
-        <div class="seg" id="output-group">
-          <button type="button" class="active" data-output="image">📸 Image</button>
-          <button type="button" data-output="video">🎬 Video</button>
-        </div>
-      </div>
-      <div class="field" id="style-field">
-        <label>Video Style</label>
-        <div class="seg" id="style-group">
-          <button type="button" class="active" data-style="kling">🎙️ Talking Ad</button>
-          <button type="button" data-style="cinematic">🎬 Cinematic</button>
-        </div>
-      </div>
-
-      <!-- Row 4: Presenter + Language -->
-      <div class="field">
-        <label>Presenter</label>
-        <div class="seg" id="presenter-group">
-          <button type="button" class="active" data-presenter="ai">✨ AI Choose</button>
-          <button type="button" data-presenter="uploaded" id="use-model-btn">👤 Upload</button>
-        </div>
-        <div class="model-thumb-row" id="model-thumb-row">
-          <img id="model-thumb-img" src="" alt="Model" />
-          <div class="model-thumb-info">
-            <strong id="model-thumb-name">Uploaded</strong>
-            <span>Presenter reference</span>
+        <section class="panel script-card" id="script-preview-card">
+          <h2 class="script-title">Review the generated script</h2>
+          <p>Edit anything that should sound more like your brand before submitting the order.</p>
+          <textarea id="script-edit-area"></textarea>
+          <div class="script-actions">
+            <button class="submit-btn" id="submit-btn" type="button">
+              <span class="spinner" id="submit-spinner"></span>
+              Confirm and submit order
+            </button>
+            <button type="button" class="edit-btn" id="back-btn">Edit brief</button>
           </div>
-          <button class="model-thumb-change" type="button" id="model-change-btn">Change</button>
-        </div>
-      </div>
-      <div class="field" id="lang-field">
-        <label>Language</label>
-        <div class="seg" id="lang-group">
-          <button type="button" class="active" data-lang="hindi">🇮🇳 Hindi</button>
-          <button type="button" data-lang="english">🌐 English</button>
-          <button type="button" data-lang="hinglish">✨ Hinglish</button>
-        </div>
+          <div class="error-msg" id="script-error-msg"></div>
+        </section>
+
+        <section class="panel success-card" id="success-card">
+          <div class="success-icon">✓</div>
+          <h2>Order received</h2>
+          <p>Your request has been saved. Production updates will be shared on WhatsApp.</p>
+          <div class="order-id-box">
+            <strong>Order ID</strong>
+            <span id="success-order-id"></span>
+          </div>
+          <br />
+          <a class="track-btn" id="track-btn" href="#">Track order</a>
+        </section>
       </div>
 
-      <!-- Row 5: Platform + Duration -->
-      <div class="field">
-        <label>Platform</label>
-        <div class="seg" id="platform-group">
-          <button type="button" class="active" data-platform="instagram" data-ratio="9:16">📸 Insta</button>
-          <button type="button" data-platform="facebook" data-ratio="16:9">👥 FB</button>
-          <button type="button" data-platform="youtube" data-ratio="16:9">▶ YT</button>
-          <button type="button" data-platform="x" data-ratio="16:9">✕ X</button>
-        </div>
-      </div>
-      <div class="field" id="duration-field">
-        <label>Duration</label>
-        <div class="seg" id="duration-group">
-          <button type="button" class="active" data-duration="5">⚡ 5s</button>
-          <button type="button" data-duration="10">🎬 10s</button>
-          <button type="button" data-duration="15">💎 15s</button>
-        </div>
-      </div>
+      <aside class="sidebar">
+        <section class="panel summary" aria-label="Order summary">
+          <h2>Order summary</h2>
+          <div class="summary-list">
+            <div class="summary-row"><span>Output</span><strong id="summary-output">UGC video ad</strong></div>
+            <div class="summary-row"><span>Style</span><strong id="summary-style">Talking ad</strong></div>
+            <div class="summary-row"><span>Language</span><strong id="summary-language">Hindi</strong></div>
+            <div class="summary-row"><span>Platform</span><strong id="summary-platform">Instagram 9:16</strong></div>
+            <div class="summary-row"><span>Duration</span><strong id="summary-duration">5 sec</strong></div>
+            <div class="summary-row"><span>Quality</span><strong id="summary-quality">High</strong></div>
+          </div>
+          <div class="price-box">
+            <span>Estimated starting price</span>
+            <strong id="summary-price">Rs. 499</strong>
+          </div>
+          <p class="sidebar-note">Final price may vary for custom presenter references, longer videos, or special edits.</p>
+        </section>
+        <section class="panel checklist">
+          <strong>Before you submit</strong>
+          <div class="check-item">Use one clear product image with minimal background clutter.</div>
+          <div class="check-item">Mention offer, audience, or tone in creative notes if important.</div>
+          <div class="check-item">Review the AI script before final submission.</div>
+        </section>
+      </aside>
+    </div>
 
-      <!-- Row 6: Quality + Notes -->
-      <div class="field" id="quality-field">
-        <label>Quality</label>
-        <div class="seg" id="quality-group">
-          <button type="button" data-quality="standard">⚡ Std</button>
-          <button type="button" class="active" data-quality="high">✨ High</button>
-          <button type="button" data-quality="ultra">💎 Ultra</button>
+    <div class="modal-backdrop" id="model-modal">
+      <div class="modal-box">
+        <p class="modal-title">Upload presenter reference</p>
+        <p class="modal-sub">Add a clear photo or short video of the presenter style you want.</p>
+        <div class="modal-drop" id="modal-drop">
+          <input type="file" id="modal-model-file" accept="image/*,video/*" />
+          <div class="modal-drop-icon">+</div>
+          <div class="modal-drop-text"><strong>Click or drag a file here</strong><br />JPG, PNG, WEBP, or MP4</div>
         </div>
-      </div>
-
-      <!-- Row 7: Notes (full width) -->
-      <div class="field full">
-        <label>Special Notes <span style="color:var(--muted);text-transform:none;font-weight:400">(optional)</span></label>
-        <div class="notes-wrap">
-          <textarea id="notes" placeholder="E.g. bridal jewelry, premium look, emphasize gold work..."></textarea>
-          <button class="mic-btn" id="mic-btn" type="button" title="Dictate">🎤</button>
+        <img class="modal-preview" id="modal-model-preview" alt="Presenter preview" />
+        <p class="modal-preview-name" id="modal-model-name"></p>
+        <div class="modal-actions">
+          <button class="modal-cancel" id="modal-cancel-btn" type="button" onclick="cancelModel()">Cancel</button>
+          <button class="modal-confirm" id="modal-confirm-btn" type="button" onclick="confirmModel()">Use this reference</button>
         </div>
-        <small id="mic-status" style="color:var(--muted);font-size:0.65rem;margin-top:3px;display:none"></small>
-      </div>
-
-      <!-- Submit (full width) -->
-      <div class="full">
-        <button class="submit-btn" id="preview-btn" type="button">
-          <span class="spinner" id="preview-spinner"></span>
-          ✨ Preview Script →
-        </button>
-        <div class="error-msg" id="error-msg"></div>
       </div>
     </div>
-  </div>
+  </main>
 
-  <!-- Model Upload Modal -->
-  <div class="modal-backdrop" id="model-modal" style="display:none">
-    <div class="modal-box">
-      <p class="modal-title">📸 Upload Model Photo</p>
-      <p class="modal-sub">Upload a clear photo of the person you want as presenter.</p>
-      <div class="modal-drop" id="modal-drop">
-        <input type="file" id="modal-model-file" accept="image/*,video/*" />
-        <div class="modal-drop-icon">🧑‍🎤</div>
-        <div class="modal-drop-text"><strong>Click or drag</strong> · JPG, PNG, MP4</div>
-      </div>
-      <img class="modal-preview" id="modal-model-preview" alt="Preview" />
-      <p class="modal-preview-name" id="modal-model-name"></p>
-      <div class="modal-actions">
-        <button class="modal-confirm" id="modal-confirm-btn" onclick="confirmModel()">✅ Use This Model</button>
-        <button class="modal-cancel" id="modal-cancel-btn" onclick="cancelModel()">Cancel</button>
-      </div>
-    </div>
-  </div>
+  <script>
+    let selectedLang = "hindi";
+    let selectedStyle = "kling";
+    let selectedOutput = "video";
+    let selectedDuration = "5";
+    let selectedQuality = "high";
+    let selectedPresenter = "ai";
+    let selectedPlatform = "instagram";
+    let selectedRatio = "9:16";
+    let productFile = null;
+    let modelFile = null;
 
-  <!-- Script Preview -->
-  <div class="script-card" id="script-preview-card">
-    <p class="form-title">📝 Your Script Preview</p>
-    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px">AI-generated script. Edit before submitting.</p>
-    <textarea id="script-edit-area"></textarea>
-    <div class="script-actions">
-      <button class="submit-btn" id="submit-btn" type="button">
-        <span class="spinner" id="submit-spinner"></span>
-        ✅ Confirm & Submit
-      </button>
-      <button type="button" class="edit-btn" id="back-btn">← Edit</button>
-    </div>
-  </div>
+    const labels = {
+      output: { video: "UGC video ad", image: "AI product image" },
+      style: { kling: "Talking ad", cinematic: "Cinematic ad" },
+      lang: { hindi: "Hindi", english: "English", hinglish: "Hinglish" },
+      platform: { instagram: "Instagram", facebook: "Facebook", youtube: "YouTube", x: "X" },
+      quality: { standard: "Standard", high: "High", ultra: "Ultra" }
+    };
 
-  <!-- Success -->
-  <div class="success-card" id="success-card">
-    <div class="success-icon">🎉</div>
-    <h2>Order Received!</h2>
-    <p>We'll process your request within 30 minutes.</p>
-    <p style="margin-top:4px">You'll be notified on WhatsApp once ready.</p>
-    <div class="order-id-box">
-      <strong>Order ID</strong>
-      <span id="success-order-id"></span>
-    </div>
-    <a class="track-btn" id="track-btn" href="#">Track Order</a>
-  </div>
-</div>
-
-<script>
-  // State
-  let selectedLang = "hindi";
-  let selectedStyle = "kling";
-  let selectedOutput = "image";
-  let selectedDuration = "5";
-  let selectedQuality = "high";
-  let selectedPresenter = "ai";
-  let selectedPlatform = "instagram";
-  let selectedRatio = "9:16";
-  let productFile = null;
-  let modelFile = null;
-
-  // Segmented controls
-  function wireSegmented(groupId, onChange) {
-    const group = document.getElementById(groupId);
-    if (!group) return;
-    group.querySelectorAll("button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        group.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        onChange(btn);
+    function wireSegmented(groupId, onChange) {
+      const group = document.getElementById(groupId);
+      if (!group) return;
+      group.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          group.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          onChange(btn);
+          updateSummary();
+        });
       });
+    }
+
+    function updateVideoVisibility() {
+      const isImage = selectedOutput === "image";
+      document.getElementById("style-field").classList.toggle("field-hidden", isImage);
+      document.getElementById("video-options-section").classList.toggle("field-hidden", isImage);
+    }
+
+    function estimatePrice() {
+      if (selectedOutput === "image") return 199;
+      let price = selectedStyle === "cinematic" ? 599 : 499;
+      if (selectedDuration === "10") price += 200;
+      if (selectedDuration === "15") price += 400;
+      if (selectedQuality === "ultra") price += 300;
+      if (selectedPresenter === "uploaded") price += 100;
+      return price;
+    }
+
+    function updateSummary() {
+      document.getElementById("summary-output").textContent = labels.output[selectedOutput] || selectedOutput;
+      document.getElementById("summary-style").textContent = selectedOutput === "image" ? "Static product creative" : (labels.style[selectedStyle] || selectedStyle);
+      document.getElementById("summary-language").textContent = selectedOutput === "image" ? "Not required" : (labels.lang[selectedLang] || selectedLang);
+      document.getElementById("summary-platform").textContent = `${labels.platform[selectedPlatform] || selectedPlatform} ${selectedRatio}`;
+      document.getElementById("summary-duration").textContent = selectedOutput === "image" ? "Not required" : `${selectedDuration} sec`;
+      document.getElementById("summary-quality").textContent = selectedOutput === "image" ? "Image ready" : (labels.quality[selectedQuality] || selectedQuality);
+      document.getElementById("summary-price").textContent = `Rs. ${estimatePrice()}`;
+    }
+
+    wireSegmented("output-group", btn => {
+      selectedOutput = btn.dataset.output;
+      updateVideoVisibility();
     });
-  }
+    wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; });
+    wireSegmented("presenter-group", btn => {
+      selectedPresenter = btn.dataset.presenter;
+      if (selectedPresenter === "uploaded") openModelModal();
+    });
+    wireSegmented("platform-group", btn => {
+      selectedPlatform = btn.dataset.platform;
+      selectedRatio = btn.dataset.ratio;
+    });
+    wireSegmented("lang-group", btn => { selectedLang = btn.dataset.lang; });
+    wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
+    wireSegmented("quality-group", btn => { selectedQuality = btn.dataset.quality; });
 
-  wireSegmented("presenter-group", btn => {
-    selectedPresenter = btn.dataset.presenter;
-    if (selectedPresenter === "uploaded") openModelModal();
-  });
-  wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; });
-  wireSegmented("platform-group", btn => {
-    selectedPlatform = btn.dataset.platform;
-    selectedRatio = btn.dataset.ratio;
-  });
-  wireSegmented("lang-group", btn => { selectedLang = btn.dataset.lang; });
-  wireSegmented("output-group", btn => {
-    selectedOutput = btn.dataset.output;
-    const isImage = selectedOutput === "image";
-    document.getElementById("lang-field").classList.toggle("field-hidden", isImage);
-    document.getElementById("style-field").classList.toggle("field-hidden", isImage);
-    document.getElementById("duration-field").classList.toggle("field-hidden", isImage);
-    document.getElementById("quality-field").classList.toggle("field-hidden", isImage);
-  });
-  wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
-  wireSegmented("quality-group", btn => { selectedQuality = btn.dataset.quality; });
+    updateVideoVisibility();
+    updateSummary();
 
-  // Default to image — hide video-only fields on load
-  document.getElementById("lang-field").classList.add("field-hidden");
-  document.getElementById("style-field").classList.add("field-hidden");
-  document.getElementById("duration-field").classList.add("field-hidden");
-  document.getElementById("quality-field").classList.add("field-hidden");
+    document.getElementById("order-form-card").addEventListener("submit", event => {
+      event.preventDefault();
+    });
 
-  // Voice dictation
-  const micBtn = document.getElementById("mic-btn");
-  const micStatus = document.getElementById("mic-status");
-  const notesArea = document.getElementById("notes");
-  let recognition = null, isListening = false;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { micBtn.style.opacity = "0.4"; micBtn.disabled = true; }
-  else {
-    recognition = new SR();
-    recognition.continuous = true; recognition.interimResults = true; recognition.lang = "hi-IN";
-    recognition.onstart = () => { isListening = true; micBtn.classList.add("listening"); micBtn.textContent = "⏹"; micStatus.textContent = "🎤 Listening…"; micStatus.style.display = "block"; };
-    recognition.onend = () => { isListening = false; micBtn.classList.remove("listening"); micBtn.textContent = "🎤"; micStatus.style.display = "none"; };
-    let ft = "";
-    recognition.onresult = (e) => { let interim = ""; for (let i = e.resultIndex; i < e.results.length; i++) { const t = e.results[i][0].transcript; if (e.results[i].isFinal) ft += t + " "; else interim = t; } notesArea.value = (notesArea.dataset.base || "") + ft + interim; };
-    recognition.onerror = (e) => { micStatus.textContent = "Error: " + e.error; micStatus.style.display = "block"; setTimeout(() => micStatus.style.display = "none", 3000); };
-    micBtn.addEventListener("click", () => {
-      if (isListening) { recognition.stop(); } else {
-        notesArea.dataset.base = notesArea.value ? notesArea.value.trimEnd() + " " : ""; ft = "";
-        const lang = document.querySelector("#lang-group button.active")?.dataset.lang;
-        recognition.lang = lang === "english" ? "en-IN" : "hi-IN"; recognition.start();
+    const micBtn = document.getElementById("mic-btn");
+    const micStatus = document.getElementById("mic-status");
+    const notesArea = document.getElementById("notes");
+    let recognition = null;
+    let isListening = false;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      micBtn.disabled = true;
+      micBtn.style.opacity = "0.5";
+      micBtn.title = "Voice input is not supported in this browser";
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "hi-IN";
+      let finalTranscript = "";
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add("listening");
+        micBtn.textContent = "Stop";
+        micStatus.textContent = "Listening...";
+        micStatus.style.display = "block";
+      };
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "Mic";
+        micStatus.style.display = "none";
+      };
+      recognition.onresult = event => {
+        let interimTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          const text = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalTranscript += text + " ";
+          else interimTranscript = text;
+        }
+        notesArea.value = (notesArea.dataset.base || "") + finalTranscript + interimTranscript;
+      };
+      recognition.onerror = event => {
+        micStatus.textContent = "Voice error: " + event.error;
+        micStatus.style.display = "block";
+        setTimeout(() => { micStatus.style.display = "none"; }, 3000);
+      };
+      micBtn.addEventListener("click", () => {
+        if (isListening) {
+          recognition.stop();
+          return;
+        }
+        notesArea.dataset.base = notesArea.value ? notesArea.value.trimEnd() + " " : "";
+        finalTranscript = "";
+        recognition.lang = selectedLang === "english" ? "en-IN" : "hi-IN";
+        recognition.start();
+      });
+    }
+
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("product-file");
+    const previewImg = document.getElementById("preview-img");
+    const dropPlaceholder = document.getElementById("drop-placeholder");
+
+    function showPreview(file) {
+      productFile = file;
+      previewImg.src = URL.createObjectURL(file);
+      previewImg.style.display = "block";
+      dropPlaceholder.style.display = "none";
+    }
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files[0]) showPreview(fileInput.files[0]);
+    });
+    dropZone.addEventListener("dragover", event => {
+      event.preventDefault();
+      dropZone.style.borderColor = "#0f766e";
+    });
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.style.borderColor = "";
+    });
+    dropZone.addEventListener("drop", event => {
+      event.preventDefault();
+      dropZone.style.borderColor = "";
+      const file = event.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) showPreview(file);
+    });
+
+    function showError(message, targetId = "error-msg") {
+      const el = document.getElementById(targetId);
+      el.textContent = message;
+      el.style.display = "block";
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function hideErrors() {
+      ["error-msg", "script-error-msg"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+      });
+    }
+
+    function validateForm(errorTarget = "error-msg") {
+      const name = document.getElementById("customer-name").value.trim();
+      const rawPhone = document.getElementById("customer-phone").value.trim().replace(/^\+?91/, "").replace(/\D/g, "");
+      if (!name) {
+        showError("Please enter your full name.", errorTarget);
+        return null;
+      }
+      if (!rawPhone || rawPhone.length < 10) {
+        showError("Please enter a valid 10-digit WhatsApp number.", errorTarget);
+        return null;
+      }
+      if (!productFile) {
+        showError("Please upload a product photo.", errorTarget);
+        return null;
+      }
+      return {
+        name,
+        phone: "+91" + rawPhone.slice(-10),
+        email: document.getElementById("customer-email").value.trim()
+      };
+    }
+
+    document.getElementById("preview-btn").addEventListener("click", async () => {
+      const fields = validateForm();
+      if (!fields) return;
+      hideErrors();
+      const btn = document.getElementById("preview-btn");
+      const spinner = document.getElementById("preview-spinner");
+      const label = document.getElementById("preview-btn-text");
+      btn.disabled = true;
+      spinner.style.display = "block";
+      label.textContent = "Generating script...";
+      try {
+        const fd = new FormData();
+        fd.append("image", productFile);
+        fd.append("auto_mode", "true");
+        fd.append("language", selectedLang);
+        fd.append("presenter_source", selectedPresenter);
+        fd.append("model_gender", "female");
+        const resp = await fetch("/api/generate-script", { method: "POST", body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Script generation failed.");
+        document.getElementById("script-edit-area").value = data.script || "";
+        document.getElementById("order-form-card").style.display = "none";
+        document.getElementById("script-preview-card").style.display = "block";
+        document.getElementById("script-preview-card").scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (error) {
+        showError(error.message || "Script generation failed.");
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = "none";
+        label.textContent = "Preview script";
       }
     });
-  }
 
-  // File upload
-  const dropZone = document.getElementById("drop-zone");
-  const fileInput = document.getElementById("product-file");
-  const previewImg = document.getElementById("preview-img");
-  const dropPlaceholder = document.getElementById("drop-placeholder");
-
-  function showPreview(file) {
-    productFile = file;
-    previewImg.src = URL.createObjectURL(file);
-    previewImg.style.display = "block";
-    dropPlaceholder.style.display = "none";
-  }
-  fileInput.addEventListener("change", () => { if (fileInput.files[0]) showPreview(fileInput.files[0]); });
-  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.style.borderColor = "#7C3AED"; });
-  dropZone.addEventListener("dragleave", () => dropZone.style.borderColor = "");
-  dropZone.addEventListener("drop", e => { e.preventDefault(); dropZone.style.borderColor = ""; const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) showPreview(f); });
-
-  function validateForm() {
-    const name = document.getElementById("customer-name").value.trim();
-    const rawPhone = document.getElementById("customer-phone").value.trim().replace(/^\+?91/, "").replace(/\D/g, "");
-    if (!name) { showError("Please enter your full name."); return null; }
-    if (!rawPhone || rawPhone.length < 10) { showError("Please enter a valid 10-digit WhatsApp number."); return null; }
-    if (!productFile) { showError("Please upload a product photo."); return null; }
-    return { name, phone: "+91" + rawPhone, email: document.getElementById("customer-email").value.trim() };
-  }
-
-  // Step 1 — Preview Script
-  document.getElementById("preview-btn").addEventListener("click", async () => {
-    const fields = validateForm();
-    if (!fields) return;
-    document.getElementById("error-msg").style.display = "none";
-    const btn = document.getElementById("preview-btn");
-    const spinner = document.getElementById("preview-spinner");
-    btn.disabled = true; spinner.style.display = "block";
-    btn.childNodes[btn.childNodes.length - 1].textContent = " Analyzing…";
-    try {
-      const fd = new FormData();
-      fd.append("image", productFile);
-      fd.append("auto_mode", "true");
-      fd.append("language", selectedLang);
-      fd.append("presenter_source", selectedPresenter);
-      fd.append("model_gender", "female");
-      const resp = await fetch("/api/generate-script", { method: "POST", body: fd });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.detail || "Script generation failed");
-      document.getElementById("script-edit-area").value = data.script || "";
-      document.getElementById("order-form-card").style.display = "none";
-      document.getElementById("script-preview-card").style.display = "block";
-    } catch (e) { showError(e.message); }
-    finally { btn.disabled = false; spinner.style.display = "none"; btn.childNodes[btn.childNodes.length - 1].textContent = " ✨ Preview Script →"; }
-  });
-
-  document.getElementById("back-btn").addEventListener("click", () => {
-    document.getElementById("script-preview-card").style.display = "none";
-    document.getElementById("order-form-card").style.display = "block";
-  });
-
-  // Step 2 — Submit
-  document.getElementById("submit-btn").addEventListener("click", async () => {
-    const fields = validateForm();
-    if (!fields) return;
-    const btn = document.getElementById("submit-btn");
-    const spinner = document.getElementById("submit-spinner");
-    btn.disabled = true; spinner.style.display = "block";
-    const fd = new FormData();
-    fd.append("customer_name", fields.name);
-    fd.append("customer_phone", fields.phone);
-    fd.append("customer_email", fields.email);
-    fd.append("language", selectedLang);
-    fd.append("output_type", selectedOutput);
-    fd.append("video_duration", selectedDuration);
-    fd.append("video_quality", selectedQuality);
-    fd.append("presenter_source", selectedPresenter);
-    fd.append("platform", selectedPlatform);
-    fd.append("aspect_ratio", selectedRatio);
-    fd.append("notes", document.getElementById("notes").value.trim());
-    fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
-    fd.append("video_style", selectedStyle);
-    fd.append("product_image", productFile);
-    if (modelFile) fd.append("model_reference", modelFile);
-    try {
-      const resp = await fetch("/api/orders", { method: "POST", body: fd });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.detail || "Submission failed");
+    document.getElementById("back-btn").addEventListener("click", () => {
+      hideErrors();
       document.getElementById("script-preview-card").style.display = "none";
-      document.getElementById("success-order-id").textContent = data.order_id;
-      document.getElementById("track-btn").href = `/order/result/${data.order_id}`;
-      document.getElementById("success-card").style.display = "block";
-    } catch (e) { showError(e.message); btn.disabled = false; spinner.style.display = "none"; }
-  });
+      document.getElementById("order-form-card").style.display = "block";
+      document.getElementById("order-form-card").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 
-  function showError(msg) { const el = document.getElementById("error-msg"); el.textContent = msg; el.style.display = "block"; }
+    document.getElementById("submit-btn").addEventListener("click", async () => {
+      const fields = validateForm("script-error-msg");
+      if (!fields) return;
+      hideErrors();
+      const btn = document.getElementById("submit-btn");
+      const spinner = document.getElementById("submit-spinner");
+      btn.disabled = true;
+      spinner.style.display = "block";
+      const fd = new FormData();
+      fd.append("customer_name", fields.name);
+      fd.append("customer_phone", fields.phone);
+      fd.append("customer_email", fields.email);
+      fd.append("language", selectedLang);
+      fd.append("output_type", selectedOutput);
+      fd.append("video_duration", selectedDuration);
+      fd.append("video_quality", selectedQuality);
+      fd.append("presenter_source", selectedPresenter);
+      fd.append("platform", selectedPlatform);
+      fd.append("aspect_ratio", selectedRatio);
+      fd.append("notes", document.getElementById("notes").value.trim());
+      fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
+      fd.append("video_style", selectedStyle);
+      fd.append("product_image", productFile);
+      if (modelFile) fd.append("model_reference", modelFile);
 
-  // Model modal
-  function openModelModal() { document.getElementById("model-modal").style.display = "flex"; }
-  function cancelModel() {
-    document.getElementById("model-modal").style.display = "none";
-    if (!modelFile) {
-      document.querySelectorAll("#presenter-group button").forEach(b => b.classList.remove("active"));
-      document.querySelector("#presenter-group [data-presenter='ai']").classList.add("active");
-      selectedPresenter = "ai";
+      try {
+        const resp = await fetch("/api/orders", { method: "POST", body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Submission failed.");
+        document.getElementById("script-preview-card").style.display = "none";
+        document.getElementById("success-order-id").textContent = data.order_id;
+        document.getElementById("track-btn").href = `/order/result/${data.order_id}`;
+        document.getElementById("success-card").style.display = "block";
+        document.getElementById("success-card").scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (error) {
+        showError(error.message || "Submission failed.", "script-error-msg");
+        btn.disabled = false;
+      } finally {
+        spinner.style.display = "none";
+      }
+    });
+
+    function openModelModal() {
+      document.getElementById("model-modal").style.display = "flex";
     }
-  }
-  function confirmModel() {
-    const fi = document.getElementById("modal-model-file");
-    const file = fi.files[0];
-    if (!file) { alert("Please select a photo first."); return; }
-    modelFile = file;
-    document.getElementById("model-thumb-name").textContent = file.name;
-    if (file.type.startsWith("image/")) document.getElementById("model-thumb-img").src = URL.createObjectURL(file);
-    document.getElementById("model-thumb-row").style.display = "flex";
-    document.getElementById("model-modal").style.display = "none";
-  }
-  document.getElementById("modal-model-file").addEventListener("change", function() {
-    const file = this.files[0]; if (!file) return;
-    const prev = document.getElementById("modal-model-preview");
-    const name = document.getElementById("modal-model-name");
-    if (file.type.startsWith("image/")) { prev.src = URL.createObjectURL(file); prev.style.display = "block"; } else prev.style.display = "none";
-    name.textContent = file.name; name.style.display = "block";
-  });
-  document.getElementById("model-change-btn").addEventListener("click", openModelModal);
-</script>
+
+    function cancelModel() {
+      document.getElementById("model-modal").style.display = "none";
+      if (!modelFile) {
+        document.querySelectorAll("#presenter-group button").forEach(button => button.classList.remove("active"));
+        document.querySelector("#presenter-group [data-presenter='ai']").classList.add("active");
+        selectedPresenter = "ai";
+        updateSummary();
+      }
+    }
+
+    function confirmModel() {
+      const input = document.getElementById("modal-model-file");
+      const file = input.files[0];
+      if (!file) {
+        alert("Please select a presenter reference first.");
+        return;
+      }
+      modelFile = file;
+      document.getElementById("model-thumb-name").textContent = file.name;
+      const thumb = document.getElementById("model-thumb-img");
+      if (file.type.startsWith("image/")) {
+        thumb.src = URL.createObjectURL(file);
+        thumb.style.display = "block";
+      } else {
+        thumb.removeAttribute("src");
+        thumb.style.display = "none";
+      }
+      document.getElementById("model-thumb-row").style.display = "flex";
+      document.getElementById("model-modal").style.display = "none";
+      updateSummary();
+    }
+
+    document.getElementById("modal-model-file").addEventListener("change", function() {
+      const file = this.files[0];
+      if (!file) return;
+      const preview = document.getElementById("modal-model-preview");
+      const name = document.getElementById("modal-model-name");
+      if (file.type.startsWith("image/")) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+      } else {
+        preview.style.display = "none";
+      }
+      name.textContent = file.name;
+      name.style.display = "block";
+    });
+
+    document.getElementById("model-change-btn").addEventListener("click", openModelModal);
+    document.getElementById("model-modal").addEventListener("click", event => {
+      if (event.target.id === "model-modal") cancelModel();
+    });
+  </script>
 </body>
 </html>
