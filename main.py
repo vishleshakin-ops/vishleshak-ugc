@@ -77,6 +77,45 @@ def _gcal_service():
 
 _DAY_NAMES = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
+def _clinic_now() -> datetime:
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("Asia/Kolkata"))
+    except Exception:
+        return datetime.now()
+
+
+def _ordinal_day(day: int) -> str:
+    if 10 <= day % 100 <= 20:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    return f"{day}{suffix}"
+
+
+def _display_date_option(dt: datetime, prefix: str = "") -> str:
+    label = f"{dt.strftime('%A')}, {_ordinal_day(dt.day)} {dt.strftime('%B %Y')}"
+    return f"{prefix}{label}" if prefix else label
+
+
+def _same_weekday_date_options(date_text: str) -> dict | None:
+    text = date_text.lower().strip()
+    if text not in _DAY_NAMES:
+        return None
+
+    today = _clinic_now()
+    if text != _DAY_NAMES[today.weekday()]:
+        return None
+
+    next_week = today + timedelta(days=7)
+    return {
+        "today_value": today.strftime("%d %B %Y"),
+        "today_label": _display_date_option(today, "Today, "),
+        "next_value": next_week.strftime("%d %B %Y"),
+        "next_label": _display_date_option(next_week),
+    }
+
+
 def _parse_event_datetime(date_str: str, hour: int) -> datetime:
     """Parse date string and return datetime with given hour. Always returns a future date."""
     from dateutil import parser as dateparser
@@ -2095,7 +2134,42 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     "📅 What *date* works for you?\n\n"
                     "_Example: Monday 2 June or Tomorrow_"
                 )
+            elif step == "clarify_date":
+                options = dental.get("date_options", {})
+                if text.strip() not in ("1", "2") or not options:
+                    today_label = options.get("today_label", "today")
+                    next_label = options.get("next_label", "next week")
+                    await wa_send_text(from_phone,
+                        "Please confirm the date:\n\n"
+                        f"1ï¸âƒ£ {today_label}\n"
+                        f"2ï¸âƒ£ {next_label}\n\n"
+                        "_Reply with 1 or 2_"
+                    )
+                    return {"status": "ok"}
+
+                dental["date"] = options["today_value"] if text.strip() == "1" else options["next_value"]
+                dental.pop("date_options", None)
+                dental["step"] = "ask_time"
+                _dental_sessions[from_phone] = dental
+                await wa_send_text(from_phone,
+                    "â° What time works for you?\n\n"
+                    "_e.g. 10:30 AM, 2 PM, 4:30 PM_\n\n"
+                    "ðŸ• Clinic hours: Monâ€“Fri 9amâ€“8pm | Sat 9amâ€“6pm"
+                )
             elif step == "ask_date":
+                date_options = _same_weekday_date_options(text)
+                if date_options:
+                    dental["date_options"] = date_options
+                    dental["step"] = "clarify_date"
+                    _dental_sessions[from_phone] = dental
+                    await wa_send_text(from_phone,
+                        "Do you mean:\n\n"
+                        f"1ï¸âƒ£ {date_options['today_label']}\n"
+                        f"2ï¸âƒ£ {date_options['next_label']}\n\n"
+                        "_Reply with 1 or 2_"
+                    )
+                    return {"status": "ok"}
+
                 dental["date"] = text
                 # Try to extract time from the date input
                 _dl = text.lower()
