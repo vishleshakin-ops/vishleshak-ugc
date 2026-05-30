@@ -200,13 +200,14 @@
       gap: 10px;
     }
     .platform-share {
-      margin-top: 18px;
-      padding-top: 18px;
-      border-top: 1px solid var(--line);
+      display: none;
+      margin-top: 28px;
+      max-width: 500px;
     }
+    .platform-share.ready { display: block; }
     .platform-share-title {
-      margin-bottom: 10px;
-      color: var(--ink);
+      margin-bottom: 12px;
+      color: rgba(255,255,255,0.92);
       font-size: 0.78rem;
       font-weight: 900;
       letter-spacing: 0.08em;
@@ -222,18 +223,20 @@
       display: grid;
       place-items: center;
       gap: 7px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(167,139,250,0.28);
       border-radius: 10px;
-      background: #fbfaff;
-      color: #475569;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.78);
       text-decoration: none;
       font-size: 0.78rem;
       font-weight: 900;
+      backdrop-filter: blur(12px);
       transition: border-color 0.15s, background 0.15s, transform 0.15s;
     }
     .platform-btn:hover {
       border-color: #a78bfa;
-      background: #f3f0ff;
+      background: rgba(124,58,237,0.18);
+      color: #fff;
       transform: translateY(-1px);
     }
     .platform-icon {
@@ -243,8 +246,12 @@
       height: 34px;
       border-radius: 10px;
       color: #fff;
-      font-size: 0.96rem;
-      font-weight: 900;
+    }
+    .platform-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      fill: currentColor;
     }
     .platform-icon.instagram { background: linear-gradient(135deg, #f97316, #db2777, #7c3aed); }
     .platform-icon.facebook { background: #1877f2; }
@@ -318,6 +325,15 @@
       line-height: 1.5;
       word-break: break-all;
     }
+    .hero-order-id {
+      display: none;
+      margin-top: 16px;
+      color: rgba(255,255,255,0.54);
+      font-size: 0.78rem;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+    .hero-order-id.ready { display: block; }
     .new-order {
       display: inline-flex;
       align-items: center;
@@ -381,6 +397,8 @@
         <h1>Your Creative.<br><span class="accent">Almost There.</span></h1>
         <p class="hero-sub">Track your Vishleshak UGC order here. When the image or video is ready, you can download it and copy the caption from this page.</p>
         <a class="new-order" href="/order">&larr; Place a new order</a>
+        <div id="hero-platform-share"></div>
+        <div class="hero-order-id" id="hero-order-id"></div>
       </section>
 
       <section class="status-card" aria-label="Order status">
@@ -420,24 +438,30 @@
       const pageUrl = window.location.href;
       const encodedCaption = encodeURIComponent(`${caption}\n\n${pageUrl}`);
       const encodedUrl = encodeURIComponent(pageUrl);
+      const icons = {
+        instagram: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6Zm9.65 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>`,
+        facebook: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8.5V6.75c0-.83.2-1.25 1.35-1.25H17V2.25C16.2 2.1 15.43 2 14.63 2 12.08 2 10.4 3.55 10.4 6.4v2.1H7.5V12h2.9v10H14V12h2.92l.45-3.5H14Z"/></svg>`,
+        youtube: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.58 7.2a2.75 2.75 0 0 0-1.94-1.95C17.93 4.8 12 4.8 12 4.8s-5.93 0-7.64.45A2.75 2.75 0 0 0 2.42 7.2C2 8.92 2 12 2 12s0 3.08.42 4.8a2.75 2.75 0 0 0 1.94 1.95c1.71.45 7.64.45 7.64.45s5.93 0 7.64-.45a2.75 2.75 0 0 0 1.94-1.95C22 15.08 22 12 22 12s0-3.08-.42-4.8ZM10 15.2V8.8l5.2 3.2L10 15.2Z"/></svg>`,
+        x: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.9 10.47 21.35 2h-1.77l-6.47 7.35L7.95 2H2l7.82 11.13L2 22h1.77l6.83-7.76L16.05 22H22l-8.1-11.53Zm-2.42 2.75-.79-1.1L4.38 3.3h2.72l5.08 7.1.79 1.1 6.61 9.24h-2.72l-5.38-7.52Z"/></svg>`
+      };
       return `
         <div class="platform-share">
           <div class="platform-share-title">Post to platform</div>
           <div class="platform-grid">
             <a class="platform-btn" href="https://www.instagram.com/" target="_blank" rel="noopener">
-              <span class="platform-icon instagram">IG</span>
+              <span class="platform-icon instagram">${icons.instagram}</span>
               <span>Instagram</span>
             </a>
             <a class="platform-btn" href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" rel="noopener">
-              <span class="platform-icon facebook">f</span>
+              <span class="platform-icon facebook">${icons.facebook}</span>
               <span>Facebook</span>
             </a>
             <a class="platform-btn" href="https://www.youtube.com/upload" target="_blank" rel="noopener">
-              <span class="platform-icon youtube">YT</span>
+              <span class="platform-icon youtube">${icons.youtube}</span>
               <span>YouTube</span>
             </a>
             <a class="platform-btn" href="https://twitter.com/intent/tweet?text=${encodedCaption}" target="_blank" rel="noopener">
-              <span class="platform-icon x">X</span>
+              <span class="platform-icon x">${icons.x}</span>
               <span>X</span>
             </a>
           </div>
@@ -531,6 +555,8 @@
       }
 
       if (status === "completed") {
+        const heroPlatform = document.getElementById("hero-platform-share");
+        const heroOrderId = document.getElementById("hero-order-id");
         const hasVideo = Boolean(order.video_url);
         const hasImage = Boolean(order.image_url);
         const isVideo = hasVideo;
@@ -560,8 +586,12 @@
             <button class="btn btn-primary" onclick="blobDownload('${escapeHtml(downloadUrl)}','${downloadName}')">Download</button>
             ${order.script ? `<button class="btn btn-secondary" id="copy-caption-btn" type="button">Copy Caption</button>` : ""}
           </div>
-          ${platformShareHtml(order, downloadUrl, isVideo)}
           <div class="order-id-row">Order ID: ${safeId}</div>`;
+        heroPlatform.innerHTML = platformShareHtml(order, downloadUrl, isVideo);
+        const platformShare = heroPlatform.querySelector(".platform-share");
+        if (platformShare) platformShare.classList.add("ready");
+        heroOrderId.textContent = `Order ID: ${order.id || orderId}`;
+        heroOrderId.classList.add("ready");
         if (order.script) {
           document.getElementById("copy-caption-btn").addEventListener("click", () => {
             navigator.clipboard.writeText(order.script).then(() => {
