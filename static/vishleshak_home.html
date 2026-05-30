@@ -796,12 +796,6 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   display: flex; align-items: center; justify-content: center;
 }
 
-@media (max-width: 900px) {
-  .demo-section { padding: 60px 24px; }
-  .demo-cards { grid-template-columns: 1fr; gap: 18px; }
-  .demo-card-icon.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
-}
-
 /* FOOTER */
 footer {
   background: #0a0618; padding: 60px;
@@ -834,6 +828,65 @@ footer {
   footer { padding: 40px 24px; flex-direction: column; align-items: flex-start; }
   .contact { padding: 60px 24px; }
   .contact-inner { grid-template-columns: 1fr; gap: 28px; }
+  .demo-section { padding: 60px 24px; }
+  .demo-cards { grid-template-columns: 1fr; gap: 18px; }
+}
+
+@media (max-width: 600px) {
+  .nav { padding: 12px 20px; }
+  .nav-inner { padding: 10px 0; }
+  .nav-links { gap: 16px; }
+  .nav-links a { font-size: 13px; }
+  .nav-links a.ugc-btn { padding: 7px 14px; font-size: 13px; }
+  .hero { padding: 80px 16px 40px; }
+  .hero-title { font-size: 28px; }
+  .hero-sub { font-size: 15px; margin-bottom: 20px; }
+  .hero-btns { flex-direction: column; gap: 10px; }
+  .btn-primary, .btn-secondary { padding: 12px 24px; font-size: 14px; justify-content: center; }
+  .hero-pills { gap: 12px; margin-top: 24px; }
+  .pill { padding: 14px 16px; }
+  .pill-title { font-size: 14px; }
+  .pill-desc { font-size: 11.5px; }
+  .features, .services, .testimonials, .samples { padding: 40px 16px; }
+  .section-title { font-size: 28px; }
+  .section-sub { font-size: 14px; }
+  .feature-card { padding: 24px 20px; }
+  .feature-title { font-size: 17px; }
+  .feature-desc { font-size: 13px; }
+  .service-body { padding: 16px; }
+  .service-title { font-size: 16px; }
+  .service-desc { font-size: 13px; }
+  .samples-grid { grid-template-columns: repeat(1, 1fr); gap: 12px; max-width: 320px; }
+  .sample-caption { font-size: 12px; }
+  .cta { padding: 60px 16px; }
+  .cta-box { padding: 32px 20px; border-radius: 20px; }
+  .cta-title { font-size: 26px; }
+  .cta-sub { font-size: 14px; margin-bottom: 24px; }
+  .cta-btns { flex-direction: column; gap: 10px; }
+  .btn-whatsapp { padding: 12px 24px; font-size: 14px; justify-content: center; }
+  .why-us { padding: 40px 16px; }
+  .why-us-left .section-title { font-size: 26px; }
+  .why-text h4 { font-size: 14px; }
+  .why-text p { font-size: 12px; }
+  .stats-grid { gap: 10px; }
+  .stat-box { padding: 20px 16px; }
+  .stat-box-num { font-size: 28px; }
+  .stat-box-label { font-size: 11px; }
+  .testimonials .section-title { font-size: 28px; }
+  .testi-card { padding: 20px; }
+  .testi-text { font-size: 14px; }
+  .demo-section { padding: 40px 16px; }
+  .demo-card { padding: 28px 20px; }
+  .demo-card-title { font-size: 17px; }
+  .demo-card-desc { font-size: 13px; }
+  .contact { padding: 40px 16px; }
+  .contact-left .section-title { font-size: 26px; }
+  .contact-left p { font-size: 13px; }
+  .contact-actions { flex-direction: column; gap: 10px; }
+  footer { padding: 32px 16px; }
+  .footer-logo { font-size: 17px; }
+  .footer-links { gap: 16px; }
+  .footer-links a { font-size: 13px; }
 }
 </style>
 </head>

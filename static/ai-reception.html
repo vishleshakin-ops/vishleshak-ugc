@@ -275,10 +275,17 @@
       .features-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 600px) {
-      nav { padding: 12px 20px; }
-      .hero { padding: 60px 20px 48px; }
-      .stats, .demo, .tabs-section, .features, .cta-section { padding: 52px 20px; }
+      nav { padding: 12px 16px; }
+      .hero { padding: 40px 20px 32px; }
+      .hero h1 { font-size: 1.8rem; }
+      .hero-sub { font-size: 0.9rem; }
+      .stats, .demo, .tabs-section, .features, .cta-section { padding: 40px 16px; }
+      .stats-inner { grid-template-columns: 1fr; }
+      .stat-num { font-size: 1.5rem; }
       .features-grid { grid-template-columns: 1fr; }
+      .section-title { font-size: 1.4rem; }
+      .cta-section h2 { font-size: 1.4rem; }
+      .demo-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
