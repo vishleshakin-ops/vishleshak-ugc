@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -1277,6 +1277,12 @@
       font-size: 1.05rem;
       line-height: 1.7;
     }
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
     .eyebrow {
       min-height: auto;
       margin-bottom: 20px;
@@ -1333,16 +1339,71 @@
       background: rgba(255,255,255,0.25);
     }
     .ugc-info-card { display: none; }
-    .form-cue {
-      width: min(1100px, 100%);
-      margin: -36px auto 28px;
-    }
-    .form-cue .hero-cue {
+    .hero-actions .hero-cue {
       color: var(--order-text);
       background: rgba(255,255,255,0.07);
       border: 1px solid var(--order-border);
-      font-size: 0.84rem;
-      font-weight: 700;
+      border-radius: 12px;
+      min-height: 48px;
+      padding: 0 18px 0 20px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      box-shadow: 0 10px 32px rgba(0,0,0,0.18);
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    }
+    .hero-actions .hero-cue:hover {
+      background: rgba(255,255,255,0.11);
+      border-color: rgba(255,255,255,0.22);
+      transform: translateY(-1px);
+    }
+    .hero-actions .btn-wa-order {
+      background: var(--order-green);
+      border-color: var(--order-green);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(37,211,102,0.35);
+    }
+    .hero-actions .btn-wa-order:hover {
+      background: #22c55e;
+      border-color: #22c55e;
+      box-shadow: 0 8px 32px rgba(37,211,102,0.45);
+    }
+    .hero-actions .btn-outline-order {
+      text-decoration: none;
+      color: #fff;
+    }
+    .order-stats {
+      width: min(1100px, 100%);
+      margin: -24px auto 36px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .order-stat-card {
+      min-height: 110px;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      text-align: center;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 22px 18px;
+    }
+    .order-stat-card strong {
+      display: block;
+      color: #8b8cff;
+      font-size: clamp(1.7rem, 4vw, 2.35rem);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .order-stat-card span {
+      display: block;
+      margin-top: 10px;
+      color: var(--order-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      line-height: 1.35;
     }
     .layout {
       width: min(1100px, 100%);
@@ -1521,6 +1582,10 @@
         padding: 56px 0 54px;
       }
       .ugc-visual { justify-self: center; }
+      .order-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: -16px;
+      }
       .layout { grid-template-columns: 1fr; }
       .sidebar {
         position: static;
@@ -1546,7 +1611,6 @@
         max-width: 100%;
         font-size: 0.98rem;
       }
-      .form-cue,
       .layout { width: 100%; }
       .intro h1 {
         font-size: clamp(2rem, 12vw, 2.8rem);
@@ -1556,8 +1620,17 @@
       .form-grid,
       .choice-grid,
       .choice-grid.four,
+      .order-stats,
       .sidebar {
         grid-template-columns: 1fr;
+      }
+      .order-stats {
+        gap: 12px;
+        margin: -10px 0 24px;
+      }
+      .order-stat-card {
+        min-height: 86px;
+        padding: 18px 16px;
       }
       .section,
       .summary,
@@ -1589,15 +1662,19 @@
         <span class="logo-sub">AI Content Studio</span>
       </div>
     </a>
-    <a class="back-btn" href="https://vishleshak.in">← Back to Home</a>
+    <a class="back-btn" href="https://vishleshak.in">Back to Home</a>
   </nav>
 
   <main class="page">
     <section class="intro">
       <div>
-        <span class="eyebrow">✦ UGC Order</span>
+        <span class="eyebrow">UGC Order</span>
         <h1>Your Product.<br><span class="accent">Ready to Sell.</span></h1>
         <p class="intro-copy">Create platform-ready image and video ads from one product photo.</p>
+        <div class="hero-actions">
+          <button class="hero-cue btn-wa-order" id="scroll-to-form-btn" type="button">Start My UGC Ad</button>
+          <a class="hero-cue btn-outline-order" href="https://wa.me/919953910987?text=Hi%2C+I+want+help+with+a+UGC+video+ad" target="_blank" rel="noopener">Chat on WhatsApp</a>
+        </div>
       </div>
       <div class="ugc-visual intro-status" aria-label="Animated UGC order preview">
         <div class="ugc-phone" aria-hidden="true">
@@ -1624,12 +1701,25 @@
         </div>
       </div>
     </section>
-
-    <div class="form-cue">
-      <button class="hero-cue" id="scroll-to-form-btn" type="button">Complete your order below <span>↓</span></button>
-    </div>
-
-    <div class="layout">
+    <section class="order-stats" aria-label="Order benefits">
+      <div class="order-stat-card">
+        <strong>6 cr</strong>
+        <span>Typical image preview</span>
+      </div>
+      <div class="order-stat-card">
+        <strong>4-10s</strong>
+        <span>Short ad formats</span>
+      </div>
+      <div class="order-stat-card">
+        <strong>AI</strong>
+        <span>Notes improved first</span>
+      </div>
+      <div class="order-stat-card">
+        <strong>WA</strong>
+        <span>Delivery updates</span>
+      </div>
+    </section>
+<div class="layout">
       <div>
         <form class="panel form-card" id="order-form-card">
           <section class="section">
@@ -1853,7 +1943,7 @@
         </section>
 
         <section class="panel success-card" id="success-card">
-          <div class="success-icon">✓</div>
+          <div class="success-icon">âœ“</div>
           <h2>Order received</h2>
           <p>Your request has been saved. Production updates will be shared on WhatsApp.</p>
           <div class="order-id-box">
@@ -2361,4 +2451,5 @@
   </script>
 </body>
 </html>
+
 
