@@ -46,23 +46,17 @@
     button, input, textarea { font: inherit; }
     button { cursor: pointer; }
     a { color: inherit; }
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(13, 6, 64, 0.8);
-      backdrop-filter: blur(20px);
-    }
-    .topbar-inner {
-      width: 100%;
-      margin: 0;
-      min-height: 64px;
-      padding: 14px 48px;
+    nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 18px;
+      padding: 14px 48px;
+      background: rgba(13, 6, 64, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     .logo {
       display: flex;
@@ -71,53 +65,40 @@
       text-decoration: none;
       min-width: 0;
     }
-    .logo-mark {
+    .logo-icon {
       width: 36px;
       height: 36px;
       border-radius: 9px;
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--purple), var(--blue));
-      color: #fff;
       font-weight: 900;
-      letter-spacing: 0;
-      font-size: 17px;
-      flex: 0 0 auto;
-    }
-    .logo-copy { min-width: 0; }
-    .logo-name {
-      display: block;
       color: #fff;
+      font-size: 17px;
+    }
+    .logo-name {
       font-size: 1rem;
       font-weight: 700;
-      line-height: 1.1;
+      color: #fff;
     }
     .logo-sub {
+      font-size: 0.67rem;
+      color: rgba(255, 255, 255, 0.42);
       display: block;
       margin-top: -2px;
-      color: rgba(255, 255, 255, 0.42);
-      font-size: 0.67rem;
-      line-height: 1.1;
     }
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 0 0 auto;
-    }
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+    .back-btn {
       color: rgba(255, 255, 255, 0.72);
-      text-decoration: none;
       font-size: 0.85rem;
       font-weight: 500;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
       transition: color 0.15s;
     }
-    .back-link:hover { color: #fff; }
+    .back-btn:hover { color: #fff; }
     .page {
       width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
@@ -833,7 +814,7 @@
       .sidebar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 720px) {
-      .topbar-inner { padding: 12px 16px; }
+      nav { padding: 12px 16px; }
       .page { width: min(100% - 24px, 1180px); }
       .page { padding-top: 20px; }
       .intro-status,
@@ -857,9 +838,8 @@
       .submit-row { flex-direction: column; align-items: stretch; }
     }
     @media (max-width: 430px) {
-      .topbar-inner { gap: 10px; }
       .logo-sub { display: none; }
-      .back-link { font-size: 0.8rem; }
+      .back-btn { font-size: 0.8rem; }
       .seg,
       .seg.three,
       .seg.four { grid-template-columns: 1fr; }
@@ -870,20 +850,16 @@
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <a class="logo" href="https://vishleshak.in">
-        <span class="logo-mark">V</span>
-        <span class="logo-copy">
-          <span class="logo-name">Vishleshak</span>
-          <span class="logo-sub">AI Content Studio</span>
-        </span>
-      </a>
-      <div class="nav-actions">
-        <a class="back-link" href="https://vishleshak.in/">← Back to Home</a>
+  <nav>
+    <a class="logo" href="https://vishleshak.in">
+      <div class="logo-icon">V</div>
+      <div>
+        <span class="logo-name">Vishleshak</span>
+        <span class="logo-sub">AI Content Studio</span>
       </div>
-    </div>
-  </header>
+    </a>
+    <a class="back-btn" href="https://vishleshak.in">← Back to Home</a>
+  </nav>
 
   <main class="page">
     <section class="intro">
@@ -919,7 +895,7 @@
                 <label for="customer-phone">WhatsApp number *</label>
                 <div class="phone-row">
                   <span class="phone-prefix">+91</span>
-                  <input type="tel" id="customer-phone" placeholder="98765 43210" inputmode="numeric" autocomplete="tel" required />
+                  <input type="tel" id="customer-phone" placeholder="99539 10987" inputmode="numeric" autocomplete="tel" required />
                 </div>
               </div>
               <div class="field full">
@@ -1078,9 +1054,9 @@
               <div class="field" id="lang-field">
                 <label>Language</label>
                 <div class="seg three" id="lang-group">
-                  <button type="button" class="active" data-lang="english">English</button>
+                  <button type="button" data-lang="english">English</button>
                   <button type="button" data-lang="hindi">Hindi</button>
-                  <button type="button" data-lang="hinglish">Hinglish</button>
+                  <button type="button" class="active" data-lang="hinglish">Hinglish</button>
                 </div>
               </div>
               <div class="field" id="duration-field">
@@ -1094,8 +1070,8 @@
               <div class="field" id="quality-field">
                 <label>Quality</label>
                 <div class="seg three" id="quality-group">
-                  <button type="button" data-quality="standard">Standard</button>
-                  <button type="button" class="active" data-quality="high">High</button>
+                  <button type="button" class="active" data-quality="standard">Standard</button>
+                  <button type="button" data-quality="high">High</button>
                   <button type="button" data-quality="ultra">Ultra</button>
                 </div>
               </div>
@@ -1144,15 +1120,15 @@
           <div class="summary-list">
             <div class="summary-row"><span>Output</span><strong id="summary-output">UGC video ad</strong></div>
             <div class="summary-row"><span>Style</span><strong id="summary-style">Talking ad</strong></div>
-            <div class="summary-row"><span>Language</span><strong id="summary-language">English</strong></div>
+            <div class="summary-row"><span>Language</span><strong id="summary-language">Hinglish</strong></div>
             <div class="summary-row"><span>Platform</span><strong id="summary-platform">Instagram - Video 9:16</strong></div>
             <div class="summary-row"><span>Model</span><strong id="summary-presenter">AI generated</strong></div>
             <div class="summary-row"><span>Duration</span><strong id="summary-duration">5 sec</strong></div>
-            <div class="summary-row"><span>Quality</span><strong id="summary-quality">High</strong></div>
+            <div class="summary-row"><span>Quality</span><strong id="summary-quality">Standard</strong></div>
           </div>
           <div class="price-box">
             <span>Estimated starting price</span>
-            <strong id="summary-price">Rs. 599</strong>
+            <strong id="summary-price">Rs. 499</strong>
           </div>
           <p class="sidebar-note">Final price may vary for custom presenter references, longer videos, or special edits.</p>
         </section>
@@ -1185,11 +1161,11 @@
   </main>
 
   <script>
-    let selectedLang = "english";
+    let selectedLang = "hinglish";
     let selectedStyle = "kling";
     let selectedOutput = "video";
     let selectedDuration = "5";
-    let selectedQuality = "high";
+    let selectedQuality = "standard";
     let selectedPresenter = "ai";
     let selectedPlatform = "instagram";
     let selectedRatio = "9:16";
@@ -1547,3 +1523,4 @@
   </script>
 </body>
 </html>
+
