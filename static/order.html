@@ -243,19 +243,19 @@
         </div>
       </div>
 
-      <!-- Row 2: Email + Product Photo -->
+      <!-- Row 2: Email + Product Photo inline -->
       <div class="field">
         <label>Email <span style="color:var(--muted);text-transform:none;font-weight:400">(optional)</span></label>
         <input type="email" id="customer-email" placeholder="you@example.com" />
       </div>
       <div class="field">
         <label>Product Photo *</label>
-        <div class="drop-zone" id="drop-zone">
+        <div class="drop-zone" id="drop-zone" style="display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px">
           <input type="file" id="product-file" accept="image/*" />
-          <img class="preview-img" id="preview-img" alt="Preview" />
-          <div id="drop-placeholder">
-            <div class="drop-zone-icon">📷</div>
-            <div class="drop-zone-text"><strong>Click or drag</strong> · JPG, PNG, WEBP</div>
+          <img class="preview-img" id="preview-img" alt="Preview" style="max-height:40px;max-width:40px;border-radius:6px" />
+          <div id="drop-placeholder" style="display:flex;align-items:center;gap:10px">
+            <span class="drop-zone-icon" style="font-size:24px;margin:0">📷</span>
+            <span class="drop-zone-text"><strong>Click or drag</strong> · JPG, PNG, WEBP</span>
           </div>
         </div>
       </div>
@@ -312,17 +312,18 @@
         </div>
       </div>
       <div class="field" id="duration-field">
-        <label>Duration + Quality</label>
-        <div style="display:flex;gap:6px">
-          <div class="seg" id="duration-group" style="flex:0 0 auto;gap:4px">
-            <button type="button" class="active" data-duration="5">⚡5s</button>
-            <button type="button" data-duration="6">🔥6s</button>
-          </div>
-          <div class="seg" id="quality-group" style="flex:1;gap:4px">
-            <button type="button" data-quality="standard">Std</button>
-            <button type="button" class="active" data-quality="high">✨High</button>
-            <button type="button" data-quality="ultra">💎Ultra</button>
-          </div>
+        <label>Duration</label>
+        <div class="seg" id="duration-group">
+          <button type="button" class="active" data-duration="5">⚡ 5s</button>
+          <button type="button" data-duration="6">🔥 6s</button>
+        </div>
+      </div>
+      <div class="field" id="quality-field">
+        <label>Quality</label>
+        <div class="seg" id="quality-group">
+          <button type="button" data-quality="standard">⚡ Standard</button>
+          <button type="button" class="active" data-quality="high">✨ High</button>
+          <button type="button" data-quality="ultra">💎 Ultra</button>
         </div>
       </div>
 
@@ -436,6 +437,7 @@
     document.getElementById("lang-field").classList.toggle("field-hidden", isImage);
     document.getElementById("style-field").classList.toggle("field-hidden", isImage);
     document.getElementById("duration-field").classList.toggle("field-hidden", isImage);
+    document.getElementById("quality-field").classList.toggle("field-hidden", isImage);
   });
   wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
   wireSegmented("quality-group", btn => { selectedQuality = btn.dataset.quality; });
@@ -444,6 +446,7 @@
   document.getElementById("lang-field").classList.add("field-hidden");
   document.getElementById("style-field").classList.add("field-hidden");
   document.getElementById("duration-field").classList.add("field-hidden");
+  document.getElementById("quality-field").classList.add("field-hidden");
 
   // Voice dictation
   const micBtn = document.getElementById("mic-btn");
