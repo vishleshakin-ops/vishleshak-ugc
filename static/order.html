@@ -814,32 +814,41 @@
     /* Premium order-desk polish */
     body {
       background:
-        radial-gradient(ellipse 68% 42% at 18% 10%, rgba(124, 58, 237, 0.34), transparent 66%),
-        radial-gradient(ellipse 58% 36% at 78% 18%, rgba(37, 99, 235, 0.22), transparent 62%),
-        linear-gradient(180deg, #0d0640 0, #16083a 210px, #24105a 390px, #f7f5ff 610px),
+        linear-gradient(180deg, transparent 0, transparent 520px, #f7f5ff 520px, #f7f5ff 100%),
+        radial-gradient(ellipse 80% 60% at 30% 230px, rgba(124, 58, 237, 0.22), transparent 65%),
+        radial-gradient(ellipse 50% 50% at 80% 230px, rgba(37, 99, 235, 0.12), transparent 60%),
+        linear-gradient(145deg, #0d0640 0%, #1a0a40 40%, #2d1b8a 70%, #1e0a4e 100%),
         var(--bg);
     }
-    .page { padding: 34px 0 64px; }
+    .page {
+      width: 100%;
+      padding: 0 0 64px;
+    }
     .intro {
+      width: min(1100px, calc(100% - 96px));
       align-items: center;
-      gap: 34px;
-      margin-bottom: 22px;
-      padding: 44px;
-      border: 1px solid rgba(255, 255, 255, 0.13);
-      box-shadow: 0 34px 90px rgba(15, 6, 64, 0.34);
-      background:
-        radial-gradient(ellipse at 78% 12%, rgba(124, 58, 237, 0.42), transparent 48%),
-        radial-gradient(ellipse at 22% 88%, rgba(37, 99, 235, 0.30), transparent 54%),
-        linear-gradient(135deg, rgba(15, 10, 40, 0.98), rgba(30, 10, 78, 0.98) 56%, rgba(29, 78, 216, 0.94));
+      gap: 64px;
+      min-height: 340px;
+      margin: 0 auto 64px;
+      padding: 80px 0 72px;
+      border: 0;
+      box-shadow: none;
+      background: transparent;
     }
     .intro h1,
     h1 {
-      margin-top: 16px;
-      font-size: clamp(2.25rem, 5vw, 4rem);
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: 0;
     }
     .intro-copy {
-      margin-top: 16px;
+      margin-top: 0;
+      margin-bottom: 0;
       font-size: 1.04rem;
+      max-width: 620px;
     }
     .intro-status {
       gap: 12px;
@@ -847,10 +856,12 @@
     }
     .status-row {
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.10);
       padding: 14px 16px;
     }
     .layout {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
       grid-template-columns: minmax(0, 1fr) 328px;
       gap: 24px;
     }
