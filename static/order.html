@@ -264,8 +264,8 @@
       <div class="field">
         <label>Output Type</label>
         <div class="seg" id="output-group">
-          <button type="button" class="active" data-output="video">🎬 Video</button>
-          <button type="button" data-output="image">📸 Image</button>
+          <button type="button" data-output="video">🎬 Video</button>
+          <button type="button" class="active" data-output="image">📸 Image</button>
         </div>
       </div>
       <div class="field" id="style-field">
@@ -398,7 +398,7 @@
   // State
   let selectedLang = "hindi";
   let selectedStyle = "kling";
-  let selectedOutput = "video";
+  let selectedOutput = "image";
   let selectedDuration = "5";
   let selectedQuality = "high";
   let selectedPresenter = "ai";
@@ -439,6 +439,11 @@
   });
   wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
   wireSegmented("quality-group", btn => { selectedQuality = btn.dataset.quality; });
+
+  // Default to image — hide video-only fields on load
+  document.getElementById("lang-field").classList.add("field-hidden");
+  document.getElementById("style-field").classList.add("field-hidden");
+  document.getElementById("duration-field").classList.add("field-hidden");
 
   // Voice dictation
   const micBtn = document.getElementById("mic-btn");
