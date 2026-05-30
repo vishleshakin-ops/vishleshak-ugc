@@ -2008,7 +2008,13 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 # Map to slot number using specific hour (most reliable) or keyword
                 if _specific_hour is not None and text.strip() not in ("1", "2", "3"):
                     dental["gcal_hour"] = _specific_hour
-                    dental["time_label"] = dental.get("_raw_time_text") or text
+                    _raw_time = dental.get("_raw_time_text") or text
+                    if _re.fullmatch(r'(?:[4-9]|1[0-2])', _raw_time.strip()):
+                        _display_hour = _specific_hour if _specific_hour <= 12 else _specific_hour - 12
+                        _display_period = "AM" if _specific_hour < 12 else "PM"
+                        dental["time_label"] = f"{_display_hour} {_display_period}"
+                    else:
+                        dental["time_label"] = _raw_time
                     text = "1" if _specific_hour < 12 else ("2" if _specific_hour < 16 else "3")
                 elif text.strip() in ("1", "2", "3"):
                     pass
