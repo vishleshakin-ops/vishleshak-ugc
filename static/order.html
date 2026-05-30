@@ -1087,7 +1087,7 @@
     .form-card {
       padding: 0;
       overflow: hidden;
-      scroll-margin-top: 110px;
+      scroll-margin-top: 150px;
     }
     .section {
       padding: 26px;
@@ -2029,8 +2029,13 @@
       event.preventDefault();
     });
 
-    document.getElementById("scroll-to-form-btn").addEventListener("click", () => {
-      document.getElementById("order-form-card").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("scroll-to-form-btn").addEventListener("click", event => {
+      event.preventDefault();
+      const form = document.getElementById("order-form-card");
+      const nav = document.querySelector("nav");
+      const navOffset = nav ? nav.getBoundingClientRect().height : 0;
+      const targetY = window.scrollY + form.getBoundingClientRect().top - navOffset - 36;
+      window.scrollTo({ top: Math.max(targetY, 0), behavior: "smooth" });
     });
 
     const micBtn = document.getElementById("mic-btn");
