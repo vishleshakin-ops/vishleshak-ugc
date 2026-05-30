@@ -600,16 +600,13 @@
     .notes-wrap { position: relative; }
     .notes-wrap textarea {
       padding-right: 13px;
-      padding-bottom: 56px;
     }
     .notes-actions {
-      position: absolute;
-      right: 10px;
-      bottom: 10px;
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       gap: 8px;
-      pointer-events: none;
+      margin-top: 8px;
     }
     .notes-ai-btn {
       height: 32px;
@@ -621,7 +618,6 @@
       font-size: 0.76rem;
       font-weight: 900;
       cursor: pointer;
-      pointer-events: auto;
     }
     .notes-ai-btn:disabled {
       cursor: wait;
@@ -638,7 +634,6 @@
       place-items: center;
       font-size: 0.78rem;
       font-weight: 900;
-      pointer-events: auto;
     }
     .mic-btn.listening {
       background: #fee2e2;
@@ -1092,6 +1087,7 @@
     .form-card {
       padding: 0;
       overflow: hidden;
+      scroll-margin-top: 110px;
     }
     .section {
       padding: 26px;
@@ -1103,9 +1099,11 @@
       align-items: center;
       min-height: 24px;
       border-radius: 999px;
-      background: var(--accent-soft);
+      background: #f4f0ff;
+      color: #4c1d95;
       padding: 0 9px;
       font-size: 0.72rem;
+      font-weight: 900;
     }
     .intro .eyebrow { margin-bottom: 20px; }
     .section-title {
@@ -1374,10 +1372,11 @@
     .section:first-child { border-top: 0; }
     .section-head { margin-bottom: 18px; }
     .section-kicker {
-      color: #c4b5fd;
+      color: #5b21b6;
       font-size: 0.72rem;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: 1.5px;
+      text-shadow: none;
     }
     .section-title {
       margin-top: 6px;
