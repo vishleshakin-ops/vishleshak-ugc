@@ -29,43 +29,26 @@
       color: var(--ink);
       min-height: 100vh;
     }
-    /* Header */
+    /* Nav — matches chatbot/ai-reception pages */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 48px;
+      background: rgba(13,6,64,0.95); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg,#7C3AED,#2563EB); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 17px; }
+    .logo-name { font-size: 1rem; font-weight: 700; color: #fff; }
+    .logo-sub { font-size: 0.67rem; color: rgba(255,255,255,0.42); display: block; margin-top: -2px; }
+    .back-btn { color: rgba(255,255,255,0.72); font-size: 0.85rem; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+    .back-btn:hover { color: #fff; }
+    /* Hero banner */
     .header {
       background: linear-gradient(135deg, #0f0a28 0%, #1e0a4e 50%, #2d1a72 100%);
       padding: 28px 20px 24px;
       text-align: center;
       box-shadow: 0 4px 24px rgba(100,40,200,0.25);
-    }
-    .header-brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .header-logo-icon {
-      width: 40px; height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #7C3AED, #2563EB);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; color: white; font-size: 20px;
-      flex-shrink: 0;
-    }
-    .header-logo-text {
-      text-align: left;
-    }
-    .header-logo-name {
-      font-size: 18px;
-      font-weight: 700;
-      color: #ffffff;
-      display: block;
-    }
-    .header-logo-sub {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #a78bfa;
-      display: block;
     }
     .header h1 {
       font-size: 1.6rem;
@@ -80,6 +63,9 @@
     .header p {
       font-size: 14px;
       color: rgba(255,255,255,0.55);
+    }
+    @media (max-width: 600px) {
+      nav { padding: 12px 20px; }
     }
     /* Page wrapper */
     .page {
@@ -390,14 +376,17 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-brand">
-      <div class="header-logo-icon">V</div>
-      <div class="header-logo-text">
-        <span class="header-logo-name">Vishleshak</span>
-        <span class="header-logo-sub">AI Studio</span>
+  <nav>
+    <a class="logo" href="https://vishleshak.in">
+      <div class="logo-icon">V</div>
+      <div>
+        <span class="logo-name">Vishleshak</span>
+        <span class="logo-sub">An AI Studio</span>
       </div>
-    </div>
+    </a>
+    <a class="back-btn" href="https://vishleshak.in">← Back to Home</a>
+  </nav>
+  <div class="header">
     <h1>Order Your AI Video Ad</h1>
     <p>AI-Powered UGC Video Ads for Your Products</p>
   </div>
