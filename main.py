@@ -2279,6 +2279,11 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         )
                         return {"status": "ok"}
 
+                    await wa_send_text(
+                        from_phone,
+                        f"Got it. Checking availability for {_format_date(dental['date'], dental.get('gcal_hour'))} at {dental['time']}..."
+                    )
+
                     _conflicts = await check_gcal_conflict(dental["date"], dental["gcal_hour"])
                     if _conflicts:
                         emojis = ["1.", "2.", "3."]
@@ -2493,6 +2498,13 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 await wa_send_text(from_phone, "What's your *full name*?")
         except Exception as e:
             print(f"[Dental] Error: {e}")
+            try:
+                await wa_send_text(
+                    from_phone,
+                    "Sorry, something went wrong while booking that appointment. Please send the date and time again, e.g. *Today 4 PM* or *Friday 4:30 PM*."
+                )
+            except Exception:
+                pass
         return {"status": "ok"}
 
     # ── Route to UGC bot ────────────────────────────────────────────
