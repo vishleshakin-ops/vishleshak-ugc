@@ -418,6 +418,7 @@ CLOUDINARY_API_KEY     = os.getenv("CLOUDINARY_API_KEY", "")
 CLOUDINARY_API_SECRET  = os.getenv("CLOUDINARY_API_SECRET", "")
 if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
     import cloudinary
+    import cloudinary.api
     import cloudinary.uploader
     cloudinary.config(
         cloud_name = CLOUDINARY_CLOUD_NAME,
@@ -482,6 +483,8 @@ IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 VIDEO_EXTS = {".mp4", ".mov", ".webm", ".m4v"}
 SAMPLE_IMAGES_DIR = os.getenv("SAMPLE_IMAGES_DIR", r"D:\Sample Images")
 SAMPLE_VIDEOS_DIR = os.getenv("SAMPLE_VIDEOS_DIR", r"D:\Sample Videos")
+CLOUDINARY_SAMPLE_IMAGE_PREFIX = os.getenv("CLOUDINARY_SAMPLE_IMAGE_PREFIX", "vishleshak-samples/images")
+CLOUDINARY_SAMPLE_VIDEO_PREFIX = os.getenv("CLOUDINARY_SAMPLE_VIDEO_PREFIX", "vishleshak-samples/videos")
 
 # "admin" on local machine, "client" on Railway (set APP_MODE=client env var)
 APP_MODE = os.getenv("APP_MODE", "admin")
@@ -497,6 +500,10 @@ def _sample_media_files(kind: str) -> list[dict]:
     base_dir = SAMPLE_IMAGES_DIR if kind == "image" else SAMPLE_VIDEOS_DIR
     fallback_dir = os.path.join(os.path.dirname(__file__), "static", "images" if kind == "image" else "samples")
     extensions = IMAGE_EXTS if kind == "image" else VIDEO_EXTS
+    cloudinary_prefix = CLOUDINARY_SAMPLE_IMAGE_PREFIX if kind == "image" else CLOUDINARY_SAMPLE_VIDEO_PREFIX
+    cloudinary_items = _cloudinary_sample_media_files(kind, cloudinary_prefix)
+    if cloudinary_items:
+        return cloudinary_items
 
     if os.path.isdir(base_dir):
         items = []
@@ -523,6 +530,35 @@ def _sample_media_files(kind: str) -> list[dict]:
                     "source": "bundled",
                 })
     return sorted(items, key=lambda item: item["name"].lower())
+
+
+def _cloudinary_sample_media_files(kind: str, prefix: str) -> list[dict]:
+    if not _CLOUDINARY_READY or not prefix:
+        return []
+
+    try:
+        resource_type = "image" if kind == "image" else "video"
+        result = cloudinary.api.resources(
+            type="upload",
+            resource_type=resource_type,
+            prefix=prefix.rstrip("/") + "/",
+            max_results=100,
+        )
+        items = []
+        for item in result.get("resources", []):
+            url = item.get("secure_url") or item.get("url")
+            public_id = item.get("public_id") or ""
+            filename = public_id.rsplit("/", 1)[-1] or item.get("asset_id", "sample")
+            if url:
+                items.append({
+                    "name": filename,
+                    "url": url,
+                    "source": "cloudinary",
+                })
+        return sorted(items, key=lambda item: item["name"].lower())
+    except Exception as e:
+        print(f"[Cloudinary samples] list failed for {kind}: {e}")
+        return []
 
 
 def _sample_caption(filename: str) -> str:

@@ -9,6 +9,7 @@ imageio-ffmpeg
 pillow
 edge-tts
 fal-client
+cloudinary
 google-api-python-client
 google-auth
 python-dateutil
