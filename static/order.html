@@ -158,6 +158,37 @@
       line-height: 1.6;
       max-width: 660px;
     }
+    .hero-cue {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+    .hero-cue span {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: rgba(124, 58, 237, 0.22);
+      border: 1px solid rgba(167, 139, 250, 0.38);
+      color: #c4b5fd;
+    }
+    .form-cue {
+      display: flex;
+      justify-content: center;
+      width: min(1180px, calc(100% - 32px));
+      margin: -28px auto 28px;
+    }
+    .form-cue .hero-cue {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(124, 58, 237, 0.18);
+      border: 1px solid rgba(167, 139, 250, 0.28);
+      backdrop-filter: blur(14px);
+    }
     .intro-status {
       display: grid;
       gap: 10px;
@@ -1002,6 +1033,7 @@
       font-size: 1.04rem;
       max-width: 620px;
     }
+    .hero-cue { margin-top: 0; }
     .intro-status {
       gap: 12px;
       width: min(380px, 100%);
@@ -1200,6 +1232,10 @@
         </div>
       </div>
     </section>
+
+    <div class="form-cue">
+      <div class="hero-cue">Complete your order below <span>↓</span></div>
+    </div>
 
     <div class="layout">
       <div>
