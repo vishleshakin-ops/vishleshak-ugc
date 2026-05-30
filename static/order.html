@@ -180,13 +180,14 @@
       position: relative;
       display: grid;
       place-items: center;
-      width: 360px;
+      width: 500px;
       min-height: 430px;
-      flex: 0 0 360px;
+      flex: 0 0 500px;
     }
     .ugc-phone {
       position: relative;
       width: 260px;
+      margin-left: 32px;
       border-radius: 44px;
       padding: 46px 10px 12px;
       background: #0d1117;
@@ -238,6 +239,7 @@
       display: block;
       object-fit: cover;
       object-position: center;
+      transition: opacity 0.45s ease;
     }
     .ugc-creative-screen::after {
       content: "";
@@ -261,8 +263,8 @@
     }
     .ugc-info-card {
       position: absolute;
-      right: -10px;
-      bottom: 76px;
+      right: 0;
+      bottom: 104px;
       z-index: 3;
       width: 220px;
       border-radius: 16px;
@@ -959,7 +961,7 @@
     /* Premium order-desk polish */
     body {
       background:
-        linear-gradient(180deg, transparent 0, transparent 470px, #f7f5ff 470px, #f7f5ff 100%),
+        linear-gradient(180deg, transparent 0, transparent 430px, #f7f5ff 430px, #f7f5ff 100%),
         radial-gradient(ellipse 80% 60% at 30% 230px, rgba(124, 58, 237, 0.22), transparent 65%),
         radial-gradient(ellipse 50% 50% at 80% 230px, rgba(37, 99, 235, 0.12), transparent 60%),
         linear-gradient(145deg, #0d0640 0%, #1a0a40 40%, #2d1b8a 70%, #1e0a4e 100%),
@@ -970,15 +972,16 @@
       padding: 0 0 64px;
     }
     .intro {
-      width: min(1100px, calc(100% - 96px));
+      width: min(1200px, calc(100% - 96px));
       align-items: center;
-      gap: 64px;
+      gap: 60px;
       min-height: 340px;
-      margin: 0 auto 20px;
-      padding: 104px 0 48px;
+      margin: 0 auto 12px;
+      padding: 48px 0 42px;
       border: 0;
       box-shadow: none;
       background: transparent;
+      overflow: visible;
     }
     .intro h1,
     h1 {
@@ -1088,6 +1091,7 @@
         align-self: center;
         grid-template-columns: none;
       }
+      .ugc-phone { margin-left: 0; }
       .layout { grid-template-columns: 1fr; }
       .sidebar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -1160,7 +1164,7 @@
           <div class="ugc-phone-notch"></div>
           <div class="ugc-phone-top"><span></span><strong>AI ad preview</strong></div>
           <div class="ugc-creative-screen">
-            <img src="/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg" alt="" />
+            <img id="hero-ugc-image" src="/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg" alt="" />
             <span class="ugc-home-bar"></span>
           </div>
         </div>
@@ -1545,6 +1549,29 @@
     updateVideoVisibility();
     updateSelectedRatio();
     updateSummary();
+
+    const heroUgcImages = [
+      "/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg",
+      "/static/images/7509d168-018e-4020-bf22-2e60669c98e8.jpg",
+      "/static/images/86dde3ab-d088-4dad-a72b-9360124e7622.jpg",
+      "/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg"
+    ];
+    const heroUgcImage = document.getElementById("hero-ugc-image");
+    if (heroUgcImage && heroUgcImages.length > 1 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      heroUgcImages.slice(1).forEach(src => {
+        const img = new Image();
+        img.src = src;
+      });
+      let heroImageIndex = 0;
+      setInterval(() => {
+        heroImageIndex = (heroImageIndex + 1) % heroUgcImages.length;
+        heroUgcImage.style.opacity = "0";
+        setTimeout(() => {
+          heroUgcImage.src = heroUgcImages[heroImageIndex];
+          heroUgcImage.style.opacity = "1";
+        }, 260);
+      }, 3600);
+    }
 
     document.getElementById("order-form-card").addEventListener("submit", event => {
       event.preventDefault();
