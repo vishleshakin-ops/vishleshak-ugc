@@ -180,28 +180,42 @@
       position: relative;
       display: grid;
       place-items: center;
-      width: min(380px, 100%);
-      min-height: 310px;
+      width: 360px;
+      min-height: 430px;
       flex: 0 0 360px;
     }
     .ugc-phone {
-      width: 214px;
-      border-radius: 30px;
-      padding: 12px;
+      position: relative;
+      width: 260px;
+      border-radius: 44px;
+      padding: 46px 10px 12px;
       background: #0d1117;
-      border: 1px solid rgba(255, 255, 255, 0.14);
       box-shadow:
-        0 0 0 6px rgba(124, 58, 237, 0.20),
-        0 34px 70px rgba(0, 0, 0, 0.44);
+        0 0 0 2px rgba(255,255,255,0.12),
+        0 0 0 6px rgba(124,58,237,0.25),
+        0 40px 80px rgba(0,0,0,0.5);
       animation: float-preview 4.8s ease-in-out infinite;
+    }
+    .ugc-phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 2;
+      width: 70px;
+      height: 12px;
+      border-radius: 0 0 10px 10px;
+      background: #0d1117;
+      transform: translateX(-50%);
     }
     .ugc-phone-top {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 6px 12px;
+      padding: 10px 14px;
+      border-radius: 24px 24px 0 0;
+      background: linear-gradient(135deg, #3b1f8c, #1e3a8a);
       color: #fff;
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-weight: 800;
     }
     .ugc-phone-top span {
@@ -211,153 +225,99 @@
       background: #25D366;
       box-shadow: 0 0 14px rgba(37, 211, 102, 0.8);
     }
-    .ugc-screen {
+    .ugc-creative-screen {
       position: relative;
       overflow: hidden;
-      border-radius: 22px;
-      min-height: 238px;
-      padding: 16px;
-      background:
-        radial-gradient(circle at 70% 15%, rgba(96, 165, 250, 0.30), transparent 34%),
-        linear-gradient(160deg, #20105a, #111827 58%, #0d1117);
+      height: 340px;
+      border-radius: 28px;
+      background: #111827;
     }
-    .ugc-screen::after {
+    .ugc-creative-screen img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+    }
+    .ugc-creative-screen::after {
       content: "";
       position: absolute;
-      inset: -35% auto auto -55%;
-      width: 90%;
-      height: 180%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
-      transform: rotate(18deg);
-      animation: preview-shine 3.6s ease-in-out infinite;
-    }
-    .ad-stack {
-      position: relative;
-      height: 145px;
-      margin-top: 2px;
-    }
-    .ad-card {
-      position: absolute;
       inset: 0;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.10);
-      transform-origin: center bottom;
+      background:
+        linear-gradient(180deg, transparent 58%, rgba(0,0,0,0.28)),
+        linear-gradient(90deg, rgba(255,255,255,0.10), transparent 28%, transparent 72%, rgba(255,255,255,0.08));
+      pointer-events: none;
     }
-    .ad-card:nth-child(1) {
-      transform: translate(12px, 12px) rotate(5deg) scale(0.92);
-      opacity: 0.56;
+    .ugc-home-bar {
+      position: absolute;
+      left: 50%;
+      bottom: 12px;
+      width: 82px;
+      height: 5px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.45);
+      transform: translateX(-50%);
+      z-index: 2;
     }
-    .ad-card:nth-child(2) {
-      transform: translate(5px, 6px) rotate(-4deg) scale(0.96);
-      opacity: 0.76;
+    .ugc-info-card {
+      position: absolute;
+      right: -10px;
+      bottom: 76px;
+      z-index: 3;
+      width: 220px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.96);
+      color: #1f2937;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+      overflow: hidden;
+      animation: chip-float-card 4.8s ease-in-out infinite;
     }
-    .ad-card.main {
+    .ugc-info-row {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 14px 16px;
+    }
+    .ugc-info-row + .ugc-info-row {
+      border-top: 1px solid #e5e7eb;
+    }
+    .ugc-info-icon {
       display: grid;
       place-items: center;
-      transform: none;
-      opacity: 1;
-      background:
-        radial-gradient(circle at 50% 38%, rgba(255,255,255,0.92) 0 20%, transparent 21%),
-        radial-gradient(circle at 50% 38%, rgba(167,139,250,0.75) 0 36%, transparent 37%),
-        linear-gradient(145deg, rgba(124,58,237,0.95), rgba(37,99,235,0.88));
-      animation: ad-card-lift 4.8s ease-in-out infinite;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: #f3f0ff;
+      color: #6d28d9;
+      font-size: 0.78rem;
+      font-weight: 900;
     }
-    .ad-card.main span {
-      position: absolute;
-      bottom: 14px;
-      left: 16px;
-      right: 16px;
-      min-height: 8px;
-      border-radius: 99px;
-      background: rgba(255,255,255,0.74);
-      box-shadow: 0 16px 0 rgba(255,255,255,0.42);
+    .ugc-info-row strong {
+      display: block;
+      color: #111827;
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1.2;
     }
-    .render-dots {
-      display: flex;
-      gap: 5px;
-      justify-content: center;
-      margin-top: 18px;
-    }
-    .render-dots i {
-      width: 6px;
-      height: 18px;
-      border-radius: 99px;
-      background: linear-gradient(180deg, #a78bfa, #60a5fa);
-      animation: render-wave 1.2s ease-in-out infinite;
-    }
-    .render-dots i:nth-child(2) { animation-delay: 0.12s; }
-    .render-dots i:nth-child(3) { animation-delay: 0.24s; }
-    .render-dots i:nth-child(4) { animation-delay: 0.36s; }
-    .render-dots i:nth-child(5) { animation-delay: 0.48s; }
-    .render-label {
-      margin-top: 12px;
-      color: rgba(255,255,255,0.68);
-      font-size: 0.76rem;
-      text-align: center;
+    .ugc-info-row small {
+      display: block;
+      margin-top: 3px;
+      color: #64748b;
+      font-size: 0.78rem;
       font-weight: 700;
     }
-    .float-chip {
-      position: absolute;
-      z-index: 2;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      min-width: 206px;
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.10);
-      backdrop-filter: blur(18px);
-      padding: 13px 15px;
-      color: rgba(255,255,255,0.64);
-      font-size: 0.84rem;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.18);
-      animation: chip-float 4.8s ease-in-out infinite;
-    }
-    .float-chip strong {
-      color: #fff;
-      font-weight: 900;
-      white-space: nowrap;
-    }
-    .chip-format {
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    .chip-delivery {
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      animation-delay: 0.35s;
+    @keyframes chip-float-card {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
     }
     @keyframes float-preview {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-8px); }
     }
-    @keyframes chip-float {
-      0%, 100% { transform: translate(-50%, 0); }
-      50% { transform: translate(-50%, -6px); }
-    }
-    @keyframes preview-shine {
-      0%, 44% { transform: translateX(0) rotate(18deg); opacity: 0; }
-      55% { opacity: 1; }
-      100% { transform: translateX(220%) rotate(18deg); opacity: 0; }
-    }
-    @keyframes render-wave {
-      0%, 100% { transform: scaleY(0.45); opacity: 0.55; }
-      50% { transform: scaleY(1); opacity: 1; }
-    }
-    @keyframes ad-card-lift {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-4px) scale(1.015); }
-    }
     @media (prefers-reduced-motion: reduce) {
       .ugc-phone,
-      .float-chip,
-      .ugc-screen::after,
-      .render-dots i,
-      .ad-card.main {
+      .ugc-info-card {
         animation: none;
       }
     }
@@ -999,7 +959,7 @@
     /* Premium order-desk polish */
     body {
       background:
-        linear-gradient(180deg, transparent 0, transparent 520px, #f7f5ff 520px, #f7f5ff 100%),
+        linear-gradient(180deg, transparent 0, transparent 470px, #f7f5ff 470px, #f7f5ff 100%),
         radial-gradient(ellipse 80% 60% at 30% 230px, rgba(124, 58, 237, 0.22), transparent 65%),
         radial-gradient(ellipse 50% 50% at 80% 230px, rgba(37, 99, 235, 0.12), transparent 60%),
         linear-gradient(145deg, #0d0640 0%, #1a0a40 40%, #2d1b8a 70%, #1e0a4e 100%),
@@ -1014,8 +974,8 @@
       align-items: center;
       gap: 64px;
       min-height: 340px;
-      margin: 0 auto 64px;
-      padding: 80px 0 72px;
+      margin: 0 auto 20px;
+      padding: 104px 0 48px;
       border: 0;
       box-shadow: none;
       background: transparent;
@@ -1124,7 +1084,7 @@
       .intro-status { width: 100%; flex: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .ugc-visual {
         width: min(390px, 100%);
-        min-height: 310px;
+        min-height: 430px;
         align-self: center;
         grid-template-columns: none;
       }
@@ -1142,11 +1102,13 @@
       .choice-grid.four,
       .sidebar { grid-template-columns: 1fr; }
       .ugc-visual {
-        min-height: 320px;
+        min-height: 430px;
         width: min(100%, 360px);
       }
-      .float-chip {
-        min-width: min(230px, 92%);
+      .ugc-info-card {
+        right: 0;
+        bottom: 44px;
+        width: min(220px, 72%);
       }
       .form-card,
       .script-card,
@@ -1194,20 +1156,24 @@
         <p class="intro-copy">Create platform-ready image and video ads from one product photo.</p>
       </div>
       <div class="ugc-visual intro-status" aria-label="Animated UGC order preview">
-        <div class="float-chip chip-format"><span>Formats</span><strong>Image + Video</strong></div>
         <div class="ugc-phone" aria-hidden="true">
+          <div class="ugc-phone-notch"></div>
           <div class="ugc-phone-top"><span></span><strong>AI ad preview</strong></div>
-          <div class="ugc-screen">
-            <div class="ad-stack">
-              <div class="ad-card"></div>
-              <div class="ad-card"></div>
-              <div class="ad-card main"><span></span></div>
-            </div>
-            <div class="render-dots"><i></i><i></i><i></i><i></i><i></i></div>
-            <div class="render-label">Rendering product creative</div>
+          <div class="ugc-creative-screen">
+            <img src="/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg" alt="" />
+            <span class="ugc-home-bar"></span>
           </div>
         </div>
-        <div class="float-chip chip-delivery"><span>Delivery update</span><strong>WhatsApp</strong></div>
+        <div class="ugc-info-card" aria-hidden="true">
+          <div class="ugc-info-row">
+            <span class="ugc-info-icon">AI</span>
+            <div><strong>Image/Video</strong><small>Ready to sell</small></div>
+          </div>
+          <div class="ugc-info-row">
+            <span class="ugc-info-icon">WA</span>
+            <div><strong>WhatsApp</strong><small>Delivery updates</small></div>
+          </div>
+        </div>
       </div>
     </section>
 
