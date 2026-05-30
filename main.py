@@ -2053,7 +2053,16 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                 if _specific_hour is not None and text.strip() not in ("1", "2", "3"):
                     dental["gcal_hour"] = _specific_hour
                     _raw_time = dental.get("_raw_time_text") or text
-                    if _re.fullmatch(r'(?:[4-9]|1[0-2])', _raw_time.strip()):
+                    _bare_time = _re.fullmatch(r'(\d{1,2})(?:[\.:](\d{2}))?', _raw_time.strip())
+                    if _bare_time:
+                        _display_hour = _specific_hour if _specific_hour <= 12 else _specific_hour - 12
+                        _display_minute = _bare_time.group(2)
+                        _display_period = "AM" if _specific_hour < 12 else "PM"
+                        if _display_minute:
+                            dental["time_label"] = f"{_display_hour}:{_display_minute} {_display_period}"
+                        else:
+                            dental["time_label"] = f"{_display_hour} {_display_period}"
+                    elif _re.fullmatch(r'(?:[4-9]|1[0-2])', _raw_time.strip()):
                         _display_hour = _specific_hour if _specific_hour <= 12 else _specific_hour - 12
                         _display_period = "AM" if _specific_hour < 12 else "PM"
                         dental["time_label"] = f"{_display_hour} {_display_period}"
@@ -2146,8 +2155,8 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     next_label = options.get("next_label", "next week")
                     await wa_send_text(from_phone,
                         "Please confirm the date:\n\n"
-                        f"1ï¸âƒ£ {today_label}\n"
-                        f"2ï¸âƒ£ {next_label}\n\n"
+                        f"1. {today_label}\n"
+                        f"2. {next_label}\n\n"
                         "_Reply with 1 or 2_"
                     )
                     return {"status": "ok"}
@@ -2169,8 +2178,8 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     _dental_sessions[from_phone] = dental
                     await wa_send_text(from_phone,
                         "Do you mean:\n\n"
-                        f"1ï¸âƒ£ {date_options['today_label']}\n"
-                        f"2ï¸âƒ£ {date_options['next_label']}\n\n"
+                        f"1. {date_options['today_label']}\n"
+                        f"2. {date_options['next_label']}\n\n"
                         "_Reply with 1 or 2_"
                     )
                     return {"status": "ok"}
