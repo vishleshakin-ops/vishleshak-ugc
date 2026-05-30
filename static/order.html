@@ -176,6 +176,182 @@
       color: rgba(255, 255, 255, 0.62);
     }
     .status-row strong { color: #fff; font-weight: 800; }
+    .ugc-visual {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: min(380px, 100%);
+      min-height: 270px;
+      flex: 0 0 360px;
+    }
+    .ugc-phone {
+      width: 214px;
+      border-radius: 30px;
+      padding: 12px;
+      background: #0d1117;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow:
+        0 0 0 6px rgba(124, 58, 237, 0.20),
+        0 34px 70px rgba(0, 0, 0, 0.44);
+      animation: float-preview 4.8s ease-in-out infinite;
+    }
+    .ugc-phone-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 6px 12px;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+    .ugc-phone-top span {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      background: #25D366;
+      box-shadow: 0 0 14px rgba(37, 211, 102, 0.8);
+    }
+    .ugc-screen {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      min-height: 238px;
+      padding: 16px;
+      background:
+        radial-gradient(circle at 70% 15%, rgba(96, 165, 250, 0.30), transparent 34%),
+        linear-gradient(160deg, #20105a, #111827 58%, #0d1117);
+    }
+    .ugc-screen::after {
+      content: "";
+      position: absolute;
+      inset: -35% auto auto -55%;
+      width: 90%;
+      height: 180%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+      transform: rotate(18deg);
+      animation: preview-shine 3.6s ease-in-out infinite;
+    }
+    .ad-stack {
+      position: relative;
+      height: 145px;
+      margin-top: 2px;
+    }
+    .ad-card {
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.10);
+      transform-origin: center bottom;
+    }
+    .ad-card:nth-child(1) {
+      transform: translate(12px, 12px) rotate(5deg) scale(0.92);
+      opacity: 0.56;
+    }
+    .ad-card:nth-child(2) {
+      transform: translate(5px, 6px) rotate(-4deg) scale(0.96);
+      opacity: 0.76;
+    }
+    .ad-card.main {
+      display: grid;
+      place-items: center;
+      transform: none;
+      opacity: 1;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255,255,255,0.92) 0 20%, transparent 21%),
+        radial-gradient(circle at 50% 38%, rgba(167,139,250,0.75) 0 36%, transparent 37%),
+        linear-gradient(145deg, rgba(124,58,237,0.95), rgba(37,99,235,0.88));
+      animation: ad-card-lift 4.8s ease-in-out infinite;
+    }
+    .ad-card.main span {
+      position: absolute;
+      bottom: 14px;
+      left: 16px;
+      right: 16px;
+      min-height: 8px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.74);
+      box-shadow: 0 16px 0 rgba(255,255,255,0.42);
+    }
+    .render-dots {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      margin-top: 18px;
+    }
+    .render-dots i {
+      width: 6px;
+      height: 18px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, #a78bfa, #60a5fa);
+      animation: render-wave 1.2s ease-in-out infinite;
+    }
+    .render-dots i:nth-child(2) { animation-delay: 0.12s; }
+    .render-dots i:nth-child(3) { animation-delay: 0.24s; }
+    .render-dots i:nth-child(4) { animation-delay: 0.36s; }
+    .render-dots i:nth-child(5) { animation-delay: 0.48s; }
+    .render-label {
+      margin-top: 12px;
+      color: rgba(255,255,255,0.68);
+      font-size: 0.76rem;
+      text-align: center;
+      font-weight: 700;
+    }
+    .float-chip {
+      position: absolute;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-width: 206px;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(18px);
+      padding: 13px 15px;
+      color: rgba(255,255,255,0.64);
+      font-size: 0.84rem;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.18);
+      animation: chip-float 4.8s ease-in-out infinite;
+    }
+    .float-chip strong {
+      color: #fff;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .chip-format { top: 30px; right: 0; }
+    .chip-delivery { left: 0; bottom: 36px; animation-delay: 0.35s; }
+    @keyframes float-preview {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes chip-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes preview-shine {
+      0%, 44% { transform: translateX(0) rotate(18deg); opacity: 0; }
+      55% { opacity: 1; }
+      100% { transform: translateX(220%) rotate(18deg); opacity: 0; }
+    }
+    @keyframes render-wave {
+      0%, 100% { transform: scaleY(0.45); opacity: 0.55; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+    @keyframes ad-card-lift {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-4px) scale(1.015); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ugc-phone,
+      .float-chip,
+      .ugc-screen::after,
+      .render-dots i,
+      .ad-card.main {
+        animation: none;
+      }
+    }
     .layout {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 340px;
@@ -937,6 +1113,12 @@
     @media (max-width: 960px) {
       .intro { align-items: flex-start; flex-direction: column; }
       .intro-status { width: 100%; flex: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ugc-visual {
+        width: min(390px, 100%);
+        min-height: 270px;
+        align-self: center;
+        grid-template-columns: none;
+      }
       .layout { grid-template-columns: 1fr; }
       .sidebar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -950,6 +1132,12 @@
       .choice-grid.three,
       .choice-grid.four,
       .sidebar { grid-template-columns: 1fr; }
+      .ugc-visual {
+        min-height: 320px;
+        width: min(100%, 360px);
+      }
+      .chip-format { top: 0; right: 0; }
+      .chip-delivery { left: 0; bottom: 0; }
       .form-card,
       .script-card,
       .success-card { padding: 18px; }
@@ -995,9 +1183,21 @@
         <h1>Your Product.<br><span class="accent">Ready to Sell.</span></h1>
         <p class="intro-copy">Create platform-ready image and video ads from one product photo.</p>
       </div>
-      <div class="intro-status" aria-label="Order process summary">
-        <div class="status-row"><span>Formats</span><strong>Image + Video</strong></div>
-        <div class="status-row"><span>Delivery update</span><strong>WhatsApp</strong></div>
+      <div class="ugc-visual intro-status" aria-label="Animated UGC order preview">
+        <div class="float-chip chip-format"><span>Formats</span><strong>Image + Video</strong></div>
+        <div class="ugc-phone" aria-hidden="true">
+          <div class="ugc-phone-top"><span></span><strong>AI ad preview</strong></div>
+          <div class="ugc-screen">
+            <div class="ad-stack">
+              <div class="ad-card"></div>
+              <div class="ad-card"></div>
+              <div class="ad-card main"><span></span></div>
+            </div>
+            <div class="render-dots"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="render-label">Rendering product creative</div>
+          </div>
+        </div>
+        <div class="float-chip chip-delivery"><span>Delivery update</span><strong>WhatsApp</strong></div>
       </div>
     </section>
 
