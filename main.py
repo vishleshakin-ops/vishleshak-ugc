@@ -479,6 +479,8 @@ def save_order(order: dict):
 
 MODEL_DIR  = os.path.join(os.path.dirname(__file__), "model")
 VIDEOS_DIR = os.path.join(os.path.dirname(__file__), "static", "videos")
+IMAGES_DIR = os.path.join(os.path.dirname(__file__), "static", "images")
+RAW_IMAGES_DIR = os.path.join(os.path.dirname(__file__), "static", "images", "raw")
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 VIDEO_EXTS = {".mp4", ".mov", ".webm", ".m4v"}
 SAMPLE_IMAGES_DIR = os.getenv("SAMPLE_IMAGES_DIR", r"D:\Sample Images")
@@ -493,6 +495,8 @@ RAILWAY_URL = os.getenv("RAILWAY_URL", "")
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), "video_history.json")
 
 os.makedirs(VIDEOS_DIR, exist_ok=True)
+os.makedirs(IMAGES_DIR, exist_ok=True)
+os.makedirs(RAW_IMAGES_DIR, exist_ok=True)
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 def _sample_media_files(kind: str) -> list[dict]:
@@ -1342,16 +1346,20 @@ async def append_video_end_card(final_url: str, job_id: str, aspect_ratio: str, 
 
 async def download_and_save_image(image_url: str, job_id: str, branding: dict | None = None) -> str:
     """Download a generated composite image and save it locally."""
-    images_dir = os.path.join(os.path.dirname(__file__), "static", "images")
-    os.makedirs(images_dir, exist_ok=True)
+    os.makedirs(IMAGES_DIR, exist_ok=True)
+    os.makedirs(RAW_IMAGES_DIR, exist_ok=True)
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.get(image_url)
         image_bytes = resp.content
-    raw_path = os.path.join(images_dir, f"{job_id}_raw.jpg")
+    raw_ext = ".png" if ".png" in image_url.lower().split("?")[0] else ".jpg"
+    raw_path = os.path.join(RAW_IMAGES_DIR, f"{job_id}{raw_ext}")
     with open(raw_path, "wb") as f:
         f.write(image_bytes)
+    legacy_raw_path = os.path.join(IMAGES_DIR, f"{job_id}_raw{raw_ext}")
+    with open(legacy_raw_path, "wb") as f:
+        f.write(image_bytes)
     image_bytes = await asyncio.to_thread(_apply_image_brand_overlay, image_bytes, branding)
-    output_path = os.path.join(images_dir, f"{job_id}.jpg")
+    output_path = os.path.join(IMAGES_DIR, f"{job_id}.jpg")
     with open(output_path, "wb") as f:
         f.write(image_bytes)
     return f"/static/images/{job_id}.jpg"
