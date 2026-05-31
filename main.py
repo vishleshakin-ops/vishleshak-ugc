@@ -1363,7 +1363,8 @@ PERSON_RESTRICTED_PRODUCT_TERMS = (
 def _person_restricted_reason(*values: str) -> str:
     text = " ".join(str(value or "") for value in values).lower()
     for term in PERSON_RESTRICTED_PRODUCT_TERMS:
-        if term in text:
+        pattern = r"\b" + re.escape(term).replace(r"\ ", r"[\s-]?") + r"\b"
+        if re.search(pattern, text, flags=re.I):
             return term
     return ""
 

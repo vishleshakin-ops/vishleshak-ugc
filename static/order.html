@@ -2235,15 +2235,10 @@
       return price;
     }
 
-    const personRestrictedPattern = /\b(condoms?|contraceptive|sexual wellness|adult product|adult toy|intimate product|lingerie|bra|pant(y|ies)|underwear|bikini|swim\s?wear|swimsuits?|swim\s?suits?|swimming costume)\b/i;
+    const personRestrictedPattern = /\b(condoms?|contraceptives?|sexual[\s-]?wellness|adult[\s-]?(product|toy)|intimate[\s-]?product|lingerie|bra|panty|panties|underwear|bikini|swim[\s-]?wear|swimsuits?|swim[\s-]?suits?|swimming[\s-]?costume)\b/i;
 
     function personRestrictedText() {
-      const ids = ["notes", "offer-cta"];
-      if (selectedOutput === "image") {
-        ids.push("image-brand-name", "image-offer-text", "image-cta-text");
-      } else {
-        ids.push("video-brand-name", "video-brand-details", "video-cta-text");
-      }
+      const ids = ["notes"];
       const values = ids.map(id => {
         const el = document.getElementById(id);
         return el ? el.value : "";
