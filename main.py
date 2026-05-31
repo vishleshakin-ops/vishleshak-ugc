@@ -1347,6 +1347,9 @@ async def download_and_save_image(image_url: str, job_id: str, branding: dict | 
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.get(image_url)
         image_bytes = resp.content
+    raw_path = os.path.join(images_dir, f"{job_id}_raw.jpg")
+    with open(raw_path, "wb") as f:
+        f.write(image_bytes)
     image_bytes = await asyncio.to_thread(_apply_image_brand_overlay, image_bytes, branding)
     output_path = os.path.join(images_dir, f"{job_id}.jpg")
     with open(output_path, "wb") as f:
