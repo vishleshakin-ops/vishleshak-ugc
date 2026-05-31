@@ -848,6 +848,13 @@ async def generate_model_with_product(
         "Do not substitute it with a generic object, different ball, different jewelry, different packaging, "
         "or a similar-looking product. The product must remain the hero object and be clearly visible."
     )
+    MODEL_LOCK = (
+        "Critical reference-person identity rule: the first uploaded image is the exact person to preserve. "
+        "Keep the same face, age, body proportions, hairstyle, hair accessories, skin tone, outfit color, outfit style, "
+        "and recognizable expression from the reference image. If the reference person is a child, keep them as a child; "
+        "do not adultify, beautify, replace, or change them into a generic model. Do not change gender or age. "
+        "Only adjust pose/composition enough to naturally include the product."
+    )
 
     def build_prompt(base_action: str) -> str:
         action = model_action if model_action else base_action
@@ -878,12 +885,14 @@ async def generate_model_with_product(
             )
         else:
             p = (
-                f"Using the first image as the model and the second image as the product, "
-                f"generate a photorealistic image of this exact {gender_word} ({gender_adj}, {skin_desc}) "
+                f"Using the first image as the exact reference person and the second image as the product, "
+                f"generate a photorealistic ad image of the same person "
                 f"{action}. "
+                f"{MODEL_LOCK} "
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
-                f"Keep the model's face and distinguishing features identical. {EYES_OPEN} High quality."
+                f"Do not invent a different model, different face, different age, different hairstyle, different outfit, or different body. "
+                f"{EYES_OPEN} High quality."
             )
         if custom_instr:
             p += f" Additional: {custom_instr}."
@@ -1138,57 +1147,89 @@ def _apply_image_brand_overlay(image_bytes: bytes, branding: dict | None = None)
     mobile = (branding.get("brand_mobile") or "").strip()
     offer = (branding.get("offer_text") or "").strip()
     cta = (branding.get("cta_text") or "").strip()
+    if any([brand, mobile, offer]) and not cta:
+        cta = "Order now" if mobile else "Shop now"
     if not any([brand, mobile, offer, cta]):
         return image_bytes
 
     image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
     width, height = image.size
-    overlay_height = max(int(height * 0.18), 150)
-    padding = max(int(width * 0.045), 36)
+    padding = max(int(width * 0.04), 28)
+    radius = max(int(width * 0.018), 14)
 
     layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(layer)
-    y0 = height - overlay_height
-    draw.rectangle((0, y0, width, height), fill=(12, 9, 28, 218))
-    draw.line((padding, y0, width - padding, y0), fill=(255, 255, 255, 72), width=max(1, width // 500))
 
-    brand_font = _load_overlay_font(max(int(width * 0.04), 24), bold=True)
-    offer_font = _load_overlay_font(max(int(width * 0.034), 21), bold=True)
-    small_font = _load_overlay_font(max(int(width * 0.025), 16), bold=False)
-    cta_font = _load_overlay_font(max(int(width * 0.026), 16), bold=True)
+    brand_font = _load_overlay_font(max(int(width * 0.032), 22), bold=True)
+    offer_font = _load_overlay_font(max(int(width * 0.026), 18), bold=True)
+    small_font = _load_overlay_font(max(int(width * 0.022), 15), bold=False)
+    cta_font = _load_overlay_font(max(int(width * 0.024), 16), bold=True)
 
-    left_max = int(width * 0.58)
-    right_max = width - (padding * 2) - left_max
-    y = y0 + max(int(overlay_height * 0.2), 22)
-    if brand:
-        draw.text((padding, y), _fit_text(draw, brand, brand_font, left_max), font=brand_font, fill=(255, 255, 255, 255))
-        y += _text_size(draw, brand, brand_font)[1] + 10
+    if brand or mobile:
+        brand_max = int(width * 0.38)
+        brand_line = _fit_text(draw, brand or "Contact us", brand_font, brand_max)
+        mobile_line = _fit_text(draw, mobile, small_font, brand_max) if mobile else ""
+        brand_w, brand_h = _text_size(draw, brand_line, brand_font)
+        mobile_w, mobile_h = _text_size(draw, mobile_line, small_font)
+        badge_pad_x = max(int(width * 0.018), 14)
+        badge_pad_y = max(int(width * 0.012), 10)
+        line_gap = max(int(width * 0.008), 7) if mobile_line else 0
+        badge_w = max(brand_w, mobile_w) + badge_pad_x * 2
+        badge_h = brand_h + mobile_h + line_gap + badge_pad_y * 2
+        badge_x1 = width - padding
+        badge_y0 = padding
+        badge_x0 = max(padding, badge_x1 - badge_w)
+        draw.rounded_rectangle(
+            (badge_x0, badge_y0, badge_x1, badge_y0 + badge_h),
+            radius=radius,
+            fill=(12, 9, 28, 178),
+            outline=(255, 255, 255, 76),
+            width=max(1, width // 700),
+        )
+        draw.text(
+            (badge_x0 + badge_pad_x, badge_y0 + badge_pad_y),
+            brand_line,
+            font=brand_font,
+            fill=(255, 255, 255, 245),
+        )
+        if mobile_line:
+            draw.text(
+                (badge_x0 + badge_pad_x, badge_y0 + badge_pad_y + brand_h + line_gap),
+                mobile_line,
+                font=small_font,
+                fill=(255, 255, 255, 225),
+            )
+
+    pill_parts = []
     if offer:
-        draw.text((padding, y), _fit_text(draw, offer, offer_font, left_max), font=offer_font, fill=(196, 181, 253, 255))
-
-    right_items = []
+        pill_parts.append(offer)
     if cta:
-        right_items.append(("cta", cta))
-    if mobile:
-        right_items.append(("mobile", mobile))
+        pill_parts.append(cta)
 
-    right_y = y0 + max(int(overlay_height * 0.22), 24)
-    for kind, text in right_items:
-        font = cta_font if kind == "cta" else small_font
-        fitted = _fit_text(draw, text, font, right_max)
-        tw, th = _text_size(draw, fitted, font)
-        x = width - padding - tw
-        if kind == "cta":
-            bx0 = max(padding, x - 18)
-            by0 = right_y - 10
-            bx1 = width - padding + 18
-            by1 = right_y + th + 12
-            draw.rounded_rectangle((bx0, by0, bx1, by1), radius=12, fill=(37, 211, 102, 255))
-            draw.text((x, right_y), fitted, font=font, fill=(255, 255, 255, 255))
-            right_y = by1 + 14
-        else:
-            draw.text((x, right_y), fitted, font=font, fill=(255, 255, 255, 235))
-            right_y += th + 10
+    if pill_parts:
+        pill_text = " | ".join(pill_parts)
+        pill_max = int(width * 0.64)
+        pill_line = _fit_text(draw, pill_text, cta_font, pill_max)
+        pill_w, pill_h = _text_size(draw, pill_line, cta_font)
+        pill_pad_x = max(int(width * 0.022), 18)
+        pill_pad_y = max(int(width * 0.014), 12)
+        pill_x1 = width - padding
+        pill_y1 = height - padding
+        pill_x0 = max(padding, pill_x1 - pill_w - pill_pad_x * 2)
+        pill_y0 = max(padding, pill_y1 - pill_h - pill_pad_y * 2)
+        draw.rounded_rectangle(
+            (pill_x0, pill_y0, pill_x1, pill_y1),
+            radius=radius,
+            fill=(12, 9, 28, 188),
+            outline=(255, 255, 255, 70),
+            width=max(1, width // 700),
+        )
+        draw.text(
+            (pill_x0 + pill_pad_x, pill_y0 + pill_pad_y),
+            pill_line,
+            font=cta_font,
+            fill=(255, 255, 255, 248),
+        )
 
     composed = Image.alpha_composite(image, layer).convert("RGB")
     out = io.BytesIO()
