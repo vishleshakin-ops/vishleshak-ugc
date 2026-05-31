@@ -421,6 +421,8 @@ TRACKING_DB_FILE = os.getenv(
     "TRACKING_DB_FILE",
     os.path.join(os.path.dirname(__file__), "client_tracking.sqlite3"),
 )
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+TRACKING_DB_IS_POSTGRES = bool(DATABASE_URL)
 CREDIT_COST_IMAGE = int(os.getenv("CREDIT_COST_IMAGE", "49"))
 CREDIT_COST_VIDEO = int(os.getenv("CREDIT_COST_VIDEO", "499"))
 
@@ -557,13 +559,57 @@ def _normalize_phone(phone: str) -> str:
         digits = digits[-10:]
     return digits
 
+class _TrackingConnection:
+    def __init__(self):
+        self.conn = None
+
+    def __enter__(self):
+        if TRACKING_DB_IS_POSTGRES:
+            try:
+                import psycopg
+                from psycopg.rows import dict_row
+            except Exception as e:
+                raise RuntimeError("DATABASE_URL is set but psycopg is not installed") from e
+            self.conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
+        else:
+            self.conn = sqlite3.connect(TRACKING_DB_FILE)
+            self.conn.row_factory = sqlite3.Row
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        if not self.conn:
+            return
+        try:
+            if exc_type:
+                self.conn.rollback()
+            else:
+                self.conn.commit()
+        finally:
+            self.conn.close()
+
+    def execute(self, sql: str, params: tuple = ()):
+        if TRACKING_DB_IS_POSTGRES:
+            sql = sql.replace("?", "%s")
+        return self.conn.execute(sql, params)
+
 def _tracking_conn():
-    conn = sqlite3.connect(TRACKING_DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return _TrackingConnection()
 
 def _ensure_column(conn, table: str, column: str, ddl: str):
-    existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if TRACKING_DB_IS_POSTGRES:
+        existing = {
+            row["column_name"]
+            for row in conn.execute(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name=? AND table_schema='public'
+                """,
+                (table,),
+            ).fetchall()
+        }
+    else:
+        existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
     if column not in existing:
         conn.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
 
@@ -3027,17 +3073,21 @@ async def adjust_client_credits(client_id: str, request: Request):
     video_delta = int(body.get("video_delta") or 0)
     note = body.get("note") or "Manual credit adjustment"
     now = _utc_now_iso()
-    if not _get_client_by_id(client_id):
+    existing_client = _get_client_by_id(client_id)
+    if not existing_client:
         raise HTTPException(status_code=404, detail="Client not found")
+    next_credits = max(0, int(existing_client.get("credits_total") or 0) + credit_delta)
+    next_image_total = max(0, int(existing_client.get("image_credits_total") or 0) + image_delta)
+    next_video_total = max(0, int(existing_client.get("video_credits_total") or 0) + video_delta)
     with _tracking_conn() as conn:
         conn.execute("""
             UPDATE clients
-            SET credits_total=max(0, credits_total + ?),
-                image_credits_total=max(0, image_credits_total + ?),
-                video_credits_total=max(0, video_credits_total + ?),
+            SET credits_total=?,
+                image_credits_total=?,
+                video_credits_total=?,
                 updated_at=?
             WHERE id=?
-        """, (credit_delta, image_delta, video_delta, now, client_id))
+        """, (next_credits, next_image_total, next_video_total, now, client_id))
         conn.execute("""
             INSERT INTO usage_logs (id, client_id, usage_type, quantity, note, created_at)
             VALUES (?, ?, 'credit_adjustment', 0, ?, ?)
