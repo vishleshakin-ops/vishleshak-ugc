@@ -1147,8 +1147,6 @@ def _apply_image_brand_overlay(image_bytes: bytes, branding: dict | None = None)
     mobile = (branding.get("brand_mobile") or "").strip()
     offer = (branding.get("offer_text") or "").strip()
     cta = (branding.get("cta_text") or "").strip()
-    if any([brand, mobile, offer]) and not cta:
-        cta = "Order now" if mobile else "Shop now"
     if not any([brand, mobile, offer, cta]):
         return image_bytes
 
@@ -1161,9 +1159,7 @@ def _apply_image_brand_overlay(image_bytes: bytes, branding: dict | None = None)
     draw = ImageDraw.Draw(layer)
 
     brand_font = _load_overlay_font(max(int(width * 0.032), 22), bold=True)
-    offer_font = _load_overlay_font(max(int(width * 0.026), 18), bold=True)
     small_font = _load_overlay_font(max(int(width * 0.022), 15), bold=False)
-    cta_font = _load_overlay_font(max(int(width * 0.024), 16), bold=True)
 
     if brand or mobile:
         brand_max = int(width * 0.38)
@@ -1199,37 +1195,6 @@ def _apply_image_brand_overlay(image_bytes: bytes, branding: dict | None = None)
                 font=small_font,
                 fill=(255, 255, 255, 225),
             )
-
-    pill_parts = []
-    if offer:
-        pill_parts.append(offer)
-    if cta:
-        pill_parts.append(cta)
-
-    if pill_parts:
-        pill_text = " | ".join(pill_parts)
-        pill_max = int(width * 0.64)
-        pill_line = _fit_text(draw, pill_text, cta_font, pill_max)
-        pill_w, pill_h = _text_size(draw, pill_line, cta_font)
-        pill_pad_x = max(int(width * 0.022), 18)
-        pill_pad_y = max(int(width * 0.014), 12)
-        pill_x1 = width - padding
-        pill_y1 = height - padding
-        pill_x0 = max(padding, pill_x1 - pill_w - pill_pad_x * 2)
-        pill_y0 = max(padding, pill_y1 - pill_h - pill_pad_y * 2)
-        draw.rounded_rectangle(
-            (pill_x0, pill_y0, pill_x1, pill_y1),
-            radius=radius,
-            fill=(12, 9, 28, 188),
-            outline=(255, 255, 255, 70),
-            width=max(1, width // 700),
-        )
-        draw.text(
-            (pill_x0 + pill_pad_x, pill_y0 + pill_pad_y),
-            pill_line,
-            font=cta_font,
-            fill=(255, 255, 255, 248),
-        )
 
     composed = Image.alpha_composite(image, layer).convert("RGB")
     out = io.BytesIO()
