@@ -1316,15 +1316,12 @@
       flex: none;
     }
     .ugc-phone {
-      width: clamp(230px, 18vw, 290px);
-      height: clamp(320px, 24vw, 390px);
+      width: clamp(240px, 22vw, 320px);
       margin: 0;
       padding: 0;
       border-radius: 24px;
       background: transparent;
       box-shadow: 0 30px 70px rgba(0,0,0,0.34);
-      display: flex;
-      flex-direction: column;
     }
     .ugc-phone-notch {
       display: none;
@@ -1337,19 +1334,16 @@
       gap: 10px;
     }
     .ugc-creative-screen {
-      flex: 1;
-      min-height: 0;
+      aspect-ratio: 1 / 1;
       border-radius: 0 0 24px 24px;
       background: transparent;
-      display: grid;
-      place-items: center;
     }
     .ugc-creative-screen img {
       width: 100%;
       height: 100%;
       max-height: none;
-      object-fit: contain;
-      object-position: center top;
+      object-fit: cover;
+      object-position: center;
     }
     .ugc-home-bar {
       width: 80px;
@@ -1717,8 +1711,7 @@
       .success-card { padding: 20px; }
       .submit-row { padding: 0 20px 20px; }
       .ugc-phone {
-        width: min(260px, calc(100vw - 72px));
-        height: 360px;
+        width: min(286px, calc(100vw - 72px));
       }
     }
     @media (max-width: 430px) {
@@ -1731,8 +1724,7 @@
       .success-card { padding: 18px; }
       .ugc-visual { width: 100%; }
       .ugc-phone {
-        width: min(250px, calc(100vw - 72px));
-        height: 344px;
+        width: min(274px, calc(100vw - 72px));
       }
     }
   </style>
