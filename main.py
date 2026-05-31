@@ -1341,6 +1341,39 @@ def _format_display_phone(value: str) -> str:
     return raw
 
 
+def _combined_generation_text(customization: dict | None = None, *values: str) -> str:
+    c = customization or {}
+    branding = c.get("image_branding") or {}
+    end_card = c.get("video_end_card") or {}
+    parts = [
+        c.get("model_action", ""),
+        c.get("custom_instructions", ""),
+        c.get("custom_script", ""),
+        branding.get("brand_name", ""),
+        branding.get("offer_text", ""),
+        branding.get("cta_text", ""),
+        end_card.get("brand_name", ""),
+        end_card.get("details", ""),
+        end_card.get("cta_text", ""),
+        *values,
+    ]
+    return " ".join(str(part or "") for part in parts).lower()
+
+
+def _force_product_type(product_type: str, text: str) -> str:
+    """Use explicit user/product wording to recover from weak AI classification."""
+    normalized = (text or "").lower()
+    if re.search(r"\b(stethoscope|surgical|medical|doctor|clinic|healthcare|diagnostic|diagnosis)\b", normalized):
+        return "medical"
+    return (product_type or "other").lower()
+
+
+def _force_scene_for_product(scene: str, product_type: str, text: str) -> str:
+    if _force_product_type(product_type, text) == "medical":
+        return "clinic"
+    return scene
+
+
 PERSON_RESTRICTED_PRODUCT_TERMS = (
     "condom",
     "condoms",
@@ -1414,6 +1447,9 @@ async def generate_model_with_product(
     aspect_ratio     = c.get("aspect_ratio", "9:16")
     image_branding   = c.get("image_branding") or {}
     video_end_card   = c.get("video_end_card") or {}
+    generation_text  = _combined_generation_text(c, avatar_prompt, product_type)
+    product_type     = _force_product_type(product_type, generation_text)
+    scene            = _force_scene_for_product(scene, product_type, generation_text)
     _enforce_person_restricted_product_policy(
         presenter_source,
         bool(c.get("order_model_path")),
@@ -1484,10 +1520,10 @@ async def generate_model_with_product(
 
     CATEGORY_STYLE_GUIDE = {
         "medical": (
-            "Healthcare ad composition: premium clinic or pharmacy counter, clean white-blue trust palette, "
-            "presenter in doctor coat or neat medical attire. If the preserved reference person is a child, make it a tasteful 'little doctor' ad concept: "
-            "same child identity, child remains a child, wearing a clean white doctor coat over neat clothes, holding the stethoscope professionally, "
-            "not playing randomly. Avoid plain grey wall, avoid toy-like mood."
+            "MANDATORY healthcare ad composition: premium clinic or pharmacy counter, clean white-blue trust palette. "
+            "The presenter MUST wear a doctor coat or clean medical attire. If the preserved reference person is a child, make it a tasteful 'little doctor' ad concept: "
+            "same child identity, child remains a child, wearing a clean white doctor coat over neat clothes, holding or wearing the stethoscope professionally. "
+            "Do not keep the original casual dress as the main visible outfit. Do not show a plain grey wall. Do not make the stethoscope feel like a toy."
         ),
         "food": (
             "Food ad composition: warm appetizing close-up, steam/garnish/table styling, realistic kitchen or cafe context, "
@@ -4199,7 +4235,13 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
             jobs[job_id]["step"] = "analyzing"
             script = custom_script
             avatar_prompt = c.get("model_action", "").strip() or "talking to camera naturally, expressive"
-            product_type  = "other"
+            product_type  = _force_product_type("other", _combined_generation_text(c, script, avatar_prompt))
+            if product_type == "medical":
+                c = {**c, "scene": "clinic"}
+                avatar_prompt = (
+                    "same reference person styled in doctor coat or clean medical attire, "
+                    "professionally presenting the stethoscope in a clinic"
+                )
             ai_settings   = {}
             jobs[job_id]["script"] = script
         else:
@@ -4214,6 +4256,9 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
         # If auto mode, override manual customization with AI-decided settings
         if c.get("auto_mode") and ai_settings:
             c = {**c, **ai_settings}
+        product_type = _force_product_type(product_type, _combined_generation_text(c, script, avatar_prompt))
+        if product_type == "medical":
+            c = {**c, "scene": "clinic"}
 
         gender = c.get("model_gender", "female")
 
@@ -4363,7 +4408,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             '{"script":"...","avatar_prompt":"...","product_type":"...",'
             '"auto_gender":"female or male or girl_kid or boy_kid",'
             '"auto_skin_tone":"fair or wheatish or dusky or dark",'
-            '"auto_scene":"studio or beach or ramp or cafe or garden or outdoor"}'
+            '"auto_scene":"studio or clinic or beach or ramp or cafe or garden or outdoor"}'
         )
         customer_notes = model_action or custom_instr or ""
         notes_instruction = (
@@ -4380,6 +4425,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             "avatar_prompt: Describe exactly how the model interacts with this product. Under 20 words. "
             f"Prefer this detailed product handling guide when applicable:\n{PRODUCT_ACTION_GUIDE}\n"
             "Focus on natural, realistic body movement — avoid floating objects or impossible physics.\n"
+            "  - Medical/surgical/stethoscope -> product_type MUST be medical, auto_scene MUST be clinic, presenter wears doctor coat/medical attire; if child reference is later used, it should become a tasteful little-doctor concept\n"
             "  - Jewellery (necklace/earrings/bangles/ring/maang tikka) → wearing it, turns head slowly to show, touches gently with fingertips, admires elegantly\n"
             "  - Clothing (dress/saree/lehenga/kurti/top/jeans) → wearing it, twirls once showing fabric, strikes confident pose, walks gracefully on ramp\n"
             "  - Bags (handbag/purse/tote/clutch/backpack) → carries on shoulder, opens and peeks inside with smile, poses holding it at side\n"
@@ -4402,7 +4448,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             "auto_skin_tone: Choose the skin tone that best matches the target audience and product aesthetic "
             "('fair' for premium bridal/luxury, 'wheatish' for everyday Indian mainstream, 'dusky' for sporty/outdoor/bold, 'dark' for high-fashion/statement pieces).\n\n"
             "auto_scene: Best realistic background for this product "
-            "('studio' for jewellery/electronics/premium/makeup products, 'beach' for sunscreen/swimwear/summer, 'ramp' for fashion/clothing/footwear, "
+            "('clinic' for medical/surgical/stethoscope/healthcare products, 'studio' for jewellery/electronics/premium/makeup products, 'beach' for sunscreen/swimwear/summer, 'ramp' for fashion/clothing/footwear, "
             "'cafe' for food/beverages/lifestyle, 'garden' for skincare/natural/organic/kids products, 'outdoor' for sports/fitness/adventure)."
             f"{notes_instruction}"
         )
@@ -4419,6 +4465,7 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
             f"script: {script_lang_instr}\n\n"
             "avatar_prompt: Describe exactly how the model interacts with this product. Under 20 words. "
             "Focus on natural, realistic body movement — avoid floating objects or impossible physics.\n"
+            "  - Medical/surgical/stethoscope -> product_type MUST be medical; presenter wears doctor coat/medical attire and handles the product professionally in a clinic setting\n"
             "  - Jewellery (necklace/earrings/bangles/ring/maang tikka) → wearing it, turns head slowly to show, touches gently with fingertips, admires elegantly\n"
             "  - Clothing (dress/saree/lehenga/kurti/top/jeans) → wearing it, twirls once showing fabric, strikes confident pose, walks gracefully on ramp\n"
             "  - Bags (handbag/purse/tote/clutch/backpack) → carries on shoulder, opens and peeks inside with smile, poses holding it at side\n"
@@ -4475,12 +4522,13 @@ def generate_script(image_b64: str, media_type: str, customization: dict | None 
     try:
         data         = json.loads(raw)
         script       = data["script"]
-        product_type = data.get("product_type", "other").lower()
+        product_type = _force_product_type(data.get("product_type", "other"), _combined_generation_text(c, raw, data.get("avatar_prompt", "")))
         avatar_prompt = data.get("avatar_prompt", "").strip() or FALLBACK_PROMPTS.get(product_type, FALLBACK_PROMPTS["other"])
+        auto_scene = _force_scene_for_product(data.get("auto_scene", "studio"), product_type, _combined_generation_text(c, raw, avatar_prompt))
         ai_settings  = {
             "model_gender": data.get("auto_gender", "female"),
             "skin_tone":    data.get("auto_skin_tone", "wheatish"),
-            "scene":        data.get("auto_scene", "studio"),
+            "scene":        auto_scene,
             "custom_scene": "",
             "model_action": avatar_prompt,
             "custom_instructions": "",
@@ -4931,6 +4979,9 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
 
         if c.get("auto_mode") and ai_settings:
             c = {**c, **ai_settings}
+        product_type = _force_product_type(product_type, _combined_generation_text(c, script, avatar_prompt))
+        if product_type == "medical":
+            c = {**c, "scene": "clinic"}
         gender = c.get("model_gender", "female")
 
         # Step 2: Composite image only (no TTS needed — Veo 3 has native audio)
@@ -5055,7 +5106,13 @@ async def process_job_seedance(job_id: str, image_data: bytes, content_type: str
         if custom_script:
             script = custom_script
             avatar_prompt = c.get("model_action", "").strip() or "talking expressively, gesturing naturally to camera"
-            product_type = "other"
+            product_type = _force_product_type("other", _combined_generation_text(c, script, avatar_prompt))
+            if product_type == "medical":
+                c = {**c, "scene": "clinic"}
+                avatar_prompt = (
+                    "same reference person styled in doctor coat or clean medical attire, "
+                    "professionally presenting the stethoscope in a clinic"
+                )
             ai_settings = {}
         else:
             image_b64 = base64.b64encode(image_data).decode("utf-8")
@@ -5066,6 +5123,9 @@ async def process_job_seedance(job_id: str, image_data: bytes, content_type: str
 
         if c.get("auto_mode") and ai_settings:
             c = {**c, **ai_settings}
+        product_type = _force_product_type(product_type, _combined_generation_text(c, script, avatar_prompt))
+        if product_type == "medical":
+            c = {**c, "scene": "clinic"}
         gender = c.get("model_gender", "female")
 
         # Step 2: Composite image (GPT-4o via KIE) + TTS audio in parallel
