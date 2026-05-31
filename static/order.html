@@ -2238,11 +2238,12 @@
     const personRestrictedPattern = /\b(condoms?|contraceptive|sexual wellness|adult product|adult toy|intimate product|lingerie|bra|pant(y|ies)|underwear|bikini|swim\s?wear|swimsuits?|swim\s?suits?|swimming costume)\b/i;
 
     function personRestrictedText() {
-      const ids = [
-        "notes", "offer-cta",
-        "image-brand-name", "image-offer-text", "image-cta-text",
-        "video-brand-name", "video-brand-details", "video-cta-text"
-      ];
+      const ids = ["notes", "offer-cta"];
+      if (selectedOutput === "image") {
+        ids.push("image-brand-name", "image-offer-text", "image-cta-text");
+      } else {
+        ids.push("video-brand-name", "video-brand-details", "video-cta-text");
+      }
       const values = ids.map(id => {
         const el = document.getElementById(id);
         return el ? el.value : "";
@@ -2734,14 +2735,14 @@
       fd.append("platform", selectedPlatform);
       fd.append("aspect_ratio", selectedRatio);
       fd.append("notes", buildOrderBrief());
-      fd.append("image_brand_name", document.getElementById("image-brand-name").value.trim());
-      fd.append("image_brand_mobile", document.getElementById("image-brand-mobile").value.trim());
-      fd.append("image_offer_text", document.getElementById("image-offer-text").value.trim());
-      fd.append("image_cta_text", document.getElementById("image-cta-text").value.trim());
-      fd.append("video_brand_name", document.getElementById("video-brand-name").value.trim());
-      fd.append("video_brand_mobile", document.getElementById("video-brand-mobile").value.trim());
-      fd.append("video_brand_details", document.getElementById("video-brand-details").value.trim());
-      fd.append("video_cta_text", document.getElementById("video-cta-text").value.trim());
+      fd.append("image_brand_name", selectedOutput === "image" ? document.getElementById("image-brand-name").value.trim() : "");
+      fd.append("image_brand_mobile", selectedOutput === "image" ? document.getElementById("image-brand-mobile").value.trim() : "");
+      fd.append("image_offer_text", selectedOutput === "image" ? document.getElementById("image-offer-text").value.trim() : "");
+      fd.append("image_cta_text", selectedOutput === "image" ? document.getElementById("image-cta-text").value.trim() : "");
+      fd.append("video_brand_name", selectedOutput === "video" ? document.getElementById("video-brand-name").value.trim() : "");
+      fd.append("video_brand_mobile", selectedOutput === "video" ? document.getElementById("video-brand-mobile").value.trim() : "");
+      fd.append("video_brand_details", selectedOutput === "video" ? document.getElementById("video-brand-details").value.trim() : "");
+      fd.append("video_cta_text", selectedOutput === "video" ? document.getElementById("video-cta-text").value.trim() : "");
       fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
       fd.append("video_style", selectedStyle);
       fd.append("product_image", productFile);
