@@ -460,18 +460,18 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 
 /* SAMPLE VIDEOS */
 .samples {
-  padding: 72px 60px 80px;
+  padding: 42px 60px 64px;
   background: #0f0a28;
   text-align: center;
 }
 .samples .section-label { color: #a78bfa; }
 .samples .section-title { color: white; }
-.samples .section-sub { color: rgba(255,255,255,0.55); margin-bottom: 38px; }
+.samples .section-sub { color: rgba(255,255,255,0.55); margin-bottom: 28px; }
 .samples-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  max-width: 900px;
+  gap: 14px;
+  max-width: 780px;
   margin: 0 auto 36px;
   justify-items: center;
 }
@@ -492,7 +492,7 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 }
 .sample-video-wrap {
   position: relative;
-  aspect-ratio: 9/12.5;
+  aspect-ratio: 9/11;
   background: #0d0d10;
   overflow: hidden;
   cursor: pointer;
@@ -545,7 +545,7 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   background: rgba(37, 211, 102, 0.88);
   border-color: rgba(255,255,255,0.35);
 }
-.sample-card-body { padding: 10px 12px 12px; text-align: left; }
+.sample-card-body { padding: 8px 12px 10px; text-align: left; }
 .sample-caption {
   margin: 0;
   font-size: 13px; font-weight: 500;
@@ -996,7 +996,7 @@ footer {
   <div class="samples-grid">
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample2.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
+        <video data-src="/static/samples/sample2.mp4" playsinline preload="none" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
         <button class="sample-audio" type="button" aria-label="Play with audio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -1009,7 +1009,7 @@ footer {
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample3.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
+        <video data-src="/static/samples/sample3.mp4" playsinline preload="none" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
         <button class="sample-audio" type="button" aria-label="Play with audio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -1022,7 +1022,7 @@ footer {
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample4.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
+        <video data-src="/static/samples/sample4.mp4" playsinline preload="none" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
         <button class="sample-audio" type="button" aria-label="Play with audio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -1035,7 +1035,7 @@ footer {
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample5.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
+        <video data-src="/static/samples/sample5.mp4" playsinline preload="none" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
         <button class="sample-audio" type="button" aria-label="Play with audio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -1048,7 +1048,7 @@ footer {
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample6.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
+        <video data-src="/static/samples/sample6.mp4" playsinline preload="none" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
         <button class="sample-audio" type="button" aria-label="Play with audio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -1328,6 +1328,16 @@ footer {
     lastIndex = playRandom(lastIndex);
   });
 
+  function posterFromVideoUrl(url) {
+    const cleanUrl = String(url || '').split('?')[0];
+    if (cleanUrl.includes('res.cloudinary.com') && cleanUrl.includes('/video/upload/')) {
+      return cleanUrl
+        .replace('/video/upload/', '/video/upload/so_0/')
+        .replace(/\.[a-z0-9]+$/i, '.jpg');
+    }
+    return '';
+  }
+
   fetch('/api/sample-media/list/video?count=6')
     .then(response => response.ok ? response.json() : null)
     .then(data => {
@@ -1344,7 +1354,10 @@ footer {
         const title = (item.caption || item.name || 'UGC Video Ad').trim();
 
         if (video) {
-          video.src = item.url;
+          video.dataset.src = item.url;
+          video.removeAttribute('src');
+          const poster = posterFromVideoUrl(item.url);
+          if (poster) video.poster = poster;
           video.load();
         }
         if (tag) tag.textContent = title;
@@ -1406,7 +1419,15 @@ document.querySelectorAll('.sample-card').forEach(card => {
 
   video.muted = true;
 
+  function ensureVideoLoaded() {
+    if (!video.getAttribute('src') && video.dataset.src) {
+      video.src = video.dataset.src;
+      video.load();
+    }
+  }
+
   wrap.addEventListener('mouseenter', () => {
+    ensureVideoLoaded();
     video.play().catch(() => {});
     wrap.classList.add('playing');
   });
@@ -1420,6 +1441,7 @@ document.querySelectorAll('.sample-card').forEach(card => {
     audioButton.addEventListener('click', event => {
       event.preventDefault();
       event.stopPropagation();
+      ensureVideoLoaded();
       const shouldUnmute = video.muted;
 
       document.querySelectorAll('.sample-video-wrap video').forEach(otherVideo => {
