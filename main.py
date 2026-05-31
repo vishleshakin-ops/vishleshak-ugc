@@ -851,7 +851,17 @@ async def generate_model_with_product(
 
     def build_prompt(base_action: str) -> str:
         action = model_action if model_action else base_action
-        if presenter_source == "ai":
+        if presenter_source == "product":
+            p = (
+                f"Premium product-only advertising image. "
+                f"Use the uploaded product as the exact hero object with no human presenter, no face, and no hands unless essential for scale. "
+                f"Action or composition: {action}. "
+                f"{PRODUCT_LOCK} "
+                f"Background: {background_desc}. "
+                f"Clean commercial lighting, realistic shadows, natural reflections, high-end catalog and social ad quality. "
+                f"{frame_desc}. No added text, no watermark, no fake logo, no replacement packaging."
+            )
+        elif presenter_source == "ai":
             p = (
                 f"Professional UGC creator photo for Instagram Reels. "
                 f"Subject: a real-looking {gender_adj}, 24-28 years old, {skin_desc}, "
@@ -909,7 +919,7 @@ async def generate_model_with_product(
 
     # Read model photo — priority: order-specific → global admin model → AI fallback
     local_model_bytes = None
-    if presenter_source != "ai":
+    if presenter_source not in ("ai", "product"):
         order_model_path = c.get("order_model_path", "")
         if order_model_path and os.path.exists(order_model_path):
             # Customer uploaded their own photo
@@ -927,7 +937,7 @@ async def generate_model_with_product(
             print(f"[composite] No model photo found — falling back to AI mode")
             presenter_source = "ai"
 
-    if presenter_source != "ai" and local_model_bytes:
+    if presenter_source not in ("ai", "product") and local_model_bytes:
         model_kie_url = await upload_image_to_kie(local_model_bytes, "model.jpg", "image/jpeg")
         files_url = [model_kie_url, product_kie_url]
 
@@ -1516,14 +1526,14 @@ async def generate_video(
     image_data = await image.read()
     if len(image_data) > 15 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Image must be under 15MB")
-    if presenter_source not in ("uploaded", "ai"):
+    if presenter_source not in ("uploaded", "ai", "product"):
         raise HTTPException(status_code=400, detail="Invalid presenter source")
     if presenter_source == "uploaded" and not model_image_url and not os.path.exists(MODEL_LOCAL_PATH):
         raise HTTPException(status_code=400, detail="Model photo not set. Please upload your model photo first or choose AI presenter.")
     if output_type == "image" and not KIE_API_KEY:
         raise HTTPException(status_code=400, detail="Image generation requires KIE API (4o Image). Please configure KIE_API_KEY.")
-    if presenter_source == "ai" and not KIE_API_KEY:
-        raise HTTPException(status_code=400, detail="AI presenter requires KIE_API_KEY because it creates a presenter image from the product.")
+    if presenter_source in ("ai", "product") and not KIE_API_KEY:
+        raise HTTPException(status_code=400, detail="AI/product-only generation requires KIE_API_KEY because it creates the final product image.")
 
     customization = {
         "presenter_source":    presenter_source,

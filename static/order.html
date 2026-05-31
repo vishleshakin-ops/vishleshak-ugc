@@ -1861,6 +1861,23 @@
                   </button>
                 </div>
               </div>
+              <div class="field full">
+                <label>Ad goal</label>
+                <div class="choice-grid three" id="goal-group">
+                  <button type="button" class="choice-card active" data-goal="sales">
+                    <strong>Sales / offer</strong>
+                    <span>Push enquiries, orders, and limited-time deals.</span>
+                  </button>
+                  <button type="button" class="choice-card" data-goal="demo">
+                    <strong>Product demo</strong>
+                    <span>Show how the product looks, works, or feels.</span>
+                  </button>
+                  <button type="button" class="choice-card" data-goal="launch">
+                    <strong>New launch</strong>
+                    <span>Introduce a fresh product or collection.</span>
+                  </button>
+                </div>
+              </div>
               <div class="field full" id="style-field">
                 <label>Video style</label>
                 <div class="choice-grid" id="style-group">
@@ -1901,9 +1918,9 @@
                     <strong>YouTube</strong>
                     <span>Video 16:9, image 16:9</span>
                   </button>
-                  <button type="button" class="choice-card" data-platform="x" data-video-ratio="16:9" data-image-ratio="16:9">
-                    <strong>X</strong>
-                    <span>Video 16:9, image 16:9</span>
+                  <button type="button" class="choice-card" data-platform="whatsapp" data-video-ratio="9:16" data-image-ratio="1:1">
+                    <strong>WhatsApp Status</strong>
+                    <span>Video 9:16, image 1:1</span>
                   </button>
                 </div>
               </div>
@@ -1929,6 +1946,10 @@
                   <button type="button" class="choice-card" data-presenter="uploaded" id="use-model-btn">
                     <strong>Reference image</strong>
                     <span>Upload a face, model, or presenter reference.</span>
+                  </button>
+                  <button type="button" class="choice-card" data-presenter="product">
+                    <strong>Product only</strong>
+                    <span>No presenter; focus on the product and packaging.</span>
                   </button>
                 </div>
                 <div class="model-thumb-row" id="model-thumb-row">
@@ -1966,6 +1987,18 @@
                   <button type="button" data-duration="10">Standard Ad<br /><small>8-10 sec</small></button>
                 </div>
                 <small class="helper">Need a longer video? We will review the product, script, and cost before confirming.</small>
+              </div>
+              <div class="field full">
+                <label>Tone</label>
+                <div class="seg three" id="tone-group">
+                  <button type="button" class="active" data-tone="premium">Premium</button>
+                  <button type="button" data-tone="friendly">Friendly UGC</button>
+                  <button type="button" data-tone="energetic">Energetic</button>
+                </div>
+              </div>
+              <div class="field full">
+                <label for="offer-cta">Offer or CTA <span class="optional">Optional</span></label>
+                <input type="text" id="offer-cta" placeholder="Example: DM to order, flat 20% off, shop now, WhatsApp for price" />
               </div>
             </div>
           </section>
@@ -2012,9 +2045,11 @@
           <div class="summary-list">
             <div class="summary-row"><span>Output</span><strong id="summary-output">UGC video ad</strong></div>
             <div class="summary-row"><span>Style</span><strong id="summary-style">Talking ad</strong></div>
+            <div class="summary-row"><span>Goal</span><strong id="summary-goal">Sales / offer</strong></div>
             <div class="summary-row"><span>Language</span><strong id="summary-language">English</strong></div>
             <div class="summary-row"><span>Platform</span><strong id="summary-platform">Instagram - Video 9:16</strong></div>
             <div class="summary-row"><span>Model</span><strong id="summary-presenter">AI generated</strong></div>
+            <div class="summary-row"><span>Tone</span><strong id="summary-tone">Premium</strong></div>
             <div class="summary-row"><span>Duration</span><strong id="summary-duration">Short Ad, 4-6 sec</strong></div>
           </div>
           <div class="price-box">
@@ -2060,6 +2095,8 @@
     let selectedPresenter = "ai";
     let selectedPlatform = "instagram";
     let selectedRatio = "9:16";
+    let selectedGoal = "sales";
+    let selectedTone = "premium";
     let productFile = null;
     let modelFile = null;
 
@@ -2067,9 +2104,11 @@
       output: { video: "UGC video ad", image: "AI product image" },
       style: { talking: "Talking ad", cinematic: "Cinematic ad" },
       lang: { hindi: "Hindi", english: "English", hinglish: "Hinglish" },
-      platform: { instagram: "Instagram", facebook: "Facebook", youtube: "YouTube", x: "X" },
-      presenter: { ai: "AI generated", uploaded: "Reference image" },
-      duration: { "5": "Short Ad, 4-6 sec", "10": "Standard Ad, 8-10 sec" }
+      platform: { instagram: "Instagram", facebook: "Facebook", youtube: "YouTube", whatsapp: "WhatsApp Status" },
+      presenter: { ai: "AI generated", uploaded: "Reference image", product: "Product only" },
+      duration: { "5": "Short Ad, 4-6 sec", "10": "Standard Ad, 8-10 sec" },
+      goal: { sales: "Sales / offer", demo: "Product demo", launch: "New launch" },
+      tone: { premium: "Premium", friendly: "Friendly UGC", energetic: "Energetic" }
     };
 
     function wireSegmented(groupId, onChange) {
@@ -2115,9 +2154,11 @@
     function updateSummary() {
       document.getElementById("summary-output").textContent = labels.output[selectedOutput] || selectedOutput;
       document.getElementById("summary-style").textContent = selectedOutput === "image" ? "Static product creative" : (labels.style[selectedStyle] || selectedStyle);
+      document.getElementById("summary-goal").textContent = labels.goal[selectedGoal] || selectedGoal;
       document.getElementById("summary-language").textContent = selectedOutput === "image" ? "Not required" : (labels.lang[selectedLang] || selectedLang);
       document.getElementById("summary-platform").textContent = platformFormatLabel();
       document.getElementById("summary-presenter").textContent = labels.presenter[selectedPresenter] || selectedPresenter;
+      document.getElementById("summary-tone").textContent = labels.tone[selectedTone] || selectedTone;
       document.getElementById("summary-duration").textContent = selectedOutput === "image" ? "Not required" : (labels.duration[selectedDuration] || "Short Ad, 4-6 sec");
       document.getElementById("summary-price").textContent = `Rs. ${estimatePrice()}`;
     }
@@ -2138,6 +2179,8 @@
     });
     wireSegmented("lang-group", btn => { selectedLang = btn.dataset.lang; });
     wireSegmented("duration-group", btn => { selectedDuration = btn.dataset.duration; });
+    wireSegmented("goal-group", btn => { selectedGoal = btn.dataset.goal; });
+    wireSegmented("tone-group", btn => { selectedTone = btn.dataset.tone; });
 
     updateVideoVisibility();
     updateSelectedRatio();
@@ -2313,6 +2356,20 @@
       };
     }
 
+    function buildOrderBrief() {
+      const parts = [
+        `Ad goal: ${labels.goal[selectedGoal] || selectedGoal}`,
+        `Tone: ${labels.tone[selectedTone] || selectedTone}`,
+        `Platform: ${platformFormatLabel()}`,
+        `Presenter preference: ${labels.presenter[selectedPresenter] || selectedPresenter}`
+      ];
+      const offer = document.getElementById("offer-cta").value.trim();
+      const notes = notesArea.value.trim();
+      if (offer) parts.push(`Offer or CTA: ${offer}`);
+      if (notes) parts.push(`Creative notes: ${notes}`);
+      return parts.join("\n");
+    }
+
     async function improveCreativeNotes(options = {}) {
       const requireNotes = options.requireNotes === true;
       const btn = document.getElementById("improve-notes-btn");
@@ -2389,8 +2446,8 @@
         fd.append("language", selectedLang);
         fd.append("presenter_source", selectedPresenter);
         fd.append("model_gender", "female");
-        fd.append("model_action", notesArea.value.trim());
-        fd.append("custom_instructions", notesArea.value.trim());
+        fd.append("model_action", buildOrderBrief());
+        fd.append("custom_instructions", buildOrderBrief());
         const resp = await fetch("/api/generate-script", { method: "POST", body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.detail || "Script generation failed.");
@@ -2433,7 +2490,7 @@
       fd.append("presenter_source", selectedPresenter);
       fd.append("platform", selectedPlatform);
       fd.append("aspect_ratio", selectedRatio);
-      fd.append("notes", document.getElementById("notes").value.trim());
+      fd.append("notes", buildOrderBrief());
       fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
       fd.append("video_style", selectedStyle);
       fd.append("product_image", productFile);

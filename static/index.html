@@ -46,6 +46,9 @@
             <button id="presenter-ai" class="source-option" type="button" data-presenter-source="ai">
               AI presenter
             </button>
+            <button id="presenter-product" class="source-option" type="button" data-presenter-source="product">
+              Product only
+            </button>
           </div>
           <input id="model-file-input" type="file" accept="image/*" hidden />
           <div class="model-preview">
@@ -187,8 +190,8 @@
             <div class="field-group">
               <label>Duration</label>
               <div class="segmented" role="group" aria-label="Video duration">
-                <button class="segment selected" type="button" data-duration="5">⚡ 5s</button>
-                <button class="segment" type="button" data-duration="6">🔥 6s</button>
+                <button class="segment selected" type="button" data-duration="5">Short<br><small>4-6 sec</small></button>
+                <button class="segment" type="button" data-duration="10">Standard<br><small>8-10 sec</small></button>
               </div>
             </div>
             <div class="field-group">
@@ -203,7 +206,7 @@
 
           <!-- AI tool selection hint -->
           <div id="tool-hint" class="tool-hint-box">
-            <span id="tool-hint-text">AI will use the best pipeline for <strong>30s · High quality</strong></span>
+            <span id="tool-hint-text">AI will prepare a <strong>Short · High polish</strong> product-safe creative</span>
           </div>
 
           <!-- Platform target selector — placed last, horizontal -->
@@ -222,9 +225,9 @@
                 <span class="plat-icon yt"><i class="fa-brands fa-youtube"></i></span>
                 YouTube
               </button>
-              <button class="platform-target" type="button" data-platform-target="x" data-platform-ratio="16:9">
-                <span class="plat-icon xtw"><i class="fa-brands fa-x-twitter"></i></span>
-                X
+              <button class="platform-target" type="button" data-platform-target="whatsapp" data-platform-ratio="9:16">
+                <span class="plat-icon whatsapp"><i class="fa-brands fa-whatsapp"></i></span>
+                WhatsApp
               </button>
             </div>
           </div>
@@ -278,7 +281,7 @@
             </div>
             <div class="timeline-step" data-step="compositing_product">
               <span></span>
-              <div><strong>Create presenter image</strong><small>Blend model and product naturally</small></div>
+              <div><strong>Create product scene</strong><small>Keep product identity clear and natural</small></div>
             </div>
             <div class="timeline-step" data-step="generating_audio">
               <span></span>
@@ -333,8 +336,8 @@
                   <button class="platform-share-btn yt" type="button" data-share="youtube">
                     <i class="fa-brands fa-youtube"></i> YouTube
                   </button>
-                  <button class="platform-share-btn xtw" type="button" data-share="x">
-                    <i class="fa-brands fa-x-twitter"></i> X
+                  <button class="platform-share-btn whatsapp" type="button" data-share="whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
                   </button>
                 </div>
               </div>

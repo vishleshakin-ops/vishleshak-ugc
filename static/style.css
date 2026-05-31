@@ -213,7 +213,7 @@ h3 { font-size: 14px; font-weight: 700; margin-bottom: 0; }
 /* ── Source toggle (Presenter) ─────────────────────────────────────────────── */
 .source-toggle {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   margin-bottom: 10px;
 }
@@ -761,6 +761,7 @@ video {
 .plat-icon.fb    { background: #1877F2; }
 .plat-icon.yt    { background: #FF0000; }
 .plat-icon.xtw   { background: #000; }
+.plat-icon.whatsapp { background: #25D366; }
 
 /* ── Platform share buttons (result view) ─────────────────────────────────── */
 .platform-share-section {
@@ -806,6 +807,7 @@ video {
 .platform-share-btn.fb     { background: #1877F2; }
 .platform-share-btn.yt     { background: #FF0000; }
 .platform-share-btn.xtw    { background: #000; }
+.platform-share-btn.whatsapp { background: #25D366; }
 
 /* ── History gallery ───────────────────────────────────────────────────────── */
 .history-section { margin-top: 28px; }

@@ -16,7 +16,7 @@ const state = {
   selectedLanguage: "hindi",
   selectedRatio: "9:16",
   outputType: "video",
-  videoDuration: "30",
+  videoDuration: "5",
   videoQuality: "high",
   generatedScript: "",
   generatedAvatarPrompt: "",
@@ -137,16 +137,10 @@ function updateToolHint() {
   if (!el) return;
   const dur = state.videoDuration;
   const q   = state.videoQuality;
-  const durMap = { "5": "5s", "10": "10s", "15": "15s", "30": "30s", "60": "60s" };
-  const durLabel = durMap[dur] || "30s";
-  const qLabel   = q === "ultra" ? "Ultra quality" : q === "standard" ? "Standard quality" : "High quality";
-
-  let tool = "";
-  if (q === "ultra") tool = "D-ID Turbo + ElevenLabs Studio + GPT-4o Image";
-  else if (q === "high") tool = "D-ID + ElevenLabs + KIE Image";
-  else tool = "D-ID Standard + ElevenLabs + KIE Image";
-
-  el.innerHTML = `AI will use <strong>${tool}</strong> for <strong>${durLabel} · ${qLabel}</strong>`;
+  const durMap = { "5": "Short, 4-6 sec", "10": "Standard, 8-10 sec" };
+  const durLabel = durMap[dur] || "Short, 4-6 sec";
+  const qLabel = q === "ultra" ? "premium polish" : q === "standard" ? "standard polish" : "high polish";
+  el.innerHTML = `AI will prepare a <strong>${durLabel} · ${qLabel}</strong> product-safe creative`;
 }
 
 function setPresenterSource(source) {
@@ -156,15 +150,20 @@ function setPresenterSource(source) {
   });
 
   const usingAi = source === "ai";
-  $("model-upload-btn").disabled = usingAi;
-  $("model-upload-btn").textContent = usingAi ? "Auto" : "Change";
-  $("model-preview").classList.toggle("hidden", usingAi);
-  $("model-empty").classList.toggle("hidden", !usingAi);
+  const productOnly = source === "product";
+  $("model-upload-btn").disabled = usingAi || productOnly;
+  $("model-upload-btn").textContent = usingAi ? "Auto" : productOnly ? "No model" : "Change";
+  $("model-preview").classList.toggle("hidden", usingAi || productOnly);
+  $("model-empty").classList.toggle("hidden", !(usingAi || productOnly));
 
   if (usingAi) {
     $("model-empty").textContent = "AI will create";
     $("model-status-text").textContent = "AI presenter selected";
     $("model-status-sub").textContent = "The app will generate a male or female presenter automatically from the product and settings.";
+  } else if (productOnly) {
+    $("model-empty").textContent = "Product only";
+    $("model-status-text").textContent = "No presenter selected";
+    $("model-status-sub").textContent = "The app will create a product-first creative without a human presenter.";
   } else {
     $("model-empty").textContent = "No photo";
     loadModelStatus();
@@ -566,28 +565,28 @@ const PLATFORM_URLS = {
   instagram: "https://www.instagram.com/",
   facebook:  "https://www.facebook.com/",
   youtube:   "https://studio.youtube.com/",
-  x:         "https://twitter.com/intent/tweet?text=",
+  whatsapp:  "https://wa.me/?text=",
 };
 
 const PLATFORM_NAMES = {
   instagram: "Instagram",
   facebook:  "Facebook",
   youtube:   "YouTube Studio",
-  x:         "X (Twitter)",
+  whatsapp:  "WhatsApp Status",
 };
 
 const PLATFORM_ICON_CLASS = {
   instagram: "insta",
   facebook:  "fb",
   youtube:   "yt",
-  x:         "xtw",
+  whatsapp:  "whatsapp",
 };
 
 const PLATFORM_FA_ICON = {
   instagram: "fa-instagram",
   facebook:  "fa-facebook",
   youtube:   "fa-youtube",
-  x:         "fa-x-twitter",
+  whatsapp:  "fa-whatsapp",
 };
 
 // Single callback stored when modal opens — called on confirm, cleared on cancel
@@ -673,8 +672,8 @@ function shareToPlatform(platform) {
       const script = $("script-text").textContent || "";
       navigator.clipboard.writeText(script).catch(() => {});
       const base = PLATFORM_URLS[platform] || "";
-      const url  = platform === "x"
-        ? base + encodeURIComponent(script + "\n\nOrder now! 🛍️")
+      const url  = platform === "whatsapp"
+        ? base + encodeURIComponent(script + "\n\nOrder now!")
         : base;
       if (url) window.open(url, "_blank", "noopener");
       showToast(`${platformName} opened. Caption copied to clipboard!`);
@@ -976,7 +975,10 @@ function toggleOrdersPanel() {
 async function loadOrdersAdmin() {
   try {
     const resp = await fetch("/api/orders");
-    const orders = await resp.json();
+    let orders = await resp.json();
+    orders = orders
+      .filter(o => o.status !== "rejected")
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     const pending = orders.filter(o => o.status === "pending").length;
     const badge = $("orders-badge");
     if (pending > 0) {
@@ -1130,6 +1132,7 @@ async function checkModelReady(orderId) {
       const order = await fetch(`/api/orders/${orderId}`).then(r => r.json()).catch(() => ({}));
       if (order.model_image_path) return true;          // customer uploaded their own photo
       if (order.presenter_source === "ai") return true; // AI mode — no photo needed
+      if (order.presenter_source === "product") return true; // Product-only mode — no presenter photo needed
     }
     // Fall back to checking global admin model
     const status = await fetch("/api/model-status").then(r => r.json());
