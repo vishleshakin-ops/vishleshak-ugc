@@ -27,6 +27,8 @@ debug_server.bat
 # Orders data — keep locally, not in git
 orders.json
 video_history.json
+*.sqlite3
+*.db
 
 # IDE
 .vscode/

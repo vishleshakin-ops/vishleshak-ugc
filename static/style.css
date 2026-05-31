@@ -1092,6 +1092,17 @@ video {
   align-items: start;
 }
 .order-thumb { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; background: var(--bg); }
+.client-avatar {
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7C3AED, #2563EB);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+}
 .order-info { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 .order-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .order-name { font-weight: 800; font-size: 15px; color: var(--ink); }
@@ -1126,7 +1137,21 @@ video {
 .order-status.completed { background: #f0fdf4; color: #15803d; }
 .order-status.rejected  { background: #fef2f2; color: #991b1b; }
 .order-status.failed    { background: #fef2f2; color: #991b1b; }
+.order-status.payment_pending,
+.order-status.payment_error,
+.order-status.payment_failed { background: #fffbeb; color: #92400e; }
 .order-actions { display: flex; flex-direction: column; gap: 7px; min-width: 190px; }
+.client-package-select {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
 .approve-btn {
   display: inline-flex;
   align-items: center;

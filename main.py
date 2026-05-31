@@ -11,6 +11,7 @@ import random
 import re
 import hmac
 import hashlib
+import sqlite3
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from urllib.parse import quote
@@ -416,6 +417,10 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
 RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
+TRACKING_DB_FILE = os.getenv(
+    "TRACKING_DB_FILE",
+    os.path.join(os.path.dirname(__file__), "client_tracking.sqlite3"),
+)
 
 # URLs
 RAILWAY_URL = os.getenv("RAILWAY_URL", "").rstrip("/")
@@ -486,6 +491,312 @@ def save_order(order: dict):
     with open(ORDERS_FILE, "w", encoding="utf-8") as f:
         json.dump(all_orders, f, ensure_ascii=False, indent=2)
 
+PACKAGE_DEFS = {
+    "food_creatives_999": {
+        "name": "Food Creative Pack",
+        "price_inr": 999,
+        "validity_days": 30,
+        "image_credits": 10,
+        "video_credits": 0,
+        "whatsapp_active": 0,
+        "chatbot_active": 0,
+        "payment_flow_active": 0,
+        "followup_active": 0,
+        "features": ["10 AI food creatives"],
+    },
+    "food_growth_2999": {
+        "name": "Food Growth Pack",
+        "price_inr": 2999,
+        "validity_days": 30,
+        "image_credits": 10,
+        "video_credits": 2,
+        "whatsapp_active": 0,
+        "chatbot_active": 0,
+        "payment_flow_active": 0,
+        "followup_active": 0,
+        "features": ["10 AI creatives", "2 short videos"],
+    },
+    "monthly_order_flow_7999": {
+        "name": "Monthly Order Flow",
+        "price_inr": 7999,
+        "validity_days": 30,
+        "image_credits": 12,
+        "video_credits": 0,
+        "whatsapp_active": 1,
+        "chatbot_active": 0,
+        "payment_flow_active": 1,
+        "followup_active": 0,
+        "features": ["Weekly offers", "WhatsApp order flow", "Payment links"],
+    },
+    "growth_automation_14999": {
+        "name": "Growth Automation",
+        "price_inr": 14999,
+        "validity_days": 30,
+        "image_credits": 20,
+        "video_credits": 4,
+        "whatsapp_active": 1,
+        "chatbot_active": 1,
+        "payment_flow_active": 1,
+        "followup_active": 1,
+        "features": ["Content engine", "Chatbot", "Payment flow", "Follow-up automation"],
+    },
+}
+
+def _utc_now_iso() -> str:
+    return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def _normalize_phone(phone: str) -> str:
+    digits = re.sub(r"\D", "", phone or "")
+    if len(digits) > 10 and digits.startswith("91"):
+        digits = digits[-10:]
+    return digits
+
+def _tracking_conn():
+    conn = sqlite3.connect(TRACKING_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def _row_to_dict(row) -> dict:
+    data = dict(row)
+    if "features" in data and isinstance(data["features"], str):
+        try:
+            data["features"] = json.loads(data["features"])
+        except Exception:
+            data["features"] = []
+    return data
+
+def init_tracking_db():
+    with _tracking_conn() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS packages (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                price_inr INTEGER NOT NULL,
+                validity_days INTEGER NOT NULL,
+                image_credits INTEGER NOT NULL DEFAULT 0,
+                video_credits INTEGER NOT NULL DEFAULT 0,
+                whatsapp_active INTEGER NOT NULL DEFAULT 0,
+                chatbot_active INTEGER NOT NULL DEFAULT 0,
+                payment_flow_active INTEGER NOT NULL DEFAULT 0,
+                followup_active INTEGER NOT NULL DEFAULT 0,
+                features TEXT NOT NULL DEFAULT '[]',
+                active INTEGER NOT NULL DEFAULT 1
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS clients (
+                id TEXT PRIMARY KEY,
+                business_name TEXT NOT NULL,
+                contact_name TEXT NOT NULL DEFAULT '',
+                phone TEXT NOT NULL UNIQUE,
+                email TEXT NOT NULL DEFAULT '',
+                niche TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'lead',
+                package_id TEXT NOT NULL DEFAULT '',
+                package_name TEXT NOT NULL DEFAULT '',
+                package_started_at TEXT NOT NULL DEFAULT '',
+                package_expires_at TEXT NOT NULL DEFAULT '',
+                image_credits_total INTEGER NOT NULL DEFAULT 0,
+                image_credits_used INTEGER NOT NULL DEFAULT 0,
+                video_credits_total INTEGER NOT NULL DEFAULT 0,
+                video_credits_used INTEGER NOT NULL DEFAULT 0,
+                whatsapp_active INTEGER NOT NULL DEFAULT 0,
+                chatbot_active INTEGER NOT NULL DEFAULT 0,
+                payment_flow_active INTEGER NOT NULL DEFAULT 0,
+                followup_active INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS usage_logs (
+                id TEXT PRIMARY KEY,
+                client_id TEXT NOT NULL,
+                order_id TEXT NOT NULL DEFAULT '',
+                usage_type TEXT NOT NULL,
+                quantity INTEGER NOT NULL DEFAULT 1,
+                note TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS package_payments (
+                id TEXT PRIMARY KEY,
+                client_id TEXT NOT NULL,
+                package_id TEXT NOT NULL,
+                order_id TEXT NOT NULL DEFAULT '',
+                razorpay_payment_link_id TEXT NOT NULL DEFAULT '',
+                razorpay_payment_id TEXT NOT NULL DEFAULT '',
+                amount_inr INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                created_at TEXT NOT NULL,
+                paid_at TEXT NOT NULL DEFAULT ''
+            )
+        """)
+        for package_id, package_data in PACKAGE_DEFS.items():
+            conn.execute("""
+                INSERT INTO packages (
+                    id, name, price_inr, validity_days, image_credits, video_credits,
+                    whatsapp_active, chatbot_active, payment_flow_active, followup_active, features, active
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+                ON CONFLICT(id) DO UPDATE SET
+                    name=excluded.name,
+                    price_inr=excluded.price_inr,
+                    validity_days=excluded.validity_days,
+                    image_credits=excluded.image_credits,
+                    video_credits=excluded.video_credits,
+                    whatsapp_active=excluded.whatsapp_active,
+                    chatbot_active=excluded.chatbot_active,
+                    payment_flow_active=excluded.payment_flow_active,
+                    followup_active=excluded.followup_active,
+                    features=excluded.features,
+                    active=1
+            """, (
+                package_id,
+                package_data["name"],
+                package_data["price_inr"],
+                package_data["validity_days"],
+                package_data["image_credits"],
+                package_data["video_credits"],
+                package_data["whatsapp_active"],
+                package_data["chatbot_active"],
+                package_data["payment_flow_active"],
+                package_data["followup_active"],
+                json.dumps(package_data["features"]),
+            ))
+
+def _get_package(package_id: str) -> dict | None:
+    with _tracking_conn() as conn:
+        row = conn.execute("SELECT * FROM packages WHERE id=? AND active=1", (package_id,)).fetchone()
+        return _row_to_dict(row) if row else None
+
+def _get_client_by_phone(phone: str) -> dict | None:
+    normalized = _normalize_phone(phone)
+    if not normalized:
+        return None
+    with _tracking_conn() as conn:
+        row = conn.execute("SELECT * FROM clients WHERE phone=?", (normalized,)).fetchone()
+        return _row_to_dict(row) if row else None
+
+def _get_client_by_id(client_id: str) -> dict | None:
+    with _tracking_conn() as conn:
+        row = conn.execute("SELECT * FROM clients WHERE id=?", (client_id,)).fetchone()
+        return _row_to_dict(row) if row else None
+
+def _upsert_client_from_order(order: dict) -> dict | None:
+    phone = _normalize_phone(order.get("customer_phone", ""))
+    if not phone:
+        return None
+    now = _utc_now_iso()
+    existing = _get_client_by_phone(phone)
+    with _tracking_conn() as conn:
+        if existing:
+            conn.execute("""
+                UPDATE clients
+                SET business_name=?, contact_name=?, email=?, updated_at=?
+                WHERE id=?
+            """, (
+                order.get("image_brand_name") or order.get("video_brand_name") or existing["business_name"],
+                order.get("customer_name", ""),
+                order.get("customer_email", ""),
+                now,
+                existing["id"],
+            ))
+            return _get_client_by_id(existing["id"])
+        client_id = str(uuid.uuid4())
+        conn.execute("""
+            INSERT INTO clients (
+                id, business_name, contact_name, phone, email, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, 'lead', ?, ?)
+        """, (
+            client_id,
+            order.get("image_brand_name") or order.get("video_brand_name") or order.get("customer_name") or "New Client",
+            order.get("customer_name", ""),
+            phone,
+            order.get("customer_email", ""),
+            now,
+            now,
+        ))
+    return _get_client_by_id(client_id)
+
+def _assign_package_to_client(client_id: str, package_id: str, note: str = "") -> dict:
+    package = _get_package(package_id)
+    if not package:
+        raise HTTPException(status_code=404, detail="Package not found")
+    now_dt = datetime.utcnow()
+    expires_at = (now_dt + timedelta(days=int(package["validity_days"]))).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = now_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    with _tracking_conn() as conn:
+        cur = conn.execute("SELECT * FROM clients WHERE id=?", (client_id,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail="Client not found")
+        conn.execute("""
+            UPDATE clients SET
+                status='active',
+                package_id=?,
+                package_name=?,
+                package_started_at=?,
+                package_expires_at=?,
+                image_credits_total=?,
+                image_credits_used=0,
+                video_credits_total=?,
+                video_credits_used=0,
+                whatsapp_active=?,
+                chatbot_active=?,
+                payment_flow_active=?,
+                followup_active=?,
+                updated_at=?
+            WHERE id=?
+        """, (
+            package_id,
+            package["name"],
+            now,
+            expires_at,
+            package["image_credits"],
+            package["video_credits"],
+            package["whatsapp_active"],
+            package["chatbot_active"],
+            package["payment_flow_active"],
+            package["followup_active"],
+            now,
+            client_id,
+        ))
+        conn.execute("""
+            INSERT INTO usage_logs (id, client_id, usage_type, quantity, note, created_at)
+            VALUES (?, ?, 'package_assigned', 0, ?, ?)
+        """, (str(uuid.uuid4()), client_id, note or f"Assigned {package['name']}", now))
+    return _get_client_by_id(client_id)
+
+def _client_credit_status(client: dict) -> dict:
+    image_left = max(0, int(client.get("image_credits_total") or 0) - int(client.get("image_credits_used") or 0))
+    video_left = max(0, int(client.get("video_credits_total") or 0) - int(client.get("video_credits_used") or 0))
+    expires_at = client.get("package_expires_at") or ""
+    active = client.get("status") == "active" and bool(expires_at) and expires_at >= _utc_now_iso()
+    return {"active": active, "image_left": image_left, "video_left": video_left}
+
+def _consume_client_credit(client_id: str, order_id: str, output_type: str) -> tuple[bool, str]:
+    client = _get_client_by_id(client_id)
+    if not client:
+        return False, "client_not_found"
+    status = _client_credit_status(client)
+    if not status["active"]:
+        return False, "package_inactive_or_expired"
+    usage_type = "image" if output_type == "image" else "video"
+    if usage_type == "image" and status["image_left"] <= 0:
+        return False, "no_image_credits"
+    if usage_type == "video" and status["video_left"] <= 0:
+        return False, "no_video_credits"
+    now = _utc_now_iso()
+    used_col = "image_credits_used" if usage_type == "image" else "video_credits_used"
+    with _tracking_conn() as conn:
+        conn.execute(f"UPDATE clients SET {used_col}={used_col}+1, updated_at=? WHERE id=?", (now, client_id))
+        conn.execute("""
+            INSERT INTO usage_logs (id, client_id, order_id, usage_type, quantity, note, created_at)
+            VALUES (?, ?, ?, ?, 1, ?, ?)
+        """, (str(uuid.uuid4()), client_id, order_id, usage_type, f"Used 1 {usage_type} credit", now))
+    return True, "credit_used"
+
 def _estimate_order_amount_inr(order: dict) -> int:
     if order.get("output_type") == "image":
         return 49
@@ -552,6 +863,7 @@ os.makedirs(VIDEOS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 os.makedirs(RAW_IMAGES_DIR, exist_ok=True)
 os.makedirs(MODEL_DIR, exist_ok=True)
+init_tracking_db()
 
 def _sample_media_files(kind: str) -> list[dict]:
     """Return sample media from the external library, falling back to bundled files."""
@@ -2232,7 +2544,16 @@ async def submit_order(
     amount_inr = _estimate_order_amount_inr(order)
     order["amount_inr"] = amount_inr
     order["payment_status"] = "not_required"
-    if RAZORPAY_ENABLED:
+    client = _upsert_client_from_order(order)
+    if client:
+        order["client_id"] = client["id"]
+        credit_used, credit_reason = _consume_client_credit(client["id"], order_id, output_type)
+        order["package_credit_status"] = credit_reason
+        if credit_used:
+            order["payment_status"] = "package_credit"
+            order["status"] = "pending"
+
+    if RAZORPAY_ENABLED and order.get("payment_status") != "package_credit":
         order["status"] = "payment_pending"
         order["payment_status"] = "pending"
         try:
@@ -2569,6 +2890,120 @@ async def get_order(order_id: str):
                     save_order(o)
             return o
     raise HTTPException(status_code=404, detail="Order not found")
+
+
+@app.get("/api/packages")
+async def list_packages():
+    with _tracking_conn() as conn:
+        rows = conn.execute("SELECT * FROM packages WHERE active=1 ORDER BY price_inr").fetchall()
+    return [_row_to_dict(row) for row in rows]
+
+
+@app.get("/api/clients")
+async def list_clients():
+    with _tracking_conn() as conn:
+        rows = conn.execute("SELECT * FROM clients ORDER BY updated_at DESC").fetchall()
+    clients = []
+    for row in rows:
+        client = _row_to_dict(row)
+        client.update(_client_credit_status(client))
+        clients.append(client)
+    return clients
+
+
+@app.post("/api/clients")
+async def create_or_update_client(request: Request):
+    body = await request.json()
+    phone = _normalize_phone(body.get("phone", ""))
+    if not phone:
+        raise HTTPException(status_code=400, detail="Phone is required")
+    now = _utc_now_iso()
+    existing = _get_client_by_phone(phone)
+    business_name = (body.get("business_name") or "").strip() or "New Client"
+    with _tracking_conn() as conn:
+        if existing:
+            conn.execute("""
+                UPDATE clients SET
+                    business_name=?,
+                    contact_name=?,
+                    email=?,
+                    niche=?,
+                    updated_at=?
+                WHERE id=?
+            """, (
+                business_name,
+                body.get("contact_name", ""),
+                body.get("email", ""),
+                body.get("niche", ""),
+                now,
+                existing["id"],
+            ))
+            client_id = existing["id"]
+        else:
+            client_id = str(uuid.uuid4())
+            conn.execute("""
+                INSERT INTO clients (
+                    id, business_name, contact_name, phone, email, niche, status, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, 'lead', ?, ?)
+            """, (
+                client_id,
+                business_name,
+                body.get("contact_name", ""),
+                phone,
+                body.get("email", ""),
+                body.get("niche", ""),
+                now,
+                now,
+            ))
+    client = _get_client_by_id(client_id)
+    client.update(_client_credit_status(client))
+    return client
+
+
+@app.post("/api/clients/{client_id}/assign-package")
+async def assign_client_package(client_id: str, request: Request):
+    body = await request.json()
+    client = _assign_package_to_client(client_id, body.get("package_id", ""), body.get("note", ""))
+    client.update(_client_credit_status(client))
+    return client
+
+
+@app.post("/api/clients/{client_id}/adjust-credits")
+async def adjust_client_credits(client_id: str, request: Request):
+    body = await request.json()
+    image_delta = int(body.get("image_delta") or 0)
+    video_delta = int(body.get("video_delta") or 0)
+    note = body.get("note") or "Manual credit adjustment"
+    now = _utc_now_iso()
+    if not _get_client_by_id(client_id):
+        raise HTTPException(status_code=404, detail="Client not found")
+    with _tracking_conn() as conn:
+        conn.execute("""
+            UPDATE clients
+            SET image_credits_total=max(0, image_credits_total + ?),
+                video_credits_total=max(0, video_credits_total + ?),
+                updated_at=?
+            WHERE id=?
+        """, (image_delta, video_delta, now, client_id))
+        conn.execute("""
+            INSERT INTO usage_logs (id, client_id, usage_type, quantity, note, created_at)
+            VALUES (?, ?, 'credit_adjustment', 0, ?, ?)
+        """, (str(uuid.uuid4()), client_id, f"{note}: images {image_delta}, videos {video_delta}", now))
+    client = _get_client_by_id(client_id)
+    client.update(_client_credit_status(client))
+    return client
+
+
+@app.get("/api/clients/{client_id}/usage")
+async def client_usage(client_id: str):
+    if not _get_client_by_id(client_id):
+        raise HTTPException(status_code=404, detail="Client not found")
+    with _tracking_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM usage_logs WHERE client_id=? ORDER BY created_at DESC LIMIT 200",
+            (client_id,),
+        ).fetchall()
+    return [_row_to_dict(row) for row in rows]
 
 
 @app.get("/api/orders/{order_id}/approve-quick")

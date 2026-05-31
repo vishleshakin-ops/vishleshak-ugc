@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 
 // Set when app initialises — used by renderOrderCard to build public customer links
 let _railwayUrl = "";
+let _clientPackages = [];
 
 const state = {
   productFile: null,
@@ -22,6 +23,15 @@ const state = {
   generatedAvatarPrompt: "",
   generatedProductType: "",
 };
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 const views = {
   compose: $("compose-view"),
@@ -952,6 +962,8 @@ function wireEvents() {
 
   // Orders tab
   $("orders-tab-btn").addEventListener("click", toggleOrdersPanel);
+  const refreshClients = $("refresh-clients-btn");
+  if (refreshClients) refreshClients.addEventListener("click", loadClientsAdmin);
 }
 
 // ── Orders management ─────────────────────────────────────────────────────────
@@ -962,9 +974,12 @@ let _ordersTimer = null;
 function toggleOrdersPanel() {
   _ordersPanelOpen = !_ordersPanelOpen;
   $("orders-panel").classList.toggle("hidden", !_ordersPanelOpen);
+  const clientsPanel = $("clients-panel");
+  if (clientsPanel) clientsPanel.classList.toggle("hidden", !_ordersPanelOpen);
   $("history-section") && $("history-section").classList.toggle("hidden", _ordersPanelOpen);
   if (_ordersPanelOpen) {
     loadOrdersAdmin();
+    loadClientsAdmin();
     _ordersTimer = setInterval(loadOrdersAdmin, 30000);
   } else {
     clearInterval(_ordersTimer);
@@ -1074,6 +1089,112 @@ async function loadOrdersBadge() {
     const badge = $("orders-badge");
     if (badge && pending > 0) { badge.textContent = pending; badge.classList.remove("hidden"); }
   } catch(_) {}
+}
+
+async function loadClientPackages() {
+  if (_clientPackages.length) return _clientPackages;
+  _clientPackages = await fetch("/api/packages").then(r => r.json()).catch(() => []);
+  return _clientPackages;
+}
+
+function clientCreditLine(client) {
+  const imagesUsed = Number(client.image_credits_used || 0);
+  const imagesTotal = Number(client.image_credits_total || 0);
+  const videosUsed = Number(client.video_credits_used || 0);
+  const videosTotal = Number(client.video_credits_total || 0);
+  return `Images ${imagesUsed}/${imagesTotal} · Videos ${videosUsed}/${videosTotal}`;
+}
+
+function renderClientCard(client) {
+  const packageOptions = _clientPackages.map(pkg =>
+    `<option value="${escapeHtml(pkg.id)}">${escapeHtml(pkg.name)} - Rs. ${pkg.price_inr}</option>`
+  ).join("");
+  const expiry = client.package_expires_at
+    ? new Date(client.package_expires_at).toLocaleDateString("en-IN", {day:"2-digit", month:"short", year:"numeric"})
+    : "No package";
+  const status = client.active ? "Active" : (client.status || "Lead");
+  const automations = [
+    client.whatsapp_active ? "WhatsApp" : "",
+    client.chatbot_active ? "Chatbot" : "",
+    client.payment_flow_active ? "Payments" : "",
+    client.followup_active ? "Follow-up" : "",
+  ].filter(Boolean).join(" · ") || "No automation";
+  return `<div class="order-card client-card">
+    <div class="client-avatar">${escapeHtml((client.business_name || "?").slice(0, 1).toUpperCase())}</div>
+    <div class="order-info">
+      <div class="order-title-row">
+        <span class="order-name">${escapeHtml(client.business_name || "Unnamed Client")}</span>
+        <span class="order-status ${client.active ? "completed" : "pending"}">${escapeHtml(status)}</span>
+      </div>
+      <div class="order-tags">
+        <span>${escapeHtml(client.package_name || "No package")}</span>
+        <span class="price-tag">${escapeHtml(clientCreditLine(client))}</span>
+        <span>Expires: ${escapeHtml(expiry)}</span>
+      </div>
+      <span class="order-meta">${escapeHtml(client.contact_name || "")} · ${escapeHtml(client.phone || "")} · ${escapeHtml(client.niche || "General")}</span>
+      <span class="order-notes">${escapeHtml(automations)}</span>
+    </div>
+    <div class="order-actions">
+      <select class="client-package-select" id="pkg-${client.id}">
+        <option value="">Select package</option>
+        ${packageOptions}
+      </select>
+      <button class="approve-btn primary-action" data-assign-package="${client.id}">Assign Package</button>
+      <button class="approve-btn subtle" data-view-usage="${client.id}">Usage Logs</button>
+    </div>
+  </div>`;
+}
+
+async function loadClientsAdmin() {
+  const panel = $("clients-panel");
+  if (!panel) return;
+  await loadClientPackages();
+  const clients = await fetch("/api/clients").then(r => r.json()).catch(() => []);
+  const summary = $("clients-summary");
+  const active = clients.filter(c => c.active).length;
+  if (summary) summary.textContent = `${clients.length} clients · ${active} active`;
+  const list = $("clients-list");
+  if (!list) return;
+  if (!clients.length) {
+    list.innerHTML = `<p class="muted" style="padding:20px 0">No clients yet. A client is created automatically when they place an order.</p>`;
+    return;
+  }
+  list.innerHTML = clients.map(renderClientCard).join("");
+  list.querySelectorAll("[data-assign-package]").forEach(btn =>
+    btn.addEventListener("click", () => assignPackageToClient(btn.dataset.assignPackage))
+  );
+  list.querySelectorAll("[data-view-usage]").forEach(btn =>
+    btn.addEventListener("click", () => viewClientUsage(btn.dataset.viewUsage))
+  );
+}
+
+async function assignPackageToClient(clientId) {
+  const select = $(`pkg-${clientId}`);
+  const packageId = select ? select.value : "";
+  if (!packageId) {
+    showToast("Select a package first.", 3000);
+    return;
+  }
+  const resp = await fetch(`/api/clients/${clientId}/assign-package`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({package_id: packageId, note: "Assigned from admin dashboard"}),
+  });
+  if (!resp.ok) {
+    const data = await resp.json().catch(() => ({}));
+    showToast("Package assign failed: " + (data.detail || resp.status), 5000);
+    return;
+  }
+  showToast("Package assigned.");
+  loadClientsAdmin();
+}
+
+async function viewClientUsage(clientId) {
+  const rows = await fetch(`/api/clients/${clientId}/usage`).then(r => r.json()).catch(() => []);
+  const text = rows.slice(0, 12).map(row =>
+    `${new Date(row.created_at).toLocaleString("en-IN")} - ${row.usage_type} - ${row.note || row.order_id || ""}`
+  ).join("\n") || "No usage yet.";
+  alert(text);
 }
 
 function estimateOrderPrice(order) {
@@ -1286,7 +1407,10 @@ async function initAppMode() {
       // Auto-open orders panel on load
       _ordersPanelOpen = true;
       $("orders-panel").classList.remove("hidden");
+      const clientsPanel = $("clients-panel");
+      if (clientsPanel) clientsPanel.classList.remove("hidden");
       loadOrdersAdmin();
+      loadClientsAdmin();
       _ordersTimer = setInterval(loadOrdersAdmin, 30000);
     }
   } catch(e) {
