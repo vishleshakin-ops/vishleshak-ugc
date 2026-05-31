@@ -1442,8 +1442,9 @@ footer {
     if (href === activeHref) return;
     activeHref = href;
     navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === href));
-    const nextUrl = href === '#' ? window.location.pathname : `${window.location.pathname}${href}`;
-    if (window.location.hash !== href.replace('#', '#')) {
+    const nextHash = href === '#' ? '' : href;
+    const nextUrl = `${window.location.pathname}${nextHash}`;
+    if (window.location.hash !== nextHash) {
       history.replaceState(null, '', nextUrl);
     }
   }
