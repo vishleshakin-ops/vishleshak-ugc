@@ -8,6 +8,7 @@ import tempfile
 import io
 import smtplib
 import random
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from urllib.parse import quote
@@ -832,6 +833,67 @@ def _clean_image_generation_text(value: str) -> str:
     return " ".join(cleaned).strip()
 
 
+def _build_image_text_guidance(customization: dict) -> str:
+    """Tell the image model which marketing text it may render."""
+    if customization.get("output_type") != "image":
+        return (
+            "Do not add any new text, captions, slogans, phone numbers, prices, badges, logos, watermarks, poster typography, "
+            "brand graphics, call-to-action text, or decorative lettering anywhere in the generated image. "
+            "Only preserve text or logos that already exist physically on the uploaded product itself."
+        )
+
+    branding = customization.get("image_branding") or {}
+    brand = (branding.get("brand_name") or "").strip()
+    mobile = _format_display_phone(branding.get("brand_mobile") or "")
+    offer = (branding.get("offer_text") or "").strip()
+    cta = (branding.get("cta_text") or "").strip()
+    provided_lines = [text for text in (offer, cta) if text]
+
+    rules = [
+        "Image text priority rule: any readable marketing text must respect the client's fields first.",
+        "Use clean, tasteful social-ad typography that matches the image mood and does not cover the product or face.",
+    ]
+    if brand:
+        rules.append(f"Brand name must be exactly: \"{brand}\". Do not invent, rename, abbreviate, or replace the brand.")
+    else:
+        rules.append("Do not invent a new brand name, logo, or fake company name.")
+
+    if provided_lines:
+        rules.append(
+            "Client-provided tagline/CTA has priority; use only this wording if adding tagline or CTA text: "
+            + " | ".join(f"\"{line}\"" for line in provided_lines)
+        )
+    else:
+        rules.append(
+            "If it improves the ad, you may create one short tasteful tagline or CTA that suits the product category."
+        )
+
+    if mobile:
+        rules.append(
+            f"If showing contact details, display this exact mobile/WhatsApp number only: \"{mobile}\". "
+            "A small phone or WhatsApp icon is allowed if it matches the design."
+        )
+    else:
+        rules.append("Do not add any phone number or contact details.")
+
+    rules.append(
+        "Do not add any other readable text, fake logo, watermark, price, QR code, or extra brand graphic. "
+        "Only preserve text or logos that already exist physically on the uploaded product itself."
+    )
+    return " ".join(rules)
+
+
+def _format_display_phone(value: str) -> str:
+    """Format Indian 10-digit mobile numbers for cleaner ad display."""
+    raw = (value or "").strip()
+    digits = re.sub(r"\D", "", raw)
+    if len(digits) == 12 and digits.startswith("91"):
+        digits = digits[2:]
+    if len(digits) == 10:
+        return f"{digits[:5]}-{digits[5:]}"
+    return raw
+
+
 async def generate_model_with_product(
     model_url: str,
     product_bytes: bytes,
@@ -893,12 +955,7 @@ async def generate_model_with_product(
         "Do not substitute it with a generic object, different ball, different jewelry, different packaging, "
         "or a similar-looking product. The product must remain the hero object and be clearly visible."
     )
-    TEXT_LOCK = (
-        "Do not add any new text, captions, slogans, phone numbers, prices, badges, logos, watermarks, poster typography, "
-        "brand graphics, call-to-action text, or decorative lettering anywhere in the generated image. "
-        "Only preserve text or logos that already exist physically on the uploaded product itself. "
-        "Brand/contact overlay is handled later by the backend, not by the AI image model."
-    )
+    IMAGE_TEXT_GUIDANCE = _build_image_text_guidance(c)
     MODEL_LOCK = (
         "Critical reference-person identity rule: the first uploaded image is the exact person to preserve. "
         "Preserve the real phone-photo likeness: same face structure, age, body proportions, natural expression, "
@@ -922,7 +979,7 @@ async def generate_model_with_product(
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
                 f"Clean commercial lighting, realistic shadows, natural reflections, high-end catalog and social ad quality. "
-                f"{frame_desc}. {TEXT_LOCK} No replacement packaging."
+                f"{frame_desc}. {IMAGE_TEXT_GUIDANCE} No replacement packaging."
             )
         elif presenter_source == "ai":
             p = (
@@ -937,7 +994,7 @@ async def generate_model_with_product(
                 f"Soft diffused lighting with natural skin highlights. "
                 f"Hyper-realistic skin texture, visible pores, natural imperfections — NOT AI-looking, NOT plastic skin, NOT CGI. "
                 f"Real human face with natural asymmetry. {frame_desc}. "
-                f"Ultra high quality, 8K, magazine-grade photography. {EYES_OPEN} {TEXT_LOCK}"
+                f"Ultra high quality, 8K, magazine-grade photography. {EYES_OPEN} {IMAGE_TEXT_GUIDANCE}"
             )
         else:
             p = (
@@ -948,7 +1005,7 @@ async def generate_model_with_product(
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
                 f"Do not invent a different model, different face, different age, different hairstyle, different outfit category, or different body. "
-                f"{EYES_OPEN} High quality. {TEXT_LOCK}"
+                f"{EYES_OPEN} High quality. {IMAGE_TEXT_GUIDANCE}"
             )
         if custom_instr:
             p += f" Additional: {custom_instr}."
@@ -1200,7 +1257,7 @@ def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font, max_width: int, max_l
 def _apply_image_brand_overlay(image_bytes: bytes, branding: dict | None = None) -> bytes:
     branding = branding or {}
     brand = (branding.get("brand_name") or "").strip()
-    mobile = (branding.get("brand_mobile") or "").strip()
+    mobile = _format_display_phone(branding.get("brand_mobile") or "")
     offer = (branding.get("offer_text") or "").strip()
     cta = (branding.get("cta_text") or "").strip()
     if not any([brand, mobile, offer, cta]):
@@ -1265,7 +1322,7 @@ def _has_branding(branding: dict | None, keys: list[str]) -> bool:
 
 def _render_video_end_card(job_id: str, aspect_ratio: str, branding: dict) -> str:
     brand = (branding.get("brand_name") or "").strip()
-    mobile = (branding.get("brand_mobile") or "").strip()
+    mobile = _format_display_phone(branding.get("brand_mobile") or "")
     details = (branding.get("details") or "").strip()
     cta = (branding.get("cta_text") or "").strip()
     width, height = ASPECT_RATIO_DIMS.get(aspect_ratio, ASPECT_RATIO_DIMS["9:16"])
@@ -1391,7 +1448,12 @@ async def append_video_end_card(final_url: str, job_id: str, aspect_ratio: str, 
     return final_url
 
 
-async def download_and_save_image(image_url: str, job_id: str, branding: dict | None = None) -> str:
+async def download_and_save_image(
+    image_url: str,
+    job_id: str,
+    branding: dict | None = None,
+    apply_overlay: bool = True,
+) -> str:
     """Download a generated composite image and save it locally."""
     os.makedirs(IMAGES_DIR, exist_ok=True)
     os.makedirs(RAW_IMAGES_DIR, exist_ok=True)
@@ -1405,7 +1467,10 @@ async def download_and_save_image(image_url: str, job_id: str, branding: dict | 
     legacy_raw_path = os.path.join(IMAGES_DIR, f"{job_id}_raw{raw_ext}")
     with open(legacy_raw_path, "wb") as f:
         f.write(image_bytes)
-    image_bytes = await asyncio.to_thread(_apply_image_brand_overlay, image_bytes, branding)
+    if apply_overlay:
+        image_bytes = await asyncio.to_thread(_apply_image_brand_overlay, image_bytes, branding)
+    else:
+        image_bytes = await asyncio.to_thread(_to_jpeg_bytes, image_bytes)
     output_path = os.path.join(IMAGES_DIR, f"{job_id}.jpg")
     with open(output_path, "wb") as f:
         f.write(image_bytes)
@@ -3309,7 +3374,12 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
 
             # Image-only mode: skip audio/video and return just the composite image
             if output_type == "image":
-                final_image_url = await download_and_save_image(model_with_product_url, job_id, c.get("image_branding"))
+                final_image_url = await download_and_save_image(
+                    model_with_product_url,
+                    job_id,
+                    c.get("image_branding"),
+                    apply_overlay=False,
+                )
                 jobs[job_id].update({"status": "completed", "step": "completed", "image_url": final_image_url})
                 save_to_history({
                     "id": job_id,
