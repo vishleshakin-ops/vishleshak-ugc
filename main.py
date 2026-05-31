@@ -850,9 +850,14 @@ async def generate_model_with_product(
     )
     MODEL_LOCK = (
         "Critical reference-person identity rule: the first uploaded image is the exact person to preserve. "
-        "Keep the same face, age, body proportions, hairstyle, hair accessories, skin tone, outfit color, outfit style, "
-        "and recognizable expression from the reference image. If the reference person is a child, keep them as a child; "
-        "do not adultify, beautify, replace, or change them into a generic model. Do not change gender or age. "
+        "Preserve the real phone-photo likeness: same face structure, age, body proportions, natural expression, "
+        "skin tone, hairstyle, and hair accessories. Commercial polish is allowed: cleaner lighting, sharper photo quality, "
+        "better background, neat grooming, and ad-ready styling are fine as long as the person still looks like the same real person "
+        "with a recognizable expression from the reference image. If the reference person is a child, keep them as a child; "
+        "do not adultify, replace, or change them into a generic model. Do not change gender or age. "
+        "Clothing may be cleaned up or changed only within the same outfit category unless the user explicitly asks otherwise: "
+        "dress remains a dress, suit remains a suit, lehenga remains a lehenga, saree remains a saree, school uniform remains a uniform, "
+        "and casual wear remains casual wear. Preserve the outfit pattern/category and do not randomly convert it into another clothing type. "
         "Only adjust pose/composition enough to naturally include the product."
     )
 
@@ -891,7 +896,7 @@ async def generate_model_with_product(
                 f"{MODEL_LOCK} "
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
-                f"Do not invent a different model, different face, different age, different hairstyle, different outfit, or different body. "
+                f"Do not invent a different model, different face, different age, different hairstyle, different outfit category, or different body. "
                 f"{EYES_OPEN} High quality."
             )
         if custom_instr:
