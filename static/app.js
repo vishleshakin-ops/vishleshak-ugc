@@ -979,7 +979,7 @@ async function loadOrdersAdmin() {
     orders = orders
       .filter(o => o.status !== "rejected")
       .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    const pending = orders.filter(o => o.status === "pending").length;
+    const pending = orders.filter(o => ["pending", "paid"].includes(o.status)).length;
     const badge = $("orders-badge");
     if (pending > 0) {
       badge.textContent = pending;
@@ -1070,7 +1070,7 @@ async function loadOrdersBadge() {
   try {
     const resp = await fetch("/api/orders");
     const orders = await resp.json();
-    const pending = orders.filter(o => o.status === "pending").length;
+    const pending = orders.filter(o => ["pending", "paid"].includes(o.status)).length;
     const badge = $("orders-badge");
     if (badge && pending > 0) { badge.textContent = pending; badge.classList.remove("hidden"); }
   } catch(_) {}
@@ -1087,7 +1087,17 @@ function estimateOrderPrice(order) {
 function renderOrderCard(order) {
   const thumb = `/order_uploads/${order.id}.jpg`;
   const date = new Date(order.created_at).toLocaleString("en-IN", {day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"});
-  const statusLabel = {pending:"Pending", processing:"Processing", completed:"Done", rejected:"Rejected", failed:"Failed"}[order.status] || order.status;
+  const statusLabel = {
+    payment_pending: "Payment Pending",
+    payment_error: "Payment Error",
+    payment_failed: "Payment Failed",
+    paid: "Paid",
+    pending: "Pending",
+    processing: "Processing",
+    completed: "Done",
+    rejected: "Rejected",
+    failed: "Failed"
+  }[order.status] || order.status;
   const outputLabel = order.output_type === "image" ? "Image creative" : "Video ad";
   const styleLabel = order.output_type === "image"
     ? "Static"
@@ -1098,7 +1108,18 @@ function renderOrderCard(order) {
   const notePreview = order.notes ? order.notes.replace(/\s+/g, " ").slice(0, 240) : "";
 
   let actions = "";
-  if (order.status === "pending" || order.status === "failed") {
+  if (order.status === "payment_pending") {
+    actions = `<div class="order-actions">
+      ${order.razorpay_payment_link_url ? `<a class="approve-btn secondary-action" href="${order.razorpay_payment_link_url}" target="_blank">Open Payment Link</a>` : ""}
+      <span class="processing-chip">Waiting for customer payment</span>
+      <button class="reject-btn" data-reject="${order.id}">Reject</button>
+    </div>`;
+  } else if (order.status === "payment_error" || order.status === "payment_failed") {
+    actions = `<div class="order-actions">
+      <span class="processing-chip">${order.payment_error || "Payment did not complete"}</span>
+      <button class="reject-btn" data-reject="${order.id}">Reject</button>
+    </div>`;
+  } else if (order.status === "pending" || order.status === "paid" || order.status === "failed") {
     const kieTaskId = order.kie_task_id || "";
     const recoverRow = order.video_style === "cinematic" || kieTaskId ? `
       <div class="recovery-row">
@@ -1141,6 +1162,7 @@ function renderOrderCard(order) {
         <span>${durationLabel}</span>
         <span>${order.language || "English"}</span>
         <span class="price-tag">${priceLabel}</span>
+        ${order.payment_status ? `<span>Payment: ${order.payment_status}</span>` : ""}
       </div>
       <span class="order-meta">${order.customer_phone || ""} · ${date}</span>
       ${notePreview ? `<span class="order-notes">${notePreview}${order.notes.length > 240 ? "..." : ""}</span>` : ""}

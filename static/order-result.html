@@ -498,7 +498,7 @@
         }
 
         const order = await resp.json();
-        if (order.status === "pending" || order.status === "failed") {
+        if (["pending", "payment_pending", "payment_error", "payment_failed", "failed"].includes(order.status)) {
           const saved = await fetchFromCloudinary();
           if (saved && saved.status === "completed") {
             render(saved);
@@ -519,13 +519,41 @@
       const status = order.status;
       const safeId = escapeHtml(order.id || orderId);
 
-      if (status === "pending") {
+      if (status === "payment_pending") {
+        card.innerHTML = `
+          <div class="status-row">
+            <div class="status-icon warn">Rs</div>
+            <div>
+              <div class="status-title">Payment pending</div>
+              <div class="status-sub">Complete payment to start automatic generation.</div>
+            </div>
+          </div>
+          ${order.razorpay_payment_link_url ? `<div class="action-row"><a class="btn btn-primary" href="${escapeHtml(order.razorpay_payment_link_url)}" target="_blank" rel="noopener">Pay Rs. ${escapeHtml(order.amount_inr || "")}</a></div>` : ""}
+          <div class="order-id-row">Order ID: ${safeId}</div>`;
+        return;
+      }
+
+      if (status === "payment_error" || status === "payment_failed") {
+        card.innerHTML = `
+          <div class="status-row">
+            <div class="status-icon error">!</div>
+            <div>
+              <div class="status-title">Payment could not be completed</div>
+              <div class="status-sub">Please contact us on WhatsApp and share your order ID.</div>
+            </div>
+          </div>
+          ${order.payment_error ? `<div class="script-box">${escapeHtml(order.payment_error)}</div>` : ""}
+          <div class="order-id-row">Order ID: ${safeId}</div>`;
+        return;
+      }
+
+      if (status === "pending" || status === "paid") {
         card.innerHTML = `
           <div class="status-row">
             <div class="status-icon warn">...</div>
             <div>
-              <div class="status-title">Waiting for approval</div>
-              <div class="status-sub">We will start processing your order soon.</div>
+              <div class="status-title">${status === "paid" ? "Payment received" : "Waiting for approval"}</div>
+              <div class="status-sub">${status === "paid" ? "Generation will start automatically soon." : "We will start processing your order soon."}</div>
             </div>
           </div>
           <div class="order-id-row">Order ID: ${safeId}</div>`;

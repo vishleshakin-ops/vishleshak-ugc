@@ -2059,12 +2059,13 @@
         <section class="panel success-card" id="success-card">
           <div class="success-icon">OK</div>
           <h2>Order received</h2>
-          <p>Your request has been saved. Production updates will be shared on WhatsApp.</p>
+          <p id="success-message">Your request has been saved. Production updates will be shared on WhatsApp.</p>
           <div class="order-id-box">
             <strong>Order ID</strong>
             <span id="success-order-id"></span>
           </div>
           <br />
+          <a class="track-btn" id="pay-btn" href="#" target="_blank" rel="noopener" style="display:none">Pay now</a>
           <a class="track-btn" id="track-btn" href="#">Track order</a>
         </section>
       </div>
@@ -2656,6 +2657,17 @@
         document.getElementById("script-preview-card").style.display = "none";
         document.getElementById("success-order-id").textContent = data.order_id;
         document.getElementById("track-btn").href = `/order/result/${data.order_id}`;
+        const payBtn = document.getElementById("pay-btn");
+        const successMessage = document.getElementById("success-message");
+        if (data.payment_url) {
+          payBtn.href = data.payment_url;
+          payBtn.textContent = `Pay Rs. ${data.amount_inr || estimatePrice()} now`;
+          payBtn.style.display = "inline-flex";
+          successMessage.textContent = "Your order is saved. Complete payment to start automatic generation.";
+        } else {
+          payBtn.style.display = "none";
+          successMessage.textContent = "Your request has been saved. Production updates will be shared on WhatsApp.";
+        }
         document.getElementById("success-card").style.display = "block";
         document.getElementById("success-card").scrollIntoView({ behavior: "smooth", block: "start" });
       } catch (error) {

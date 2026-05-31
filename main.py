@@ -9,6 +9,8 @@ import io
 import smtplib
 import random
 import re
+import hmac
+import hashlib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from urllib.parse import quote
@@ -409,6 +411,12 @@ GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 OWNER_WHATSAPP     = os.getenv("OWNER_WHATSAPP", "919953910987")
 CALLMEBOT_API_KEY  = os.getenv("CALLMEBOT_API_KEY", "")
 
+# Razorpay test/live keys are read from env vars only. Never commit secrets.
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
+RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
+
 # URLs
 RAILWAY_URL = os.getenv("RAILWAY_URL", "").rstrip("/")
 PUBLIC_URL  = os.getenv("PUBLIC_URL", "").rstrip("/")
@@ -477,6 +485,51 @@ def save_order(order: dict):
     all_orders = sort_orders_latest_first(all_orders)
     with open(ORDERS_FILE, "w", encoding="utf-8") as f:
         json.dump(all_orders, f, ensure_ascii=False, indent=2)
+
+def _estimate_order_amount_inr(order: dict) -> int:
+    if order.get("output_type") == "image":
+        return 49
+    price = 599 if order.get("video_style") == "cinematic" else 499
+    if str(order.get("video_duration") or "5") == "10":
+        price += 200
+    if order.get("presenter_source") == "uploaded":
+        price += 100
+    return price
+
+def _public_base_url() -> str:
+    return (PUBLIC_URL or RAILWAY_URL or "http://127.0.0.1:8000").rstrip("/")
+
+async def _create_razorpay_payment_link(order: dict) -> dict:
+    if not RAZORPAY_ENABLED:
+        raise RuntimeError("Razorpay keys are not configured")
+    amount_inr = _estimate_order_amount_inr(order)
+    order_id = order.get("id", "")
+    payload = {
+        "amount": amount_inr * 100,
+        "currency": "INR",
+        "accept_partial": False,
+        "description": f"Vishleshak {order.get('output_type', 'UGC')} order {order_id[:8]}",
+        "reference_id": order_id,
+        "customer": {
+            "name": order.get("customer_name", ""),
+            "contact": re.sub(r"\D", "", order.get("customer_phone", ""))[-10:],
+            "email": order.get("customer_email", ""),
+        },
+        "notify": {"sms": False, "email": False},
+        "reminder_enable": True,
+        "callback_url": f"{_public_base_url()}/order/result/{order_id}",
+        "callback_method": "get",
+        "notes": {"order_id": order_id, "source": "vishleshak_ugc"},
+    }
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(
+            "https://api.razorpay.com/v1/payment_links",
+            auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+            json=payload,
+        )
+    if resp.status_code >= 400:
+        raise RuntimeError(f"Razorpay payment link failed: {resp.text}")
+    return resp.json()
 
 MODEL_DIR  = os.path.join(os.path.dirname(__file__), "model")
 VIDEOS_DIR = os.path.join(os.path.dirname(__file__), "static", "videos")
@@ -1739,8 +1792,9 @@ async def sync_order(request: Request):
     orders = load_orders()
     if any(o.get("id") == order.get("id") for o in orders):
         return {"status": "exists"}
-    # Mark as pending so admin can approve locally
-    order["status"] = "pending"
+    # Preserve payment-gated orders so local admin cannot approve unpaid orders.
+    if not order.get("status"):
+        order["status"] = "pending"
 
     # Download product image from Railway if not already local
     order_id = order.get("id", "")
@@ -2175,11 +2229,32 @@ async def submit_order(
         "image_url": None,
         "script": None,
     }
+    amount_inr = _estimate_order_amount_inr(order)
+    order["amount_inr"] = amount_inr
+    order["payment_status"] = "not_required"
+    if RAZORPAY_ENABLED:
+        order["status"] = "payment_pending"
+        order["payment_status"] = "pending"
+        try:
+            payment_link = await _create_razorpay_payment_link(order)
+            order["razorpay_payment_link_id"] = payment_link.get("id")
+            order["razorpay_payment_link_url"] = payment_link.get("short_url")
+            order["razorpay_reference_id"] = payment_link.get("reference_id") or order_id
+        except Exception as e:
+            order["status"] = "payment_error"
+            order["payment_status"] = "link_failed"
+            order["payment_error"] = str(e)
     save_order(order)
     _new_order_ids.append(order_id)
     asyncio.create_task(_send_order_email(order))
     asyncio.create_task(_send_whatsapp_notification(order))
-    return {"order_id": order_id, "status": "pending"}
+    return {
+        "order_id": order_id,
+        "status": order["status"],
+        "amount_inr": amount_inr,
+        "payment_url": order.get("razorpay_payment_link_url", ""),
+        "payment_status": order.get("payment_status", "not_required"),
+    }
 
 
 def _send_order_email_sync(order: dict):
@@ -2277,6 +2352,67 @@ def _order_video_end_card(order: dict) -> dict:
         "details": order.get("video_brand_details", ""),
         "cta_text": order.get("video_cta_text", ""),
     }
+
+
+def _start_order_generation(order: dict, background_tasks: BackgroundTasks):
+    order_id = order["id"]
+    img_path = order["product_image_path"]
+    if not os.path.exists(img_path):
+        raise HTTPException(status_code=400, detail="Product image missing")
+    with open(img_path, "rb") as f:
+        image_data = f.read()
+    job_id = str(uuid.uuid4())
+    jobs[job_id] = {
+        "status": "processing",
+        "step": "analyzing",
+        "script": None,
+        "video_url": None,
+        "image_url": None,
+        "error": None,
+        "order_id": order_id,
+    }
+    customization = {
+        "presenter_source": order.get("presenter_source", "ai"),
+        "output_type": order.get("output_type", "video"),
+        "video_duration": order.get("video_duration", "5"),
+        "video_quality": order.get("video_quality", "high"),
+        "auto_mode": True,
+        "language": order.get("language", "hindi"),
+        "model_gender": "female",
+        "skin_tone": "wheatish",
+        "scene": "studio",
+        "custom_scene": "",
+        "model_action": order.get("notes", ""),
+        "custom_instructions": order.get("notes", ""),
+        "aspect_ratio": order.get("aspect_ratio", "9:16"),
+        "custom_script": order.get("custom_script", ""),
+        "order_model_path": order.get("model_image_path") or "",
+        "image_branding": _order_image_branding(order),
+        "video_end_card": _order_video_end_card(order),
+    }
+    order["status"] = "processing"
+    order["job_id"] = job_id
+    save_order(order)
+    video_style = order.get("video_style")
+    if video_style in ("cinematic", "veo3"):
+        pipeline = process_job_veo3
+    elif video_style == "seedance":
+        pipeline = process_job_seedance
+    else:
+        pipeline = process_job
+    background_tasks.add_task(
+        pipeline,
+        job_id,
+        image_data,
+        order.get("product_mime", "image/jpeg"),
+        model_image_url,
+        customization,
+    )
+    wa_from = order.get("wa_from")
+    if wa_from:
+        product_name = order.get("notes", "your product").replace("WhatsApp order for: ", "")
+        background_tasks.add_task(notify_wa_on_complete, job_id, order_id, wa_from, product_name)
+    return job_id
 
 
 async def _persist_result_to_cloudinary(order_id: str, payload: dict):
@@ -2484,47 +2620,67 @@ async def approve_order(order_id: str, background_tasks: BackgroundTasks):
     order = next((o for o in orders if o["id"] == order_id), None)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    if order["status"] not in ("pending", "failed"):
+    if order["status"] not in ("pending", "failed", "paid"):
         raise HTTPException(status_code=400, detail="Order already processed")
-    img_path = order["product_image_path"]
-    if not os.path.exists(img_path):
-        raise HTTPException(status_code=400, detail="Product image missing")
-    with open(img_path, "rb") as f:
-        image_data = f.read()
-    job_id = str(uuid.uuid4())
-    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None, "order_id": order_id}
-    order_model_path = order.get("model_image_path") or ""
-    customization = {
-        "presenter_source": order.get("presenter_source", "ai"),
-        "output_type": order.get("output_type", "video"),
-        "video_duration": order.get("video_duration", "30"),
-        "video_quality": order.get("video_quality", "high"),
-        "auto_mode": True,
-        "language": order.get("language", "hindi"),
-        "model_gender": "female",
-        "skin_tone": "wheatish",
-        "scene": "studio",
-        "custom_scene": "",
-        "model_action": order.get("notes", ""),
-        "custom_instructions": order.get("notes", ""),
-        "aspect_ratio": order.get("aspect_ratio", "9:16"),
-        "custom_script": order.get("custom_script", ""),
-        "order_model_path": order_model_path,
-        "image_branding": _order_image_branding(order),
-        "video_end_card": _order_video_end_card(order),
-    }
-
-    order["status"] = "processing"
-    order["job_id"] = job_id
-    save_order(order)
-    pipeline = process_job_seedance if order.get("video_style") == "seedance" else process_job
-    background_tasks.add_task(pipeline, job_id, image_data, order.get("product_mime", "image/jpeg"), model_image_url, customization)
-    # If order came from WhatsApp, notify customer when done
-    wa_from = order.get("wa_from")
-    if wa_from:
-        product_name = order.get("notes", "your product").replace("WhatsApp order for: ", "")
-        background_tasks.add_task(notify_wa_on_complete, job_id, order_id, wa_from, product_name)
+    if order.get("payment_status") == "pending":
+        raise HTTPException(status_code=402, detail="Payment is pending")
+    job_id = _start_order_generation(order, background_tasks)
     return {"job_id": job_id, "status": "processing"}
+
+
+@app.post("/api/razorpay/webhook")
+async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks):
+    if not RAZORPAY_WEBHOOK_SECRET:
+        raise HTTPException(status_code=500, detail="Razorpay webhook secret is not configured")
+    raw_body = await request.body()
+    signature = request.headers.get("X-Razorpay-Signature", "")
+    expected = hmac.new(
+        RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
+        raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        raise HTTPException(status_code=400, detail="Invalid Razorpay signature")
+
+    payload = json.loads(raw_body.decode("utf-8"))
+    event = payload.get("event", "")
+    entity = (payload.get("payload", {}).get("payment_link", {}) or {}).get("entity", {}) or {}
+    payment_entity = (payload.get("payload", {}).get("payment", {}) or {}).get("entity", {}) or {}
+    order_id = (
+        entity.get("reference_id")
+        or (entity.get("notes") or {}).get("order_id")
+        or (payment_entity.get("notes") or {}).get("order_id")
+    )
+    if not order_id:
+        return {"status": "ignored", "reason": "missing_order_id"}
+
+    orders = load_orders()
+    order = next((o for o in orders if o.get("id") == order_id), None)
+    if not order:
+        return {"status": "ignored", "reason": "order_not_found"}
+
+    order["razorpay_event"] = event
+    order["razorpay_payment_id"] = payment_entity.get("id") or order.get("razorpay_payment_id")
+    order["razorpay_payment_link_id"] = entity.get("id") or order.get("razorpay_payment_link_id")
+
+    if event in ("payment_link.paid", "payment.captured"):
+        if order.get("status") in ("processing", "completed"):
+            save_order(order)
+            return {"status": "already_processing", "order_id": order_id}
+        order["payment_status"] = "paid"
+        order["paid_at"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        order["status"] = "paid"
+        job_id = _start_order_generation(order, background_tasks)
+        return {"status": "generation_started", "order_id": order_id, "job_id": job_id}
+
+    if event in ("payment.failed", "payment_link.cancelled", "payment_link.expired"):
+        order["payment_status"] = "failed"
+        order["status"] = "payment_failed"
+        save_order(order)
+        return {"status": "payment_failed", "order_id": order_id}
+
+    save_order(order)
+    return {"status": "ignored", "event": event, "order_id": order_id}
 
 
 @app.post("/api/orders/{order_id}/approve-seedance")
