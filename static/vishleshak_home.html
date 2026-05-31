@@ -1436,9 +1436,16 @@ footer {
   const NAV_H = 72; // nav bar height offset
 
   const navLinks = document.querySelectorAll('.nav-links a:not(.ugc-btn)');
+  let activeHref = "";
 
   function setActive(href) {
+    if (href === activeHref) return;
+    activeHref = href;
     navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === href));
+    const nextUrl = href === '#' ? window.location.pathname : `${window.location.pathname}${href}`;
+    if (window.location.hash !== href.replace('#', '#')) {
+      history.replaceState(null, '', nextUrl);
+    }
   }
 
   function updateActive() {
