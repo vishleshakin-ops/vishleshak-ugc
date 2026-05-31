@@ -3,10 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script>
-  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-  window.addEventListener("pageshow", () => window.scrollTo(0, 0));
-</script>
 
 <!-- Primary SEO -->
 <title>Vishleshak | AI Content Studio for Businesses — UGC Videos, Chatbots & AI Reception</title>
@@ -464,18 +460,18 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 
 /* SAMPLE VIDEOS */
 .samples {
-  padding: 80px 60px;
+  padding: 72px 60px 80px;
   background: #0f0a28;
   text-align: center;
 }
 .samples .section-label { color: #a78bfa; }
 .samples .section-title { color: white; }
-.samples .section-sub { color: rgba(255,255,255,0.55); margin-bottom: 48px; }
+.samples .section-sub { color: rgba(255,255,255,0.55); margin-bottom: 38px; }
 .samples-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  max-width: 960px;
+  gap: 18px;
+  max-width: 900px;
   margin: 0 auto 36px;
   justify-items: center;
 }
@@ -496,7 +492,7 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 }
 .sample-video-wrap {
   position: relative;
-  aspect-ratio: 9/14;
+  aspect-ratio: 9/12.5;
   background: #0d0d10;
   overflow: hidden;
   cursor: pointer;
@@ -518,6 +514,36 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   padding: 3px 8px;
   border-radius: 20px;
   z-index: 5;
+}
+.sample-audio {
+  position: absolute;
+  top: 10px; right: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 32px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 999px;
+  background: rgba(8, 8, 18, 0.72);
+  color: white;
+  font-size: 11px; font-weight: 700;
+  line-height: 1;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  z-index: 6;
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+.sample-audio svg {
+  width: 14px; height: 14px;
+  flex: 0 0 auto;
+}
+.sample-audio:hover {
+  background: rgba(124,58,237,0.86);
+  border-color: rgba(255,255,255,0.35);
+  transform: translateY(-1px);
+}
+.sample-audio.is-on {
+  background: rgba(37, 211, 102, 0.88);
+  border-color: rgba(255,255,255,0.35);
 }
 .sample-card-body { padding: 10px 12px 12px; text-align: left; }
 .sample-caption {
@@ -871,7 +897,7 @@ footer {
     <a href="#" class="nav-logo">
       <div class="nav-logo-icon">V</div>
       <div>
-        <span style="color:white;font-size:18px;font-weight:700;">Vishleshak</span>
+        <span class="nav-logo-text">Vishleshak</span>
         <span class="nav-logo-sub">AI Content Studio</span>
       </div>
     </a>
@@ -970,8 +996,12 @@ footer {
   <div class="samples-grid">
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample2.mp4" playsinline preload="metadata" muted></video>
+        <video src="/static/samples/sample2.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
+        <button class="sample-audio" type="button" aria-label="Play with audio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <span>Tap for audio</span>
+        </button>
       </div>
       <div class="sample-card-body">
         <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
@@ -979,8 +1009,12 @@ footer {
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample3.mp4" playsinline preload="metadata" muted></video>
+        <video src="/static/samples/sample3.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
+        <button class="sample-audio" type="button" aria-label="Play with audio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <span>Tap for audio</span>
+        </button>
       </div>
       <div class="sample-card-body">
         <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
@@ -988,8 +1022,12 @@ footer {
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample4.mp4" playsinline preload="metadata" muted></video>
+        <video src="/static/samples/sample4.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
+        <button class="sample-audio" type="button" aria-label="Play with audio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <span>Tap for audio</span>
+        </button>
       </div>
       <div class="sample-card-body">
         <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
@@ -997,8 +1035,12 @@ footer {
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample5.mp4" playsinline preload="metadata" muted></video>
+        <video src="/static/samples/sample5.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
+        <button class="sample-audio" type="button" aria-label="Play with audio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <span>Tap for audio</span>
+        </button>
       </div>
       <div class="sample-card-body">
         <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
@@ -1006,8 +1048,12 @@ footer {
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
-        <video src="/static/samples/sample6.mp4" playsinline preload="metadata" muted></video>
+        <video src="/static/samples/sample6.mp4" playsinline preload="metadata" controlslist="nodownload" disablepictureinpicture muted></video>
         <span class="sample-tag">UGC Sample</span>
+        <button class="sample-audio" type="button" aria-label="Play with audio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <span>Tap for audio</span>
+        </button>
       </div>
       <div class="sample-card-body">
         <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
@@ -1351,28 +1397,16 @@ footer {
   updateActive(); // run once on load
 })();
 
-// Sample videos — hover to play/pause, global mute toggle (matches index.html behaviour)
-let samplesMuted = true;
-
-function toggleSamplesMute(btn, e) {
-  e.stopPropagation();
-  samplesMuted = !samplesMuted;
-  document.querySelectorAll('.sample-video-wrap video').forEach(v => { v.muted = samplesMuted; });
-  document.querySelectorAll('.sample-mute').forEach(b => {
-    b.textContent = samplesMuted ? '🔇' : '🔊';
-    b.title       = samplesMuted ? 'Unmute' : 'Mute';
-  });
-}
-
+// Sample videos: hover previews are silent, audio starts only after a click.
 document.querySelectorAll('.sample-card').forEach(card => {
   const wrap  = card.querySelector('.sample-video-wrap');
   const video = wrap && wrap.querySelector('video');
+  const audioButton = card.querySelector('.sample-audio');
   if (!video) return;
 
   video.muted = true;
 
   wrap.addEventListener('mouseenter', () => {
-    video.muted = true;
     video.play().catch(() => {});
     wrap.classList.add('playing');
   });
@@ -1381,9 +1415,33 @@ document.querySelectorAll('.sample-card').forEach(card => {
     video.currentTime = 0;
     wrap.classList.remove('playing');
   });
+
+  if (audioButton) {
+    audioButton.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const shouldUnmute = video.muted;
+
+      document.querySelectorAll('.sample-video-wrap video').forEach(otherVideo => {
+        if (otherVideo !== video) otherVideo.muted = true;
+      });
+      document.querySelectorAll('.sample-audio').forEach(button => {
+        if (button !== audioButton) {
+          button.classList.remove('is-on');
+          button.querySelector('span').textContent = 'Tap for audio';
+          button.setAttribute('aria-label', 'Play with audio');
+        }
+      });
+
+      video.muted = !shouldUnmute;
+      video.play().catch(() => {});
+      audioButton.classList.toggle('is-on', shouldUnmute);
+      audioButton.querySelector('span').textContent = shouldUnmute ? 'Sound on' : 'Tap for audio';
+      audioButton.setAttribute('aria-label', shouldUnmute ? 'Mute sample video' : 'Play with audio');
+    });
+  }
 });
 
-// ── Retell AI Dental Receptionist Widget ──────────────────────────────────────
 (function() {
   // ★ FILL IN your Retell agent_id from https://app.retellai.com → Agents
   const RETELL_AGENT_ID = "agent_YOUR_RETELL_AGENT_ID_HERE";
