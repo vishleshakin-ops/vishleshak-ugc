@@ -1076,6 +1076,14 @@ async function loadOrdersBadge() {
   } catch(_) {}
 }
 
+function estimateOrderPrice(order) {
+  if (order.output_type === "image") return 99;
+  let price = order.video_style === "cinematic" ? 599 : 499;
+  if (String(order.video_duration || "5") === "10") price += 200;
+  if (order.presenter_source === "uploaded") price += 100;
+  return price;
+}
+
 function renderOrderCard(order) {
   const thumb = `/order_uploads/${order.id}.jpg`;
   const date = new Date(order.created_at).toLocaleString("en-IN", {day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"});
@@ -1086,6 +1094,7 @@ function renderOrderCard(order) {
     : (order.video_style === "cinematic" ? "Cinematic" : "Talking");
   const presenterLabel = {ai:"AI model", uploaded:"Reference model", product:"Product only"}[order.presenter_source] || "AI model";
   const durationLabel = order.output_type === "image" ? "No duration" : `${order.video_duration || "5"}s`;
+  const priceLabel = `Rs. ${estimateOrderPrice(order)}`;
   const notePreview = order.notes ? order.notes.replace(/\s+/g, " ").slice(0, 240) : "";
 
   let actions = "";
@@ -1131,6 +1140,7 @@ function renderOrderCard(order) {
         <span>${presenterLabel}</span>
         <span>${durationLabel}</span>
         <span>${order.language || "English"}</span>
+        <span class="price-tag">${priceLabel}</span>
       </div>
       <span class="order-meta">${order.customer_phone || ""} · ${date}</span>
       ${notePreview ? `<span class="order-notes">${notePreview}${order.notes.length > 240 ? "..." : ""}</span>` : ""}

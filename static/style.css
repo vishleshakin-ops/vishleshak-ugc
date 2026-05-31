@@ -1,10 +1,10 @@
 :root {
-  --bg:           #f3f0ff;
+  --bg:           #f8f7ff;
   --surface:      #ffffff;
-  --surface-soft: #f8f6ff;
+  --surface-soft: #fbfaff;
   --ink:          #0f172a;
   --muted:        #64748b;
-  --line:         #e5e0ff;
+  --line:         #e5e0f5;
   --purple:       #7C3AED;
   --purple-dark:  #5b21b6;
   --purple-mid:   #6d28d9;
@@ -13,9 +13,9 @@
   --green:        #10b981;
   --red:          #ef4444;
   --shadow-sm:    0 1px 3px rgba(15,23,42,0.05), 0 0 0 1px rgba(15,23,42,0.03);
-  --shadow:       0 4px 16px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.04);
-  --shadow-lg:    0 12px 40px rgba(15,23,42,0.13);
-  --radius:       12px;
+  --shadow:       0 18px 45px rgba(30,10,78,0.11);
+  --shadow-lg:    0 24px 70px rgba(15,10,40,0.22);
+  --radius:       8px;
   --radius-sm:    8px;
 }
 
@@ -25,7 +25,9 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: var(--bg);
+  background:
+    linear-gradient(180deg, #0d0640 0, #1a0a40 96px, #1e0a4e 260px, #f8f7ff 560px),
+    var(--bg);
   color: var(--ink);
   font-size: 14px;
   line-height: 1.5;
@@ -38,9 +40,9 @@ h1, h2, h3, p { margin-top: 0; }
 
 /* ── Shell ─────────────────────────────────────────────────────────────────── */
 .shell {
-  width: min(1200px, calc(100vw - 40px));
+  width: min(1220px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 24px 0 60px;
+  padding: 22px 0 60px;
 }
 
 /* ── Top bar ───────────────────────────────────────────────────────────────── */
@@ -49,11 +51,15 @@ h1, h2, h3, p { margin-top: 0; }
   justify-content: space-between;
   align-items: center;
   gap: 24px;
-  margin-bottom: 20px;
-  padding: 16px 24px;
-  background: linear-gradient(135deg, #0f0a28 0%, #1e0a4e 50%, #2d1a72 100%);
+  margin-bottom: 18px;
+  padding: 22px 26px;
+  background:
+    radial-gradient(ellipse at 76% 22%, rgba(124,58,237,0.34), transparent 46%),
+    radial-gradient(ellipse at 18% 86%, rgba(37,99,235,0.24), transparent 52%),
+    linear-gradient(135deg, #0f0a28 0%, #1e0a4e 56%, #1d4ed8 100%);
   border-radius: var(--radius);
-  box-shadow: 0 4px 24px rgba(100, 40, 200, 0.25);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255,255,255,0.10);
 }
 
 .eyebrow {
@@ -109,7 +115,7 @@ h3 { font-size: 14px; font-weight: 700; margin-bottom: 0; }
 .workspace {
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
-  gap: 16px;
+  gap: 20px;
   align-items: start;
 }
 
@@ -118,24 +124,23 @@ h3 { font-size: 14px; font-weight: 700; margin-bottom: 0; }
   background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  border: 1px solid var(--line);
 }
 
 .side-panel {
-  padding: 14px;
+  padding: 18px;
   position: sticky;
   top: 16px;
-  border: 1px solid var(--line);
 }
 
 .main-panel {
-  padding: 22px;
+  padding: 24px;
   min-height: 580px;
-  border: 1px solid var(--line);
 }
 
 .panel-section + .panel-section {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--line);
 }
 
@@ -1155,6 +1160,119 @@ video {
 }
 .processing-chip { color: var(--muted); font-size: 12px; font-weight: 800; padding: 8px 10px; background: #eff6ff; border-radius: 8px; }
 .whatsapp-send { font-size: 12px; color: #16a34a; text-align: center; display: block; margin-top: 2px; font-weight: 800; text-decoration: none; }
+
+/* ── Vishleshak admin visual refresh ──────────────────────────────────────── */
+.topbar h1 {
+  font-size: clamp(1.45rem, 3vw, 2.35rem);
+  letter-spacing: 0;
+}
+
+.server-pill {
+  min-height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.16);
+  color: rgba(255,255,255,0.86);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dot {
+  background: #25D366;
+  box-shadow: 0 0 14px rgba(37,211,102,0.8);
+}
+
+.section-heading,
+.field-group label,
+.field-grid label {
+  color: #4f46e5;
+  letter-spacing: 0.06em;
+}
+
+.view-header h2 {
+  margin: 3px 0 0;
+  color: var(--ink);
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.source-option,
+.mode-card,
+.segment,
+.scene,
+.platform-target,
+.text-input,
+textarea {
+  border-radius: 8px;
+}
+
+.source-option,
+.mode-card,
+.scene,
+.platform-target,
+.drop-zone,
+.model-preview,
+.info-panel,
+.manual-panel,
+.script-preview-card {
+  border-color: var(--line);
+  background: #fff;
+}
+
+.source-option.selected,
+.mode-card.selected,
+.segment.selected,
+.scene.selected,
+.platform-target.selected {
+  border-color: var(--purple);
+  background: var(--purple-light);
+  color: var(--purple-dark);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.10);
+}
+
+.drop-zone {
+  border-color: #cfc6ed;
+  background:
+    linear-gradient(180deg, rgba(124,58,237,0.05), rgba(37,99,235,0.03)),
+    #fff;
+}
+
+.upload-placeholder strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.upload-placeholder small {
+  color: var(--muted);
+}
+
+.tool-hint-box,
+.cost-estimate {
+  border-radius: 8px;
+}
+
+.history-section,
+.orders-panel {
+  margin-top: 22px;
+  background: rgba(255,255,255,0.96);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.orders-panel-header h2,
+.history-header h2 {
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.order-tags span.price-tag {
+  background: #ecfdf5;
+  color: #047857;
+}
 
 @media (max-width: 760px) {
   .orders-panel { padding: 16px; }
