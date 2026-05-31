@@ -2197,6 +2197,59 @@
       return price;
     }
 
+    const personRestrictedPattern = /\b(condoms?|contraceptive|sexual wellness|adult product|adult toy|intimate product|lingerie|bra|pant(y|ies)|underwear|bikini|swim\s?wear|swimsuits?|swim\s?suits?|swimming costume)\b/i;
+
+    function personRestrictedText() {
+      const ids = [
+        "notes", "offer-cta",
+        "image-brand-name", "image-offer-text", "image-cta-text",
+        "video-brand-name", "video-brand-details", "video-cta-text"
+      ];
+      const values = ids.map(id => {
+        const el = document.getElementById(id);
+        return el ? el.value : "";
+      });
+      if (productFile) values.push(productFile.name);
+      return values.join(" ");
+    }
+
+    function isPersonRestrictedCreative() {
+      return personRestrictedPattern.test(personRestrictedText());
+    }
+
+    function clearModelReference() {
+      modelFile = null;
+      const input = document.getElementById("modal-model-file");
+      if (input) input.value = "";
+      const row = document.getElementById("model-thumb-row");
+      if (row) row.style.display = "none";
+      const thumb = document.getElementById("model-thumb-img");
+      if (thumb) thumb.removeAttribute("src");
+    }
+
+    function selectPresenterSource(nextPresenter, showWarning = true) {
+      if (nextPresenter === "uploaded" && isPersonRestrictedCreative()) {
+        selectedPresenter = "ai";
+        clearModelReference();
+        document.querySelectorAll("#presenter-group button").forEach(button => button.classList.remove("active"));
+        document.querySelector("#presenter-group [data-presenter='ai']").classList.add("active");
+        if (showWarning) {
+          showError("For swimwear, intimate, condoms, and sexual-wellness products, use AI generated or Product only. Uploaded/reference person photos are not allowed.");
+        }
+        updateSummary();
+        return;
+      }
+      selectedPresenter = nextPresenter;
+      if (selectedPresenter === "uploaded") openModelModal();
+      updateSummary();
+    }
+
+    function enforceSensitivePresenterChoice() {
+      if (isPersonRestrictedCreative() && selectedPresenter === "uploaded") {
+        selectPresenterSource("ai", false);
+      }
+    }
+
     function updateSummary() {
       document.getElementById("summary-output").textContent = labels.output[selectedOutput] || selectedOutput;
       document.getElementById("summary-style").textContent = selectedOutput === "image" ? "Static product creative" : (labels.style[selectedStyle] || selectedStyle);
@@ -2216,8 +2269,7 @@
     });
     wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; });
     wireSegmented("presenter-group", btn => {
-      selectedPresenter = btn.dataset.presenter;
-      if (selectedPresenter === "uploaded") openModelModal();
+      selectPresenterSource(btn.dataset.presenter);
     });
     wireSegmented("platform-group", btn => {
       selectedPlatform = btn.dataset.platform;
@@ -2347,6 +2399,7 @@
       previewImg.src = URL.createObjectURL(file);
       previewImg.style.display = "block";
       dropPlaceholder.style.display = "none";
+      enforceSensitivePresenterChoice();
     }
 
     fileInput.addEventListener("change", () => {
@@ -2393,6 +2446,11 @@
       }
       if (!productFile) {
         showError("Please upload a product photo.", errorTarget);
+        return null;
+      }
+      if (isPersonRestrictedCreative() && (selectedPresenter === "uploaded" || modelFile)) {
+        showError("For swimwear, intimate, condoms, and sexual-wellness products, use AI generated or Product only. Uploaded/reference person photos are not allowed.", errorTarget);
+        selectPresenterSource("ai", false);
         return null;
       }
       return {
@@ -2494,6 +2552,16 @@
 
     notesArea.addEventListener("input", () => {
       notesArea.dataset.aiImproved = "false";
+      enforceSensitivePresenterChoice();
+    });
+
+    [
+      "offer-cta",
+      "image-brand-name", "image-offer-text", "image-cta-text",
+      "video-brand-name", "video-brand-details", "video-cta-text"
+    ].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", enforceSensitivePresenterChoice);
     });
 
     document.getElementById("preview-btn").addEventListener("click", async () => {
@@ -2573,7 +2641,7 @@
       fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
       fd.append("video_style", selectedStyle);
       fd.append("product_image", productFile);
-      if (modelFile) fd.append("model_reference", modelFile);
+      if (modelFile && !isPersonRestrictedCreative()) fd.append("model_reference", modelFile);
 
       try {
         const resp = await fetch("/api/orders", { method: "POST", body: fd });

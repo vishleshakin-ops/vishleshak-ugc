@@ -894,6 +894,54 @@ def _format_display_phone(value: str) -> str:
     return raw
 
 
+PERSON_RESTRICTED_PRODUCT_TERMS = (
+    "condom",
+    "condoms",
+    "contraceptive",
+    "sexual wellness",
+    "adult product",
+    "adult toy",
+    "intimate product",
+    "lingerie",
+    "bra",
+    "panty",
+    "panties",
+    "underwear",
+    "bikini",
+    "swimwear",
+    "swim wear",
+    "swimsuit",
+    "swim suit",
+    "swimming costume",
+)
+
+
+def _person_restricted_reason(*values: str) -> str:
+    text = " ".join(str(value or "") for value in values).lower()
+    for term in PERSON_RESTRICTED_PRODUCT_TERMS:
+        if term in text:
+            return term
+    return ""
+
+
+def _enforce_person_restricted_product_policy(
+    presenter_source: str,
+    has_model_reference: bool,
+    *values: str,
+) -> None:
+    reason = _person_restricted_reason(*values)
+    if not reason:
+        return
+    if presenter_source == "uploaded" or has_model_reference:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "For swimwear, intimate, condoms, and sexual-wellness products, "
+                "uploaded/reference person photos are not allowed. Please choose AI generated or Product only."
+            ),
+        )
+
+
 async def generate_model_with_product(
     model_url: str,
     product_bytes: bytes,
@@ -916,6 +964,21 @@ async def generate_model_with_product(
     model_action     = _clean_image_generation_text(c.get("model_action", "").strip())
     custom_instr     = _clean_image_generation_text(c.get("custom_instructions", "").strip())
     aspect_ratio     = c.get("aspect_ratio", "9:16")
+    image_branding   = c.get("image_branding") or {}
+    video_end_card   = c.get("video_end_card") or {}
+    _enforce_person_restricted_product_policy(
+        presenter_source,
+        bool(c.get("order_model_path")),
+        c.get("model_action", ""),
+        c.get("custom_instructions", ""),
+        avatar_prompt,
+        image_branding.get("brand_name", ""),
+        image_branding.get("offer_text", ""),
+        image_branding.get("cta_text", ""),
+        video_end_card.get("brand_name", ""),
+        video_end_card.get("details", ""),
+        video_end_card.get("cta_text", ""),
+    )
 
     # KIE's 4o Image endpoint rejects raw video ratios like 9:16.
     # Use provider-safe still-image ratios, then FFmpeg handles final video padding.
@@ -1933,6 +1996,20 @@ async def generate_video(
         raise HTTPException(status_code=400, detail="Image must be under 15MB")
     if presenter_source not in ("uploaded", "ai", "product"):
         raise HTTPException(status_code=400, detail="Invalid presenter source")
+    _enforce_person_restricted_product_policy(
+        presenter_source,
+        False,
+        model_action,
+        custom_instructions,
+        image_brand_name,
+        image_offer_text,
+        image_cta_text,
+        video_brand_name,
+        video_brand_details,
+        video_cta_text,
+        custom_script,
+        image.filename,
+    )
     if presenter_source == "uploaded" and not model_image_url and not os.path.exists(MODEL_LOCAL_PATH):
         raise HTTPException(status_code=400, detail="Model photo not set. Please upload your model photo first or choose AI presenter.")
     if output_type == "image" and not KIE_API_KEY:
@@ -2032,6 +2109,19 @@ async def submit_order(
     product_image: UploadFile = File(...),
     model_reference: UploadFile = File(None),
 ):
+    _enforce_person_restricted_product_policy(
+        presenter_source,
+        bool(model_reference and model_reference.filename),
+        notes,
+        image_brand_name,
+        image_offer_text,
+        image_cta_text,
+        video_brand_name,
+        video_brand_details,
+        video_cta_text,
+        custom_script,
+        product_image.filename,
+    )
     image_data = await product_image.read()
     if len(image_data) > 15 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Image must be under 15MB")
