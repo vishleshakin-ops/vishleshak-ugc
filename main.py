@@ -421,6 +421,8 @@ TRACKING_DB_FILE = os.getenv(
     "TRACKING_DB_FILE",
     os.path.join(os.path.dirname(__file__), "client_tracking.sqlite3"),
 )
+CREDIT_COST_IMAGE = int(os.getenv("CREDIT_COST_IMAGE", "49"))
+CREDIT_COST_VIDEO = int(os.getenv("CREDIT_COST_VIDEO", "499"))
 
 # URLs
 RAILWAY_URL = os.getenv("RAILWAY_URL", "").rstrip("/")
@@ -496,6 +498,7 @@ PACKAGE_DEFS = {
         "name": "Food Creative Pack",
         "price_inr": 999,
         "validity_days": 30,
+        "credits": 999,
         "image_credits": 10,
         "video_credits": 0,
         "whatsapp_active": 0,
@@ -508,6 +511,7 @@ PACKAGE_DEFS = {
         "name": "Food Growth Pack",
         "price_inr": 2999,
         "validity_days": 30,
+        "credits": 2999,
         "image_credits": 10,
         "video_credits": 2,
         "whatsapp_active": 0,
@@ -520,6 +524,7 @@ PACKAGE_DEFS = {
         "name": "Monthly Order Flow",
         "price_inr": 7999,
         "validity_days": 30,
+        "credits": 7999,
         "image_credits": 12,
         "video_credits": 0,
         "whatsapp_active": 1,
@@ -532,6 +537,7 @@ PACKAGE_DEFS = {
         "name": "Growth Automation",
         "price_inr": 14999,
         "validity_days": 30,
+        "credits": 14999,
         "image_credits": 20,
         "video_credits": 4,
         "whatsapp_active": 1,
@@ -556,6 +562,11 @@ def _tracking_conn():
     conn.row_factory = sqlite3.Row
     return conn
 
+def _ensure_column(conn, table: str, column: str, ddl: str):
+    existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if column not in existing:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
+
 def _row_to_dict(row) -> dict:
     data = dict(row)
     if "features" in data and isinstance(data["features"], str):
@@ -573,6 +584,7 @@ def init_tracking_db():
                 name TEXT NOT NULL,
                 price_inr INTEGER NOT NULL,
                 validity_days INTEGER NOT NULL,
+                credits INTEGER NOT NULL DEFAULT 0,
                 image_credits INTEGER NOT NULL DEFAULT 0,
                 video_credits INTEGER NOT NULL DEFAULT 0,
                 whatsapp_active INTEGER NOT NULL DEFAULT 0,
@@ -596,6 +608,8 @@ def init_tracking_db():
                 package_name TEXT NOT NULL DEFAULT '',
                 package_started_at TEXT NOT NULL DEFAULT '',
                 package_expires_at TEXT NOT NULL DEFAULT '',
+                credits_total INTEGER NOT NULL DEFAULT 0,
+                credits_used INTEGER NOT NULL DEFAULT 0,
                 image_credits_total INTEGER NOT NULL DEFAULT 0,
                 image_credits_used INTEGER NOT NULL DEFAULT 0,
                 video_credits_total INTEGER NOT NULL DEFAULT 0,
@@ -633,17 +647,21 @@ def init_tracking_db():
                 paid_at TEXT NOT NULL DEFAULT ''
             )
         """)
+        _ensure_column(conn, "packages", "credits", "credits INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(conn, "clients", "credits_total", "credits_total INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(conn, "clients", "credits_used", "credits_used INTEGER NOT NULL DEFAULT 0")
         for package_id, package_data in PACKAGE_DEFS.items():
             conn.execute("""
                 INSERT INTO packages (
-                    id, name, price_inr, validity_days, image_credits, video_credits,
+                    id, name, price_inr, validity_days, credits, image_credits, video_credits,
                     whatsapp_active, chatbot_active, payment_flow_active, followup_active, features, active
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
                 ON CONFLICT(id) DO UPDATE SET
                     name=excluded.name,
                     price_inr=excluded.price_inr,
                     validity_days=excluded.validity_days,
+                    credits=excluded.credits,
                     image_credits=excluded.image_credits,
                     video_credits=excluded.video_credits,
                     whatsapp_active=excluded.whatsapp_active,
@@ -657,6 +675,7 @@ def init_tracking_db():
                 package_data["name"],
                 package_data["price_inr"],
                 package_data["validity_days"],
+                package_data["credits"],
                 package_data["image_credits"],
                 package_data["video_credits"],
                 package_data["whatsapp_active"],
@@ -738,6 +757,8 @@ def _assign_package_to_client(client_id: str, package_id: str, note: str = "") -
                 package_name=?,
                 package_started_at=?,
                 package_expires_at=?,
+                credits_total=?,
+                credits_used=0,
                 image_credits_total=?,
                 image_credits_used=0,
                 video_credits_total=?,
@@ -753,6 +774,7 @@ def _assign_package_to_client(client_id: str, package_id: str, note: str = "") -
             package["name"],
             now,
             expires_at,
+            package["credits"],
             package["image_credits"],
             package["video_credits"],
             package["whatsapp_active"],
@@ -769,32 +791,43 @@ def _assign_package_to_client(client_id: str, package_id: str, note: str = "") -
     return _get_client_by_id(client_id)
 
 def _client_credit_status(client: dict) -> dict:
-    image_left = max(0, int(client.get("image_credits_total") or 0) - int(client.get("image_credits_used") or 0))
-    video_left = max(0, int(client.get("video_credits_total") or 0) - int(client.get("video_credits_used") or 0))
+    credits_left = max(0, int(client.get("credits_total") or 0) - int(client.get("credits_used") or 0))
     expires_at = client.get("package_expires_at") or ""
     active = client.get("status") == "active" and bool(expires_at) and expires_at >= _utc_now_iso()
-    return {"active": active, "image_left": image_left, "video_left": video_left}
+    return {"active": active, "credits_left": credits_left}
 
-def _consume_client_credit(client_id: str, order_id: str, output_type: str) -> tuple[bool, str]:
+def _credit_cost_for_order(order: dict) -> int:
+    return max(1, _estimate_order_amount_inr(order))
+
+def _consume_client_credit(client_id: str, order: dict) -> tuple[bool, str]:
     client = _get_client_by_id(client_id)
     if not client:
         return False, "client_not_found"
     status = _client_credit_status(client)
     if not status["active"]:
         return False, "package_inactive_or_expired"
-    usage_type = "image" if output_type == "image" else "video"
-    if usage_type == "image" and status["image_left"] <= 0:
-        return False, "no_image_credits"
-    if usage_type == "video" and status["video_left"] <= 0:
-        return False, "no_video_credits"
+    usage_type = "image" if order.get("output_type") == "image" else "video"
+    credits_to_use = _credit_cost_for_order(order)
+    if status["credits_left"] < credits_to_use:
+        return False, "not_enough_credits"
     now = _utc_now_iso()
-    used_col = "image_credits_used" if usage_type == "image" else "video_credits_used"
     with _tracking_conn() as conn:
-        conn.execute(f"UPDATE clients SET {used_col}={used_col}+1, updated_at=? WHERE id=?", (now, client_id))
+        legacy_col = "image_credits_used" if usage_type == "image" else "video_credits_used"
+        conn.execute(
+            f"UPDATE clients SET credits_used=credits_used+?, {legacy_col}={legacy_col}+1, updated_at=? WHERE id=?",
+            (credits_to_use, now, client_id),
+        )
         conn.execute("""
             INSERT INTO usage_logs (id, client_id, order_id, usage_type, quantity, note, created_at)
             VALUES (?, ?, ?, ?, 1, ?, ?)
-        """, (str(uuid.uuid4()), client_id, order_id, usage_type, f"Used 1 {usage_type} credit", now))
+        """, (
+            str(uuid.uuid4()),
+            client_id,
+            order.get("id", ""),
+            usage_type,
+            f"Used {credits_to_use} wallet credit(s) for {usage_type}",
+            now,
+        ))
     return True, "credit_used"
 
 def _estimate_order_amount_inr(order: dict) -> int:
@@ -2547,7 +2580,7 @@ async def submit_order(
     client = _upsert_client_from_order(order)
     if client:
         order["client_id"] = client["id"]
-        credit_used, credit_reason = _consume_client_credit(client["id"], order_id, output_type)
+        credit_used, credit_reason = _consume_client_credit(client["id"], order)
         order["package_credit_status"] = credit_reason
         if credit_used:
             order["payment_status"] = "package_credit"
@@ -2911,6 +2944,24 @@ async def list_clients():
     return clients
 
 
+@app.get("/api/clients/lookup")
+async def lookup_client(phone: str):
+    client = _get_client_by_phone(phone)
+    if not client:
+        return {"found": False}
+    status = _client_credit_status(client)
+    return {
+        "found": True,
+        "business_name": client.get("business_name", ""),
+        "package_name": client.get("package_name", ""),
+        "package_expires_at": client.get("package_expires_at", ""),
+        "credits_left": status["credits_left"],
+        "image_credit_cost": CREDIT_COST_IMAGE,
+        "video_credit_cost": CREDIT_COST_VIDEO,
+        "active": status["active"],
+    }
+
+
 @app.post("/api/clients")
 async def create_or_update_client(request: Request):
     body = await request.json()
@@ -2971,6 +3022,7 @@ async def assign_client_package(client_id: str, request: Request):
 @app.post("/api/clients/{client_id}/adjust-credits")
 async def adjust_client_credits(client_id: str, request: Request):
     body = await request.json()
+    credit_delta = int(body.get("credit_delta") if body.get("credit_delta") is not None else body.get("credits_delta") or 0)
     image_delta = int(body.get("image_delta") or 0)
     video_delta = int(body.get("video_delta") or 0)
     note = body.get("note") or "Manual credit adjustment"
@@ -2980,15 +3032,16 @@ async def adjust_client_credits(client_id: str, request: Request):
     with _tracking_conn() as conn:
         conn.execute("""
             UPDATE clients
-            SET image_credits_total=max(0, image_credits_total + ?),
+            SET credits_total=max(0, credits_total + ?),
+                image_credits_total=max(0, image_credits_total + ?),
                 video_credits_total=max(0, video_credits_total + ?),
                 updated_at=?
             WHERE id=?
-        """, (image_delta, video_delta, now, client_id))
+        """, (credit_delta, image_delta, video_delta, now, client_id))
         conn.execute("""
             INSERT INTO usage_logs (id, client_id, usage_type, quantity, note, created_at)
             VALUES (?, ?, 'credit_adjustment', 0, ?, ?)
-        """, (str(uuid.uuid4()), client_id, f"{note}: images {image_delta}, videos {video_delta}", now))
+        """, (str(uuid.uuid4()), client_id, f"{note}: credits {credit_delta}", now))
     client = _get_client_by_id(client_id)
     client.update(_client_credit_status(client))
     return client

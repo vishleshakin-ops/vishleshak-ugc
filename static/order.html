@@ -450,6 +450,30 @@
       white-space: nowrap;
     }
     .phone-row input { border-radius: 0 var(--radius) var(--radius) 0; min-width: 0; }
+    .credit-lookup {
+      display: none;
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-soft);
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+    .credit-lookup strong { color: var(--text); font-weight: 900; }
+    .credit-lookup.active {
+      display: block;
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+      color: #166534;
+    }
+    .credit-lookup.inactive {
+      display: block;
+      border-color: #fed7aa;
+      background: #fff7ed;
+      color: #9a3412;
+    }
     .choice-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1505,6 +1529,22 @@
       border-radius: 10px 0 0 10px;
     }
     .phone-row input { border-radius: 0 10px 10px 0; }
+    .credit-lookup {
+      border-color: var(--order-border);
+      background: rgba(255,255,255,0.07);
+      color: var(--order-text);
+    }
+    .credit-lookup strong { color: #fff; }
+    .credit-lookup.active {
+      border-color: rgba(34,197,94,0.35);
+      background: rgba(34,197,94,0.12);
+      color: rgba(255,255,255,0.86);
+    }
+    .credit-lookup.inactive {
+      border-color: rgba(251,146,60,0.42);
+      background: rgba(251,146,60,0.12);
+      color: rgba(255,255,255,0.84);
+    }
     .choice-card,
     .seg button {
       border: 1px solid var(--order-border);
@@ -1779,6 +1819,7 @@
                   <span class="phone-prefix">+91</span>
                   <input type="tel" id="customer-phone" placeholder="99539 10987" inputmode="numeric" autocomplete="tel" required />
                 </div>
+                <div class="credit-lookup" id="credit-lookup"></div>
               </div>
               <div class="field full">
                 <label for="customer-email">Email <span class="optional">Optional</span></label>
@@ -2268,6 +2309,62 @@
       document.getElementById("summary-duration").textContent = selectedOutput === "image" ? "Not required" : (labels.duration[selectedDuration] || "Short Ad, 4-6 sec");
       document.getElementById("summary-price").textContent = `Rs. ${estimatePrice()}`;
     }
+
+    let creditLookupTimer = null;
+    let lastCreditLookupPhone = "";
+
+    function normalizePhone(value) {
+      return String(value || "").replace(/^\+?91/, "").replace(/\D/g, "").slice(-10);
+    }
+
+    function setCreditLookup(message, state = "") {
+      const box = document.getElementById("credit-lookup");
+      if (!box) return;
+      box.classList.remove("active", "inactive");
+      if (!message) {
+        box.style.display = "none";
+        box.innerHTML = "";
+        return;
+      }
+      if (state) box.classList.add(state);
+      box.style.display = "block";
+      box.innerHTML = message;
+    }
+
+    async function lookupCreditsForPhone() {
+      const phone = normalizePhone(document.getElementById("customer-phone").value);
+      if (phone.length < 10) {
+        lastCreditLookupPhone = "";
+        setCreditLookup("");
+        return;
+      }
+      if (phone === lastCreditLookupPhone) return;
+      lastCreditLookupPhone = phone;
+      setCreditLookup("Checking available credits...", "inactive");
+      try {
+        const resp = await fetch(`/api/clients/lookup?phone=${encodeURIComponent(phone)}`);
+        const data = await resp.json();
+        if (!data.found) {
+          setCreditLookup("No active package found for this number. Payment will be required before generation.", "inactive");
+          return;
+        }
+        if (!data.active) {
+          setCreditLookup(`<strong>${data.package_name || "Package"}</strong> found, but it is inactive or expired. Credits left: <strong>${data.credits_left || 0}</strong>.`, "inactive");
+          return;
+        }
+        const expiry = data.package_expires_at
+          ? new Date(data.package_expires_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+          : "";
+        setCreditLookup(`<strong>${data.credits_left || 0} credits left</strong> in ${data.package_name || "your package"}${expiry ? ` · valid till ${expiry}` : ""}.`, "active");
+      } catch (error) {
+        setCreditLookup("Could not check credits right now. You can still continue.", "inactive");
+      }
+    }
+
+    document.getElementById("customer-phone").addEventListener("input", () => {
+      clearTimeout(creditLookupTimer);
+      creditLookupTimer = setTimeout(lookupCreditsForPhone, 450);
+    });
 
     wireSegmented("output-group", btn => {
       selectedOutput = btn.dataset.output;

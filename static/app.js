@@ -1098,11 +1098,10 @@ async function loadClientPackages() {
 }
 
 function clientCreditLine(client) {
-  const imagesUsed = Number(client.image_credits_used || 0);
-  const imagesTotal = Number(client.image_credits_total || 0);
-  const videosUsed = Number(client.video_credits_used || 0);
-  const videosTotal = Number(client.video_credits_total || 0);
-  return `Images ${imagesUsed}/${imagesTotal} · Videos ${videosUsed}/${videosTotal}`;
+  const used = Number(client.credits_used || 0);
+  const total = Number(client.credits_total || 0);
+  const left = Number(client.credits_left || Math.max(0, total - used));
+  return `Credits ${left} left · ${used}/${total} used`;
 }
 
 function renderClientCard(client) {
