@@ -221,24 +221,13 @@
       position: relative;
       width: 260px;
       margin-left: 0;
-      border-radius: 44px;
-      padding: 46px 10px 12px;
-      background: #0d1117;
-      box-shadow:
-        0 0 0 2px rgba(255,255,255,0.12),
-        0 0 0 6px rgba(124,58,237,0.25),
-        0 40px 80px rgba(0,0,0,0.5);
+      border-radius: 24px;
+      padding: 0;
+      background: transparent;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.34);
     }
     .ugc-phone-notch {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      z-index: 2;
-      width: 70px;
-      height: 12px;
-      border-radius: 0 0 10px 10px;
-      background: #0d1117;
-      transform: translateX(-50%);
+      display: none;
     }
     .ugc-phone-top {
       display: flex;
@@ -246,7 +235,7 @@
       gap: 8px;
       padding: 10px 14px;
       border-radius: 24px 24px 0 0;
-      background: linear-gradient(135deg, #3b1f8c, #1e3a8a);
+      background: #075e54;
       color: #fff;
       font-size: 0.82rem;
       font-weight: 800;
@@ -261,37 +250,24 @@
     .ugc-creative-screen {
       position: relative;
       overflow: hidden;
-      height: 340px;
-      border-radius: 28px;
-      background: #f8fafc;
+      height: auto;
+      border-radius: 0 0 24px 24px;
+      background: transparent;
     }
     .ugc-creative-screen img {
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 340px;
       display: block;
       object-fit: contain;
-      object-position: center;
+      object-position: center top;
       transition: opacity 0.45s ease;
     }
     .ugc-creative-screen::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(180deg, transparent 58%, rgba(0,0,0,0.28)),
-        linear-gradient(90deg, rgba(255,255,255,0.10), transparent 28%, transparent 72%, rgba(255,255,255,0.08));
-      pointer-events: none;
+      display: none;
     }
     .ugc-home-bar {
-      position: absolute;
-      left: 50%;
-      bottom: 12px;
-      width: 82px;
-      height: 5px;
-      border-radius: 99px;
-      background: rgba(255,255,255,0.45);
-      transform: translateX(-50%);
-      z-index: 2;
+      display: none;
     }
     .ugc-info-card {
       position: absolute;
@@ -1318,18 +1294,13 @@
     .ugc-phone {
       width: 230px;
       margin: 0;
-      padding: 40px 9px 11px;
-      border-radius: 40px;
-      background: #0f0a28;
-      box-shadow:
-        0 0 0 2px rgba(255,255,255,0.12),
-        0 0 0 6px rgba(124,58,237,0.25),
-        0 40px 80px rgba(0,0,0,0.5);
+      padding: 0;
+      border-radius: 24px;
+      background: transparent;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.34);
     }
     .ugc-phone-notch {
-      width: 70px;
-      height: 12px;
-      background: #0f0a28;
+      display: none;
     }
     .ugc-phone-top {
       padding: 10px 14px;
@@ -1339,9 +1310,9 @@
       gap: 10px;
     }
     .ugc-creative-screen {
-      height: 300px;
+      height: auto;
       border-radius: 0 0 24px 24px;
-      background: #f8fafc;
+      background: transparent;
     }
     .ugc-home-bar {
       width: 80px;
@@ -2215,7 +2186,7 @@
     }
 
     function estimatePrice() {
-      if (selectedOutput === "image") return 99;
+      if (selectedOutput === "image") return 49;
       let price = selectedStyle === "cinematic" ? 599 : 499;
       if (selectedDuration === "10") price += 200;
       if (selectedPresenter === "uploaded") price += 100;

@@ -1077,7 +1077,7 @@ async function loadOrdersBadge() {
 }
 
 function estimateOrderPrice(order) {
-  if (order.output_type === "image") return 99;
+  if (order.output_type === "image") return 49;
   let price = order.video_style === "cinematic" ? 599 : 499;
   if (String(order.video_duration || "5") === "10") price += 200;
   if (order.presenter_source === "uploaded") price += 100;
