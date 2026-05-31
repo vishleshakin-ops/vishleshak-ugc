@@ -489,6 +489,7 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
 }
 .sample-card:nth-child(4) { grid-column: 1; }
 .sample-card:nth-child(5) { grid-column: 2; }
+.sample-card:nth-child(n+4) { display: none; }
 .sample-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 40px rgba(124,58,237,0.3);
@@ -505,23 +506,6 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   object-fit: cover;
   display: block;
 }
-.sample-video-overlay {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.35);
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-.sample-video-wrap:not(.playing):hover .sample-video-overlay { opacity: 1; }
-.sample-play-icon {
-  width: 48px; height: 48px; border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(8px);
-  border: 2px solid rgba(255,255,255,0.6);
-  color: white; font-size: 18px;
-  display: flex; align-items: center; justify-content: center;
-}
 .sample-tag {
   position: absolute;
   bottom: 8px; left: 8px;
@@ -535,24 +519,6 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   border-radius: 20px;
   z-index: 5;
 }
-.sample-mute {
-  position: absolute;
-  top: 8px; right: 8px;
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
-  border: none;
-  color: white; font-size: 12px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.18s, transform 0.18s, background 0.14s;
-  z-index: 6;
-}
-.sample-card:hover .sample-mute { opacity: 1; transform: scale(1); }
-.sample-mute:hover { background: rgba(124,58,237,0.8); }
 .sample-card-body { padding: 10px 12px 12px; text-align: left; }
 .sample-caption {
   margin: 0;
@@ -1005,56 +971,46 @@ footer {
     <div class="sample-card">
       <div class="sample-video-wrap">
         <video src="/static/samples/sample2.mp4" playsinline preload="metadata" muted></video>
-        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
-        <span class="sample-tag">✨ Fashion</span>
-        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+        <span class="sample-tag">UGC Sample</span>
       </div>
       <div class="sample-card-body">
-        <p class="sample-caption">Fashion Ad<small>Hindi · Instagram Reel</small></p>
+        <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
       </div>
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
         <video src="/static/samples/sample3.mp4" playsinline preload="metadata" muted></video>
-        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
-        <span class="sample-tag">💍 Jewelry</span>
-        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+        <span class="sample-tag">UGC Sample</span>
       </div>
       <div class="sample-card-body">
-        <p class="sample-caption">Jewelry Ad<small>Hindi · Instagram Reel</small></p>
+        <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
       </div>
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
         <video src="/static/samples/sample4.mp4" playsinline preload="metadata" muted></video>
-        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
-        <span class="sample-tag">👶 Kids Fashion</span>
-        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+        <span class="sample-tag">UGC Sample</span>
       </div>
       <div class="sample-card-body">
-        <p class="sample-caption">Kids Fashion<small>Hindi · Instagram Reel</small></p>
+        <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
       </div>
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
         <video src="/static/samples/sample5.mp4" playsinline preload="metadata" muted></video>
-        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
-        <span class="sample-tag">👗 Ethnic Wear</span>
-        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+        <span class="sample-tag">UGC Sample</span>
       </div>
       <div class="sample-card-body">
-        <p class="sample-caption">Ethnic Wear Ad<small>Hindi · Instagram Reel</small></p>
+        <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
       </div>
     </div>
     <div class="sample-card">
       <div class="sample-video-wrap">
         <video src="/static/samples/sample6.mp4" playsinline preload="metadata" muted></video>
-        <div class="sample-video-overlay"><div class="sample-play-icon">▶</div></div>
-        <span class="sample-tag">🛍️ Lifestyle</span>
-        <button class="sample-mute" title="Unmute" onclick="toggleSamplesMute(this,event)">🔇</button>
+        <span class="sample-tag">UGC Sample</span>
       </div>
       <div class="sample-card-body">
-        <p class="sample-caption">Lifestyle Ad<small>Hindi · Instagram Reel</small></p>
+        <p class="sample-caption">UGC Video Ad<small>Instagram Reel</small></p>
       </div>
     </div>
   </div>
@@ -1329,13 +1285,29 @@ footer {
   fetch('/api/sample-media/list/video?count=6')
     .then(response => response.ok ? response.json() : null)
     .then(data => {
-      const urls = data && Array.isArray(data.items) ? data.items.map(item => item.url).filter(Boolean) : [];
+      const items = data && Array.isArray(data.items) ? data.items.filter(item => item && item.url) : [];
+      const urls = items.map(item => item.url);
       if (!urls.length) return;
       samples = urls;
       lastIndex = playRandom(-1);
-      document.querySelectorAll('.sample-video-wrap video').forEach((video, index) => {
-        video.src = samples[index % samples.length];
-        video.load();
+      document.querySelectorAll('.sample-card').forEach((card, index) => {
+        const item = items[index % items.length];
+        const video = card.querySelector('.sample-video-wrap video');
+        const tag = card.querySelector('.sample-tag');
+        const caption = card.querySelector('.sample-caption');
+        const title = (item.caption || item.name || 'UGC Video Ad').trim();
+
+        if (video) {
+          video.src = item.url;
+          video.load();
+        }
+        if (tag) tag.textContent = title;
+        if (caption) {
+          caption.textContent = title;
+          const small = document.createElement('small');
+          small.textContent = 'Instagram Reel';
+          caption.appendChild(small);
+        }
       });
     })
     .catch(() => {});
@@ -1397,10 +1369,10 @@ document.querySelectorAll('.sample-card').forEach(card => {
   const video = wrap && wrap.querySelector('video');
   if (!video) return;
 
-  video.muted = samplesMuted;
+  video.muted = true;
 
   wrap.addEventListener('mouseenter', () => {
-    video.muted = samplesMuted;
+    video.muted = true;
     video.play().catch(() => {});
     wrap.classList.add('playing');
   });
