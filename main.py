@@ -1143,6 +1143,7 @@ async def upload_image_to_kie(image_bytes: bytes, fname: str, mime: str) -> str:
 
 SCENE_BACKGROUNDS = {
     "studio":  "professional grey studio background with soft studio lighting",
+    "clinic":  "premium modern clinic or pharmacy counter with clean white-blue medical lighting, subtle medical shelves, and a trustworthy healthcare mood",
     "beach":   "sunny beach with ocean waves and clear blue sky in the background",
     "ramp":    "high-fashion runway with dramatic spotlights and blurred audience",
     "cafe":    "cozy modern cafe with warm ambient lighting and bokeh background",
@@ -1172,6 +1173,7 @@ PRODUCT_ACTION_GUIDE = (
     "  - Phone/gadget/electronics -> model holds device naturally, taps or uses it, reacts with satisfaction\n"
     "  - Beauty/skincare -> model applies small amount on cheek/hand, gentle massage, glowing smile\n"
     "  - Makeup -> model applies product with mirror-like gaze, smiles confidently, product visible in hand\n"
+    "  - Medical/surgical/stethoscope -> presenter wears clean doctor attire or white coat, holds/uses product professionally in clinic setting, trusted healthcare mood\n"
     "  - Food/snacks -> model presents pack/plate, picks one piece, smiles warmly, no messy eating\n"
     "  - Beverage -> model holds cup/bottle, brings close to lips, enjoys aroma/taste, label visible\n"
     "  - Home decor -> model places product carefully, steps back, admires the room styling\n"
@@ -1184,7 +1186,7 @@ PRODUCT_ACTION_GUIDE = (
 
 PRODUCT_TYPE_LIST = (
     "'necklace','ring','earrings','bangle','watch','wallet','handbag','sunglasses','perfume',"
-    "'clothing','footwear','electronics','skincare','makeup','food','beverage','home_decor',"
+    "'clothing','footwear','electronics','skincare','makeup','medical','food','beverage','home_decor',"
     "'fitness','sports_equipment','kids','stationery','organic','jewelry','bag','accessory','other'"
 )
 
@@ -1205,6 +1207,7 @@ PRODUCT_FALLBACK_PROMPTS = {
     "accessory": "wears accessory confidently, adjusts with both hands, poses and smiles",
     "skincare": "applies product on cheek with fingertip, gently massages in, glows and smiles",
     "makeup": "applies makeup product, looks in imaginary mirror, smiles confidently at camera",
+    "medical": "wears clean doctor attire or white coat, holds the medical product professionally in a clinic setting, trustworthy expression",
     "food": "gestures toward food with open hand, picks one piece and holds it up, smiles warmly",
     "beverage": "holds cup with both hands, brings close to lips, closes eyes enjoying the aroma",
     "electronics": "holds device naturally, uses it confidently, reacts with excitement",
@@ -1471,14 +1474,79 @@ async def generate_model_with_product(
         "better background, neat grooming, and ad-ready styling are fine as long as the person still looks like the same real person "
         "with a recognizable expression from the reference image. If the reference person is a child, keep them as a child; "
         "do not adultify, replace, or change them into a generic model. Do not change gender or age. "
-        "Clothing may be cleaned up or changed only within the same outfit category unless the user explicitly asks otherwise: "
-        "dress remains a dress, suit remains a suit, lehenga remains a lehenga, saree remains a saree, school uniform remains a uniform, "
-        "and casual wear remains casual wear. Preserve the outfit pattern/category and do not randomly convert it into another clothing type. "
+        "Wardrobe may change when it helps sell the product, but it must stay logical and product-led: "
+        "if the product is clothing, the same person should wear that clothing category naturally (lehenga as lehenga, saree as saree, suit as suit, dress as dress); "
+        "if the product is medical/surgical such as a stethoscope, doctor coat or clean medical attire is allowed; "
+        "if the product is a bag, keep normal outfit styling and show the bag carried, worn, opened, or used naturally. "
+        "Do not randomly change clothing into an unrelated category. "
         "Only adjust pose/composition enough to naturally include the product."
     )
 
+    CATEGORY_STYLE_GUIDE = {
+        "medical": (
+            "Healthcare ad composition: premium clinic or pharmacy counter, clean white-blue trust palette, "
+            "presenter in doctor coat or neat medical attire. If the preserved reference person is a child, make it a tasteful 'little doctor' ad concept: "
+            "same child identity, child remains a child, wearing a clean white doctor coat over neat clothes, holding the stethoscope professionally, "
+            "not playing randomly. Avoid plain grey wall, avoid toy-like mood."
+        ),
+        "food": (
+            "Food ad composition: warm appetizing close-up, steam/garnish/table styling, realistic kitchen or cafe context, "
+            "product/dish looks fresh and order-worthy. Avoid flat grey backgrounds."
+        ),
+        "bag": (
+            "Bag/fashion ad composition: lifestyle boutique, school, cafe, travel, or street context as suitable. "
+            "Show the bag hanging on shoulder/arm, being opened, or with books/items being placed inside. Product must feel useful and stylish."
+        ),
+        "handbag": (
+            "Bag/fashion ad composition: lifestyle boutique, cafe, travel, or street context. "
+            "Show the handbag carried naturally, opened, or styled with outfit. Product should not look pasted beside the model."
+        ),
+        "wallet": (
+            "Wallet ad composition: close-up lifestyle or desk/travel context. "
+            "Show the wallet opened, with card or cash placed inside, premium finish visible."
+        ),
+        "accessory": (
+            "Accessory ad composition: wearable lifestyle styling. "
+            "Show the accessory being worn or adjusted naturally, with product detail visible."
+        ),
+        "clothing": (
+            "Fashion ad composition: the same person should wear the uploaded clothing category naturally. "
+            "Lehenga remains lehenga, saree remains saree, suit remains suit, dress remains dress. Show fit, fabric, and pattern clearly."
+        ),
+        "footwear": (
+            "Footwear ad composition: show the footwear worn correctly on feet, walking or posed naturally, with product design clearly visible."
+        ),
+        "jewelry": (
+            "Jewelry ad composition: premium Indian festive or luxury lighting. Jewelry must sit correctly on the body, "
+            "not float or paste over skin."
+        ),
+        "kids": (
+            "Kids product ad composition: bright, safe, cheerful, playful but premium. Child interacts naturally with the product; avoid clutter."
+        ),
+        "skincare": (
+            "Beauty ad composition: soft vanity or bathroom styling, clean packaging close-up, glowing natural skin, premium minimal props."
+        ),
+        "makeup": (
+            "Beauty ad composition: soft vanity or studio lighting, product in hand or near mirror, polished but realistic skin."
+        ),
+        "electronics": (
+            "Tech ad composition: modern desk, home, or office context, clean lighting, product used naturally, no fake UI clutter."
+        ),
+        "home_decor": (
+            "Home decor ad composition: styled room scene, cozy interior light, product placed naturally as the room accent."
+        ),
+        "fitness": (
+            "Fitness ad composition: energetic gym or outdoor context, product in use, strong pose, clear product visibility."
+        ),
+        "sports_equipment": (
+            "Sports ad composition: active outdoor or training context, product in use, energetic pose, clear product visibility."
+        ),
+    }
+
     def build_prompt(base_action: str) -> str:
         action = model_action if model_action else base_action
+        category_style = CATEGORY_STYLE_GUIDE.get(product_type, "")
+        category_sentence = f" Category-specific creative direction: {category_style}" if category_style else ""
         if presenter_source == "product":
             p = (
                 f"Premium product-only advertising image. "
@@ -1486,6 +1554,7 @@ async def generate_model_with_product(
                 f"Action or composition: {action}. "
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
+                f"{category_sentence} "
                 f"Clean commercial lighting, realistic shadows, natural reflections, high-end catalog and social ad quality. "
                 f"{frame_desc}. {IMAGE_TEXT_GUIDANCE} No replacement packaging."
             )
@@ -1498,6 +1567,7 @@ async def generate_model_with_product(
                 f"The product from the uploaded image must be clearly visible, held or worn naturally — not floating, not pasted on. "
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
+                f"{category_sentence} "
                 f"Shot on Sony A7III, 85mm f/1.8 lens, shallow depth of field, soft bokeh background. "
                 f"Soft diffused lighting with natural skin highlights. "
                 f"Hyper-realistic skin texture, visible pores, natural imperfections — NOT AI-looking, NOT plastic skin, NOT CGI. "
@@ -1512,6 +1582,7 @@ async def generate_model_with_product(
                 f"{MODEL_LOCK} "
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
+                f"{category_sentence} "
                 f"Do not invent a different model, different face, different age, different hairstyle, different outfit category, or different body. "
                 f"{EYES_OPEN} High quality. {IMAGE_TEXT_GUIDANCE}"
             )
@@ -1971,9 +2042,6 @@ async def download_and_save_image(
     raw_ext = ".png" if ".png" in image_url.lower().split("?")[0] else ".jpg"
     raw_path = os.path.join(RAW_IMAGES_DIR, f"{job_id}{raw_ext}")
     with open(raw_path, "wb") as f:
-        f.write(image_bytes)
-    legacy_raw_path = os.path.join(IMAGES_DIR, f"{job_id}_raw{raw_ext}")
-    with open(legacy_raw_path, "wb") as f:
         f.write(image_bytes)
     if apply_overlay:
         image_bytes = await asyncio.to_thread(_apply_image_brand_overlay, image_bytes, branding)
