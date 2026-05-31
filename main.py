@@ -791,6 +791,47 @@ VIDEO_ACTION_GUIDE = {
 }
 
 
+def _clean_image_generation_text(value: str) -> str:
+    """Remove admin/branding metadata before sending a visual prompt to KIE."""
+    if not value:
+        return ""
+    blocked_prefixes = (
+        "ad goal:",
+        "tone:",
+        "platform:",
+        "presenter preference:",
+        "image brand overlay",
+        "brand name:",
+        "mobile / whatsapp:",
+        "mobile:",
+        "whatsapp:",
+        "image offer text:",
+        "offer text:",
+        "image cta text:",
+        "cta text:",
+        "video end card",
+        "end card brand name:",
+        "end card mobile",
+        "end card details:",
+        "ending cta:",
+    )
+    cleaned = []
+    for raw_line in value.replace("\r", "\n").split("\n"):
+        line = raw_line.strip()
+        if not line:
+            continue
+        lower = line.lower()
+        if lower.startswith("creative notes:"):
+            note = line.split(":", 1)[1].strip()
+            if note:
+                cleaned.append(note)
+            continue
+        if any(lower.startswith(prefix) for prefix in blocked_prefixes):
+            continue
+        cleaned.append(line)
+    return " ".join(cleaned).strip()
+
+
 async def generate_model_with_product(
     model_url: str,
     product_bytes: bytes,
@@ -810,8 +851,8 @@ async def generate_model_with_product(
     skin_tone        = c.get("skin_tone", "wheatish")
     scene            = c.get("scene", "studio")
     custom_scene     = c.get("custom_scene", "").strip()
-    model_action     = c.get("model_action", "").strip()
-    custom_instr     = c.get("custom_instructions", "").strip()
+    model_action     = _clean_image_generation_text(c.get("model_action", "").strip())
+    custom_instr     = _clean_image_generation_text(c.get("custom_instructions", "").strip())
     aspect_ratio     = c.get("aspect_ratio", "9:16")
 
     # KIE's 4o Image endpoint rejects raw video ratios like 9:16.
@@ -852,6 +893,12 @@ async def generate_model_with_product(
         "Do not substitute it with a generic object, different ball, different jewelry, different packaging, "
         "or a similar-looking product. The product must remain the hero object and be clearly visible."
     )
+    TEXT_LOCK = (
+        "Do not add any new text, captions, slogans, phone numbers, prices, badges, logos, watermarks, poster typography, "
+        "brand graphics, call-to-action text, or decorative lettering anywhere in the generated image. "
+        "Only preserve text or logos that already exist physically on the uploaded product itself. "
+        "Brand/contact overlay is handled later by the backend, not by the AI image model."
+    )
     MODEL_LOCK = (
         "Critical reference-person identity rule: the first uploaded image is the exact person to preserve. "
         "Preserve the real phone-photo likeness: same face structure, age, body proportions, natural expression, "
@@ -875,7 +922,7 @@ async def generate_model_with_product(
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
                 f"Clean commercial lighting, realistic shadows, natural reflections, high-end catalog and social ad quality. "
-                f"{frame_desc}. No added text, no watermark, no fake logo, no replacement packaging."
+                f"{frame_desc}. {TEXT_LOCK} No replacement packaging."
             )
         elif presenter_source == "ai":
             p = (
@@ -890,7 +937,7 @@ async def generate_model_with_product(
                 f"Soft diffused lighting with natural skin highlights. "
                 f"Hyper-realistic skin texture, visible pores, natural imperfections — NOT AI-looking, NOT plastic skin, NOT CGI. "
                 f"Real human face with natural asymmetry. {frame_desc}. "
-                f"Ultra high quality, 8K, magazine-grade photography. {EYES_OPEN}"
+                f"Ultra high quality, 8K, magazine-grade photography. {EYES_OPEN} {TEXT_LOCK}"
             )
         else:
             p = (
@@ -901,7 +948,7 @@ async def generate_model_with_product(
                 f"{PRODUCT_LOCK} "
                 f"Background: {background_desc}. "
                 f"Do not invent a different model, different face, different age, different hairstyle, different outfit category, or different body. "
-                f"{EYES_OPEN} High quality."
+                f"{EYES_OPEN} High quality. {TEXT_LOCK}"
             )
         if custom_instr:
             p += f" Additional: {custom_instr}."
