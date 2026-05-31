@@ -1073,23 +1073,45 @@ video {
 
 /* ── Orders panel ──────────────────────────────────────────────────────────── */
 .orders-panel { padding: 24px 32px; }
-.orders-panel-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.orders-panel-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .orders-panel-header h2 { font-size: 1.2rem; font-weight: 700; }
 .orders-list { display: flex; flex-direction: column; gap: 12px; }
 .order-card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 16px 20px;
+  padding: 14px;
   display: grid;
-  grid-template-columns: 72px 1fr auto;
-  gap: 16px;
-  align-items: center;
+  grid-template-columns: 84px minmax(0, 1fr) minmax(190px, auto);
+  gap: 14px;
+  align-items: start;
 }
-.order-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; background: var(--bg); }
-.order-info { display: flex; flex-direction: column; gap: 4px; }
-.order-name { font-weight: 600; font-size: 15px; }
+.order-thumb { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; background: var(--bg); }
+.order-info { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.order-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.order-name { font-weight: 800; font-size: 15px; color: var(--ink); }
 .order-meta { font-size: 12px; color: var(--muted); }
+.order-notes {
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+.order-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.order-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #f5f3ff;
+  color: #5b21b6;
+  font-size: 11px;
+  font-weight: 800;
+}
 .order-status {
   display: inline-flex; align-items: center;
   padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
@@ -1099,8 +1121,44 @@ video {
 .order-status.completed { background: #f0fdf4; color: #15803d; }
 .order-status.rejected  { background: #fef2f2; color: #991b1b; }
 .order-status.failed    { background: #fef2f2; color: #991b1b; }
-.order-actions { display: flex; flex-direction: column; gap: 6px; }
-.approve-btn { background: linear-gradient(135deg, #7C3AED, #2563EB); color: #fff; border: none; border-radius: 8px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.15s; }
+.order-actions { display: flex; flex-direction: column; gap: 7px; min-width: 190px; }
+.approve-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  background: linear-gradient(135deg, #7C3AED, #2563EB);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.approve-btn.secondary-action { background: #1d4ed8; }
+.approve-btn.subtle { background: #059669; min-height: 32px; font-size: 12px; padding: 6px 10px; }
 .approve-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-.reject-btn { background: transparent; color: #ef4444; border: 1.5px solid #ef4444; border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.reject-btn { background: transparent; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 800; cursor: pointer; }
 .reject-btn:hover { background: #fef2f2; }
+.recovery-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.recovery-row input {
+  width: 100%;
+  min-height: 32px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.processing-chip { color: var(--muted); font-size: 12px; font-weight: 800; padding: 8px 10px; background: #eff6ff; border-radius: 8px; }
+.whatsapp-send { font-size: 12px; color: #16a34a; text-align: center; display: block; margin-top: 2px; font-weight: 800; text-decoration: none; }
+
+@media (max-width: 760px) {
+  .orders-panel { padding: 16px; }
+  .order-card { grid-template-columns: 64px minmax(0, 1fr); }
+  .order-thumb { width: 64px; height: 64px; }
+  .order-actions { grid-column: 1 / -1; min-width: 0; }
+}

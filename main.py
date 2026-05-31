@@ -36,7 +36,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, PlainTextResponse
 import anthropic
 import imageio_ffmpeg
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from dotenv import load_dotenv, set_key
 
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
@@ -1000,6 +1000,12 @@ ASPECT_RATIO_FILTERS = {
     "16:9":  "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black",
 }
 
+ASPECT_RATIO_DIMS = {
+    "9:16": (1080, 1920),
+    "1:1": (1080, 1080),
+    "16:9": (1920, 1080),
+}
+
 
 async def download_and_reencode_video(video_url: str, job_id: str, aspect_ratio: str = "9:16", audio_url: str = "", audio_bytes: bytes = None) -> str:
     """Download avatar video and re-encode at high quality with the given aspect ratio.
@@ -1067,13 +1073,270 @@ async def download_and_reencode_video(video_url: str, job_id: str, aspect_ratio:
     return f"/static/videos/{job_id}.mp4"
 
 
-async def download_and_save_image(image_url: str, job_id: str) -> str:
+def _load_overlay_font(size: int, bold: bool = False):
+    candidates = [
+        r"C:\Windows\Fonts\arialbd.ttf" if bold else r"C:\Windows\Fonts\arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+    ]
+    for path in candidates:
+        try:
+            if path and os.path.exists(path):
+                return ImageFont.truetype(path, size)
+        except Exception:
+            pass
+    return ImageFont.load_default()
+
+
+def _text_size(draw: ImageDraw.ImageDraw, text: str, font) -> tuple[int, int]:
+    if not text:
+        return (0, 0)
+    bbox = draw.textbbox((0, 0), text, font=font)
+    return (bbox[2] - bbox[0], bbox[3] - bbox[1])
+
+
+def _fit_text(draw: ImageDraw.ImageDraw, text: str, font, max_width: int) -> str:
+    text = (text or "").strip()
+    if not text:
+        return ""
+    if _text_size(draw, text, font)[0] <= max_width:
+        return text
+    ellipsis = "..."
+    while text and _text_size(draw, text + ellipsis, font)[0] > max_width:
+        text = text[:-1].rstrip()
+    return (text + ellipsis) if text else ""
+
+
+def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font, max_width: int, max_lines: int = 2) -> list[str]:
+    words = (text or "").strip().split()
+    if not words:
+        return []
+    lines = []
+    current = ""
+    for word in words:
+        candidate = f"{current} {word}".strip()
+        if _text_size(draw, candidate, font)[0] <= max_width:
+            current = candidate
+            continue
+        if current:
+            lines.append(current)
+        current = word
+        if len(lines) >= max_lines:
+            break
+    if current and len(lines) < max_lines:
+        lines.append(current)
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+    if len(lines) == max_lines:
+        lines[-1] = _fit_text(draw, lines[-1], font, max_width)
+    return lines
+
+
+def _apply_image_brand_overlay(image_bytes: bytes, branding: dict | None = None) -> bytes:
+    branding = branding or {}
+    brand = (branding.get("brand_name") or "").strip()
+    mobile = (branding.get("brand_mobile") or "").strip()
+    offer = (branding.get("offer_text") or "").strip()
+    cta = (branding.get("cta_text") or "").strip()
+    if not any([brand, mobile, offer, cta]):
+        return image_bytes
+
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+    width, height = image.size
+    overlay_height = max(int(height * 0.18), 150)
+    padding = max(int(width * 0.045), 36)
+
+    layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer)
+    y0 = height - overlay_height
+    draw.rectangle((0, y0, width, height), fill=(12, 9, 28, 218))
+    draw.line((padding, y0, width - padding, y0), fill=(255, 255, 255, 72), width=max(1, width // 500))
+
+    brand_font = _load_overlay_font(max(int(width * 0.04), 24), bold=True)
+    offer_font = _load_overlay_font(max(int(width * 0.034), 21), bold=True)
+    small_font = _load_overlay_font(max(int(width * 0.025), 16), bold=False)
+    cta_font = _load_overlay_font(max(int(width * 0.026), 16), bold=True)
+
+    left_max = int(width * 0.58)
+    right_max = width - (padding * 2) - left_max
+    y = y0 + max(int(overlay_height * 0.2), 22)
+    if brand:
+        draw.text((padding, y), _fit_text(draw, brand, brand_font, left_max), font=brand_font, fill=(255, 255, 255, 255))
+        y += _text_size(draw, brand, brand_font)[1] + 10
+    if offer:
+        draw.text((padding, y), _fit_text(draw, offer, offer_font, left_max), font=offer_font, fill=(196, 181, 253, 255))
+
+    right_items = []
+    if cta:
+        right_items.append(("cta", cta))
+    if mobile:
+        right_items.append(("mobile", mobile))
+
+    right_y = y0 + max(int(overlay_height * 0.22), 24)
+    for kind, text in right_items:
+        font = cta_font if kind == "cta" else small_font
+        fitted = _fit_text(draw, text, font, right_max)
+        tw, th = _text_size(draw, fitted, font)
+        x = width - padding - tw
+        if kind == "cta":
+            bx0 = max(padding, x - 18)
+            by0 = right_y - 10
+            bx1 = width - padding + 18
+            by1 = right_y + th + 12
+            draw.rounded_rectangle((bx0, by0, bx1, by1), radius=12, fill=(37, 211, 102, 255))
+            draw.text((x, right_y), fitted, font=font, fill=(255, 255, 255, 255))
+            right_y = by1 + 14
+        else:
+            draw.text((x, right_y), fitted, font=font, fill=(255, 255, 255, 235))
+            right_y += th + 10
+
+    composed = Image.alpha_composite(image, layer).convert("RGB")
+    out = io.BytesIO()
+    composed.save(out, format="JPEG", quality=94, optimize=True)
+    return out.getvalue()
+
+
+def _has_branding(branding: dict | None, keys: list[str]) -> bool:
+    branding = branding or {}
+    return any((branding.get(key) or "").strip() for key in keys)
+
+
+def _render_video_end_card(job_id: str, aspect_ratio: str, branding: dict) -> str:
+    brand = (branding.get("brand_name") or "").strip()
+    mobile = (branding.get("brand_mobile") or "").strip()
+    details = (branding.get("details") or "").strip()
+    cta = (branding.get("cta_text") or "").strip()
+    width, height = ASPECT_RATIO_DIMS.get(aspect_ratio, ASPECT_RATIO_DIMS["9:16"])
+    videos_dir = os.path.join(os.path.dirname(__file__), "static", "videos")
+    os.makedirs(videos_dir, exist_ok=True)
+
+    image = Image.new("RGB", (width, height), (13, 6, 64))
+    draw = ImageDraw.Draw(image)
+
+    # Subtle diagonal brand band without relying on AI-generated text.
+    for i in range(0, height, max(height // 48, 24)):
+        color = (22 + (i * 14 // max(height, 1)), 12, 78 + (i * 28 // max(height, 1)))
+        draw.rectangle((0, i, width, i + max(height // 48, 24)), fill=color)
+    margin = max(int(width * 0.07), 64)
+    card = (margin, margin, width - margin, height - margin)
+    draw.rounded_rectangle(card, radius=max(width // 55, 18), fill=(255, 255, 255), outline=(196, 181, 253), width=max(width // 220, 4))
+
+    brand_font = _load_overlay_font(max(int(width * 0.07), 42), bold=True)
+    cta_font = _load_overlay_font(max(int(width * 0.042), 30), bold=True)
+    details_font = _load_overlay_font(max(int(width * 0.032), 24), bold=False)
+    small_font = _load_overlay_font(max(int(width * 0.028), 20), bold=True)
+
+    content_w = card[2] - card[0] - (margin * 2)
+    y = card[1] + max(int(height * 0.16), 120)
+    center_x = width // 2
+
+    title = brand or "Thank you"
+    for line in _wrap_text(draw, title, brand_font, content_w, max_lines=2):
+        tw, th = _text_size(draw, line, brand_font)
+        draw.text((center_x - tw // 2, y), line, font=brand_font, fill=(31, 10, 78))
+        y += th + max(height // 90, 16)
+
+    if cta:
+        y += max(height // 60, 18)
+        cta_line = _fit_text(draw, cta, cta_font, content_w)
+        tw, th = _text_size(draw, cta_line, cta_font)
+        pill_pad_x = max(width // 35, 28)
+        pill_pad_y = max(height // 120, 14)
+        draw.rounded_rectangle(
+            (center_x - tw // 2 - pill_pad_x, y - pill_pad_y, center_x + tw // 2 + pill_pad_x, y + th + pill_pad_y),
+            radius=max(width // 60, 16),
+            fill=(37, 211, 102),
+        )
+        draw.text((center_x - tw // 2, y), cta_line, font=cta_font, fill=(255, 255, 255))
+        y += th + (pill_pad_y * 2) + max(height // 55, 22)
+
+    info_lines = []
+    if mobile:
+        info_lines.append(f"WhatsApp: {mobile}")
+    if details:
+        info_lines.extend(_wrap_text(draw, details, details_font, content_w, max_lines=2))
+    for line in info_lines[:3]:
+        fitted = _fit_text(draw, line, details_font, content_w)
+        tw, th = _text_size(draw, fitted, details_font)
+        draw.text((center_x - tw // 2, y), fitted, font=details_font, fill=(79, 70, 110))
+        y += th + max(height // 95, 16)
+
+    footer = "Powered by Vishleshak AI"
+    tw, th = _text_size(draw, footer, small_font)
+    draw.text((center_x - tw // 2, card[3] - margin - th), footer, font=small_font, fill=(124, 58, 237))
+
+    path = os.path.join(videos_dir, f"{job_id}_end_card.jpg")
+    image.save(path, format="JPEG", quality=94, optimize=True)
+    return path
+
+
+async def append_video_end_card(final_url: str, job_id: str, aspect_ratio: str, branding: dict | None = None) -> str:
+    if not _has_branding(branding, ["brand_name", "brand_mobile", "details", "cta_text"]):
+        return final_url
+
+    videos_dir = os.path.join(os.path.dirname(__file__), "static", "videos")
+    input_path = os.path.join(os.path.dirname(__file__), final_url.lstrip("/").replace("/", os.sep))
+    if not os.path.exists(input_path):
+        return final_url
+
+    width, height = ASPECT_RATIO_DIMS.get(aspect_ratio, ASPECT_RATIO_DIMS["9:16"])
+    card_path = await asyncio.to_thread(_render_video_end_card, job_id, aspect_ratio, branding or {})
+    output_path = os.path.join(videos_dir, f"{job_id}_endcard_tmp.mp4")
+    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    vf0 = f"scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=yuv420p"
+    vf1 = f"scale={width}:{height},setsar=1,format=yuv420p"
+    with_audio = [
+        ffmpeg_exe, "-y",
+        "-i", input_path,
+        "-loop", "1", "-t", "2", "-i", card_path,
+        "-f", "lavfi", "-t", "2", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
+        "-filter_complex",
+        f"[0:v]{vf0}[v0];[1:v]{vf1}[v1];[0:a]aresample=44100[a0];[2:a]aresample=44100[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]",
+        "-map", "[v]", "-map", "[a]",
+        "-c:v", "libx264", "-preset", "slow", "-crf", "18",
+        "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+        output_path,
+    ]
+    no_audio = [
+        ffmpeg_exe, "-y",
+        "-i", input_path,
+        "-loop", "1", "-t", "2", "-i", card_path,
+        "-filter_complex",
+        f"[0:v]{vf0}[v0];[1:v]{vf1}[v1];[v0][v1]concat=n=2:v=1:a=0[v]",
+        "-map", "[v]",
+        "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-movflags", "+faststart",
+        output_path,
+    ]
+
+    try:
+        result = await asyncio.to_thread(subprocess.run, with_audio, capture_output=True, text=True, timeout=300)
+        if result.returncode != 0:
+            result = await asyncio.to_thread(subprocess.run, no_audio, capture_output=True, text=True, timeout=300)
+        if result.returncode != 0:
+            raise Exception(result.stderr[-400:])
+        os.replace(output_path, input_path)
+    finally:
+        if os.path.exists(card_path):
+            try:
+                os.remove(card_path)
+            except Exception:
+                pass
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+            except Exception:
+                pass
+    return final_url
+
+
+async def download_and_save_image(image_url: str, job_id: str, branding: dict | None = None) -> str:
     """Download a generated composite image and save it locally."""
     images_dir = os.path.join(os.path.dirname(__file__), "static", "images")
     os.makedirs(images_dir, exist_ok=True)
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.get(image_url)
         image_bytes = resp.content
+    image_bytes = await asyncio.to_thread(_apply_image_brand_overlay, image_bytes, branding)
     output_path = os.path.join(images_dir, f"{job_id}.jpg")
     with open(output_path, "wb") as f:
         f.write(image_bytes)
@@ -1519,6 +1782,14 @@ async def generate_video(
     model_action: str = Form(""),
     custom_instructions: str = Form(""),
     aspect_ratio: str = Form("9:16"),
+    image_brand_name: str = Form(""),
+    image_brand_mobile: str = Form(""),
+    image_offer_text: str = Form(""),
+    image_cta_text: str = Form(""),
+    video_brand_name: str = Form(""),
+    video_brand_mobile: str = Form(""),
+    video_brand_details: str = Form(""),
+    video_cta_text: str = Form(""),
     custom_script: str = Form(""),
 ):
     if not image.content_type or not image.content_type.startswith("image/"):
@@ -1549,6 +1820,18 @@ async def generate_video(
         "model_action":        model_action,
         "custom_instructions": custom_instructions,
         "aspect_ratio":        aspect_ratio,
+        "image_branding":      {
+            "brand_name": image_brand_name,
+            "brand_mobile": image_brand_mobile,
+            "offer_text": image_offer_text,
+            "cta_text": image_cta_text,
+        },
+        "video_end_card":      {
+            "brand_name": video_brand_name,
+            "brand_mobile": video_brand_mobile,
+            "details": video_brand_details,
+            "cta_text": video_cta_text,
+        },
         "custom_script":       custom_script.strip(),
     }
 
@@ -1602,6 +1885,14 @@ async def submit_order(
     platform: str = Form("instagram"),
     aspect_ratio: str = Form("9:16"),
     notes: str = Form(""),
+    image_brand_name: str = Form(""),
+    image_brand_mobile: str = Form(""),
+    image_offer_text: str = Form(""),
+    image_cta_text: str = Form(""),
+    video_brand_name: str = Form(""),
+    video_brand_mobile: str = Form(""),
+    video_brand_details: str = Form(""),
+    video_cta_text: str = Form(""),
     custom_script: str = Form(""),
     video_style: str = Form("kling"),
     product_image: UploadFile = File(...),
@@ -1642,6 +1933,14 @@ async def submit_order(
         "platform": platform,
         "aspect_ratio": aspect_ratio,
         "notes": notes,
+        "image_brand_name": image_brand_name,
+        "image_brand_mobile": image_brand_mobile,
+        "image_offer_text": image_offer_text,
+        "image_cta_text": image_cta_text,
+        "video_brand_name": video_brand_name,
+        "video_brand_mobile": video_brand_mobile,
+        "video_brand_details": video_brand_details,
+        "video_cta_text": video_cta_text,
         "custom_script": custom_script,
         "video_style": video_style,
         "product_image_path": img_path,
@@ -1736,6 +2035,24 @@ async def _delete_model_photos(order_id: str):
                 await client.delete(f"{RAILWAY_URL}/api/orders/{order_id}/model-photo")
         except Exception:
             pass  # Best-effort — not critical if it fails
+
+
+def _order_image_branding(order: dict) -> dict:
+    return {
+        "brand_name": order.get("image_brand_name", ""),
+        "brand_mobile": order.get("image_brand_mobile", ""),
+        "offer_text": order.get("image_offer_text", ""),
+        "cta_text": order.get("image_cta_text", ""),
+    }
+
+
+def _order_video_end_card(order: dict) -> dict:
+    return {
+        "brand_name": order.get("video_brand_name", ""),
+        "brand_mobile": order.get("video_brand_mobile", ""),
+        "details": order.get("video_brand_details", ""),
+        "cta_text": order.get("video_cta_text", ""),
+    }
 
 
 async def _persist_result_to_cloudinary(order_id: str, payload: dict):
@@ -1920,6 +2237,8 @@ async def approve_order_quick(order_id: str, token: str, background_tasks: Backg
         "model_gender": "female", "skin_tone": "wheatish", "scene": "studio",
         "custom_scene": "", "model_action": order.get("notes", ""),
         "custom_instructions": order.get("notes", ""), "aspect_ratio": order.get("aspect_ratio", "9:16"), "custom_script": order.get("custom_script", ""),
+        "image_branding": _order_image_branding(order),
+        "video_end_card": _order_video_end_card(order),
     }
     order["status"] = "processing"
     order["job_id"] = job_id
@@ -1967,6 +2286,8 @@ async def approve_order(order_id: str, background_tasks: BackgroundTasks):
         "aspect_ratio": order.get("aspect_ratio", "9:16"),
         "custom_script": order.get("custom_script", ""),
         "order_model_path": order_model_path,
+        "image_branding": _order_image_branding(order),
+        "video_end_card": _order_video_end_card(order),
     }
 
     order["status"] = "processing"
@@ -2014,6 +2335,8 @@ async def approve_order_seedance(order_id: str, background_tasks: BackgroundTask
         "custom_instructions": order.get("notes", ""),
         "aspect_ratio": order.get("aspect_ratio", "9:16"),
         "custom_script": order.get("custom_script", ""),
+        "image_branding": _order_image_branding(order),
+        "video_end_card": _order_video_end_card(order),
     }
     order["status"] = "processing"
     order["job_id"] = job_id
@@ -2059,6 +2382,8 @@ async def approve_order_veo3(order_id: str, background_tasks: BackgroundTasks):
         "aspect_ratio": order.get("aspect_ratio", "9:16"),
         "custom_script": order.get("custom_script", ""),
         "order_model_path": order.get("model_image_path") or "",
+        "image_branding": _order_image_branding(order),
+        "video_end_card": _order_video_end_card(order),
     }
     order["status"] = "processing"
     order["job_id"] = job_id
@@ -2839,6 +3164,8 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
             "custom_instructions": order.get("notes", ""),
             "aspect_ratio": "9:16",
             "custom_script": "",
+            "image_branding": _order_image_branding(order),
+            "video_end_card": _order_video_end_card(order),
         }
         order["status"] = "processing"
         order["job_id"] = job_id
@@ -2913,7 +3240,7 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
 
             # Image-only mode: skip audio/video and return just the composite image
             if output_type == "image":
-                final_image_url = await download_and_save_image(model_with_product_url, job_id)
+                final_image_url = await download_and_save_image(model_with_product_url, job_id, c.get("image_branding"))
                 jobs[job_id].update({"status": "completed", "step": "completed", "image_url": final_image_url})
                 save_to_history({
                     "id": job_id,
@@ -2964,6 +3291,7 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
 
         # Final: re-encode at correct aspect ratio
         final_url = await download_and_reencode_video(raw_video_url, job_id, aspect_ratio)
+        final_url = await append_video_end_card(final_url, job_id, aspect_ratio, c.get("video_end_card"))
 
         jobs[job_id].update({"status": "completed", "step": "completed", "video_url": final_url})
 
@@ -3649,6 +3977,7 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
         # Step 4: Re-encode to correct aspect ratio (no audio merge — audio already embedded)
         jobs[job_id]["step"] = "processing_video"
         final_url = await download_and_reencode_video(veo3_video_url, job_id, aspect_ratio)
+        final_url = await append_video_end_card(final_url, job_id, aspect_ratio, c.get("video_end_card"))
 
         jobs[job_id].update({"status": "completed", "step": "completed", "video_url": final_url})
         save_to_history({
@@ -3768,6 +4097,7 @@ async def process_job_seedance(job_id: str, image_data: bytes, content_type: str
         final_url = await download_and_reencode_video(
             seedance_video_url, job_id, aspect_ratio, audio_bytes=audio_bytes
         )
+        final_url = await append_video_end_card(final_url, job_id, aspect_ratio, c.get("video_end_card"))
 
         jobs[job_id].update({"status": "completed", "step": "completed", "video_url": final_url})
         save_to_history({

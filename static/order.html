@@ -1878,6 +1878,50 @@
                   </button>
                 </div>
               </div>
+              <div class="field full field-hidden" id="image-branding-section">
+                <label>Brand area for image <span class="optional">Optional</span></label>
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="image-brand-name">Brand name</label>
+                    <input type="text" id="image-brand-name" placeholder="Example: Vishleshak Jewels" />
+                  </div>
+                  <div class="field">
+                    <label for="image-brand-mobile">Mobile / WhatsApp</label>
+                    <input type="tel" id="image-brand-mobile" placeholder="Example: 99539 10987" inputmode="numeric" />
+                  </div>
+                  <div class="field">
+                    <label for="image-offer-text">Image offer text</label>
+                    <input type="text" id="image-offer-text" placeholder="Example: Festive collection now live" />
+                  </div>
+                  <div class="field">
+                    <label for="image-cta-text">CTA text</label>
+                    <input type="text" id="image-cta-text" placeholder="Example: WhatsApp to order" />
+                  </div>
+                </div>
+                <small class="helper">For image orders, this text is added as a clean readable strip after the AI image is created.</small>
+              </div>
+              <div class="field full" id="video-end-card-section">
+                <label>Video end card <span class="optional">Optional</span></label>
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="video-brand-name">Brand name</label>
+                    <input type="text" id="video-brand-name" placeholder="Example: Vishleshak Jewels" />
+                  </div>
+                  <div class="field">
+                    <label for="video-brand-mobile">Mobile / WhatsApp</label>
+                    <input type="tel" id="video-brand-mobile" placeholder="Example: 99539 10987" inputmode="numeric" />
+                  </div>
+                  <div class="field full">
+                    <label for="video-brand-details">Address or details</label>
+                    <input type="text" id="video-brand-details" placeholder="Example: Karol Bagh, Delhi | Instagram @brandname" />
+                  </div>
+                  <div class="field full">
+                    <label for="video-cta-text">Ending CTA</label>
+                    <input type="text" id="video-cta-text" placeholder="Example: WhatsApp to order today" />
+                  </div>
+                </div>
+                <small class="helper">For video orders, this becomes a 2-second branded end card appended after generation without using extra AI video credits.</small>
+              </div>
               <div class="field full" id="style-field">
                 <label>Video style</label>
                 <div class="choice-grid" id="style-group">
@@ -2128,6 +2172,8 @@
       const isImage = selectedOutput === "image";
       document.getElementById("style-field").classList.toggle("field-hidden", isImage);
       document.getElementById("video-options-section").classList.toggle("field-hidden", isImage);
+      document.getElementById("image-branding-section").classList.toggle("field-hidden", !isImage);
+      document.getElementById("video-end-card-section").classList.toggle("field-hidden", isImage);
     }
 
     function updateSelectedRatio() {
@@ -2366,6 +2412,31 @@
       const offer = document.getElementById("offer-cta").value.trim();
       const notes = notesArea.value.trim();
       if (offer) parts.push(`Offer or CTA: ${offer}`);
+      if (selectedOutput === "image") {
+        const brandName = document.getElementById("image-brand-name").value.trim();
+        const brandMobile = document.getElementById("image-brand-mobile").value.trim();
+        const imageOffer = document.getElementById("image-offer-text").value.trim();
+        const imageCta = document.getElementById("image-cta-text").value.trim();
+        if (brandName || brandMobile || imageOffer || imageCta) {
+          parts.push("Image brand overlay requested.");
+          if (brandName) parts.push(`Brand name: ${brandName}`);
+          if (brandMobile) parts.push(`Mobile / WhatsApp: ${brandMobile}`);
+          if (imageOffer) parts.push(`Image offer text: ${imageOffer}`);
+          if (imageCta) parts.push(`Image CTA: ${imageCta}`);
+        }
+      } else {
+        const videoBrandName = document.getElementById("video-brand-name").value.trim();
+        const videoBrandMobile = document.getElementById("video-brand-mobile").value.trim();
+        const videoBrandDetails = document.getElementById("video-brand-details").value.trim();
+        const videoCta = document.getElementById("video-cta-text").value.trim();
+        if (videoBrandName || videoBrandMobile || videoBrandDetails || videoCta) {
+          parts.push("Video end card requested.");
+          if (videoBrandName) parts.push(`End card brand name: ${videoBrandName}`);
+          if (videoBrandMobile) parts.push(`End card mobile / WhatsApp: ${videoBrandMobile}`);
+          if (videoBrandDetails) parts.push(`End card details: ${videoBrandDetails}`);
+          if (videoCta) parts.push(`End card CTA: ${videoCta}`);
+        }
+      }
       if (notes) parts.push(`Creative notes: ${notes}`);
       return parts.join("\n");
     }
@@ -2491,6 +2562,14 @@
       fd.append("platform", selectedPlatform);
       fd.append("aspect_ratio", selectedRatio);
       fd.append("notes", buildOrderBrief());
+      fd.append("image_brand_name", document.getElementById("image-brand-name").value.trim());
+      fd.append("image_brand_mobile", document.getElementById("image-brand-mobile").value.trim());
+      fd.append("image_offer_text", document.getElementById("image-offer-text").value.trim());
+      fd.append("image_cta_text", document.getElementById("image-cta-text").value.trim());
+      fd.append("video_brand_name", document.getElementById("video-brand-name").value.trim());
+      fd.append("video_brand_mobile", document.getElementById("video-brand-mobile").value.trim());
+      fd.append("video_brand_details", document.getElementById("video-brand-details").value.trim());
+      fd.append("video_cta_text", document.getElementById("video-cta-text").value.trim());
       fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
       fd.append("video_style", selectedStyle);
       fd.append("product_image", productFile);

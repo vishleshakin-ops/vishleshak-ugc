@@ -1079,46 +1079,61 @@ async function loadOrdersBadge() {
 function renderOrderCard(order) {
   const thumb = `/order_uploads/${order.id}.jpg`;
   const date = new Date(order.created_at).toLocaleString("en-IN", {day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"});
-  const statusLabel = {pending:"⏳ Pending", processing:"⚙️ Processing", completed:"✅ Done", rejected:"❌ Rejected", failed:"❗ Failed"}[order.status] || order.status;
+  const statusLabel = {pending:"Pending", processing:"Processing", completed:"Done", rejected:"Rejected", failed:"Failed"}[order.status] || order.status;
+  const outputLabel = order.output_type === "image" ? "Image creative" : "Video ad";
+  const styleLabel = order.output_type === "image"
+    ? "Static"
+    : (order.video_style === "cinematic" ? "Cinematic" : "Talking");
+  const presenterLabel = {ai:"AI model", uploaded:"Reference model", product:"Product only"}[order.presenter_source] || "AI model";
+  const durationLabel = order.output_type === "image" ? "No duration" : `${order.video_duration || "5"}s`;
+  const notePreview = order.notes ? order.notes.replace(/\s+/g, " ").slice(0, 240) : "";
 
   let actions = "";
   if (order.status === "pending" || order.status === "failed") {
-    // If a Veo3 task was already submitted (credits spent), show recovery option
     const kieTaskId = order.kie_task_id || "";
     const recoverRow = order.video_style === "cinematic" || kieTaskId ? `
-      <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-        <input id="recover-task-${order.id}" type="text" placeholder="kie.ai task ID" value="${kieTaskId}"
-          style="flex:1;font-size:11px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc"/>
-        <button class="approve-btn" style="background:#059669;font-size:11px;padding:4px 10px"
-          data-recover="${order.id}">🔁 Recover Veo3</button>
+      <div class="recovery-row">
+        <input id="recover-task-${order.id}" type="text" placeholder="Recovery task ID" value="${kieTaskId}" />
+        <button class="approve-btn subtle" data-recover="${order.id}">Recover</button>
       </div>` : "";
+    const approveButtons = order.output_type === "image"
+      ? `<button class="approve-btn primary-action" data-approve="${order.id}">Approve Image</button>`
+      : `<button class="approve-btn primary-action" data-approve="${order.id}">Approve Talking Ad</button>
+         <button class="approve-btn secondary-action" data-approve-veo3="${order.id}">Approve Cinematic Ad</button>`;
     actions = `<div class="order-actions">
-      <button class="approve-btn" data-approve="${order.id}">🎙️ Kling (Lip-sync)</button>
-      <button class="approve-btn" data-approve-veo3="${order.id}" style="background:#1a73e8">🎬 Veo 3 Fast</button>
-      <button class="reject-btn" data-reject="${order.id}">✗ Reject</button>
+      ${approveButtons}
+      <button class="reject-btn" data-reject="${order.id}">Reject</button>
       ${recoverRow}
     </div>`;
   } else if (order.status === "processing") {
-    actions = `<div class="order-actions"><span class="muted" style="font-size:12px">⚙️ ${order.job_step || "starting"}…</span></div>`;
+    actions = `<div class="order-actions"><span class="processing-chip">${order.job_step || "Starting"}...</span></div>`;
   } else if (order.status === "completed") {
-    // Use Railway URL for customer-facing links (works externally); fallback to local origin
     const resultBase = _railwayUrl ? _railwayUrl.replace(/\/$/, "") : location.origin;
     const resultUrl = `${resultBase}/order/result/${order.id}`;
     const waMsg = encodeURIComponent(`Hi ${order.customer_name}! Your UGC ${order.output_type} is ready. Download here: ${resultUrl}`);
     const waLink = `https://wa.me/${(order.customer_phone||"").replace(/\D/g,"")}?text=${waMsg}`;
     actions = `<div class="order-actions">
-      <a href="${resultUrl}" target="_blank" class="approve-btn" style="text-decoration:none;text-align:center;display:block">View Result</a>
-      <a href="${waLink}" target="_blank" style="font-size:12px;color:#25D366;text-align:center;display:block;margin-top:4px">📱 Send on WhatsApp</a>
+      <a href="${resultUrl}" target="_blank" class="approve-btn primary-action">View Result</a>
+      <a href="${waLink}" target="_blank" class="whatsapp-send">Send on WhatsApp</a>
     </div>`;
   }
 
   return `<div class="order-card">
     <img class="order-thumb" src="${thumb}" onerror="this.style.background='#e2e8f0';this.removeAttribute('src')" alt="Product">
     <div class="order-info">
-      <span class="order-name">${order.customer_name}</span>
-      <span class="order-meta">📱 ${order.customer_phone} · ${order.output_type} · ${order.video_duration}s · ${order.language} · ${date} · ${order.video_style === "seedance" ? "🎬 Lifestyle" : "🎙️ Talking Ad"}</span>
-      ${order.notes ? `<span class="order-meta">📝 ${order.notes}</span>` : ""}
-      <span class="order-status ${order.status}">${statusLabel}</span>
+      <div class="order-title-row">
+        <span class="order-name">${order.customer_name}</span>
+        <span class="order-status ${order.status}">${statusLabel}</span>
+      </div>
+      <div class="order-tags">
+        <span>${outputLabel}</span>
+        <span>${styleLabel}</span>
+        <span>${presenterLabel}</span>
+        <span>${durationLabel}</span>
+        <span>${order.language || "English"}</span>
+      </div>
+      <span class="order-meta">${order.customer_phone || ""} · ${date}</span>
+      ${notePreview ? `<span class="order-notes">${notePreview}${order.notes.length > 240 ? "..." : ""}</span>` : ""}
     </div>
     ${actions}
   </div>`;
@@ -1171,7 +1186,7 @@ async function approveVeo3(orderId) {
   try {
     const resp = await fetch(`/api/orders/${orderId}/approve-veo3`, {method: "POST"});
     if (!resp.ok) { const d = await resp.json(); throw new Error(d.detail); }
-    showToast("🎬 Veo 3 Fast started! 8s cinematic video (~5-8 min)");
+    showToast("Cinematic ad started. This usually takes 5-8 min.");
     loadOrdersAdmin();
   } catch(e) {
     showToast("Error: " + e.message);
@@ -1188,8 +1203,8 @@ async function rejectOrder(orderId) {
 async function recoverVeo3(orderId) {
   const taskInput = document.getElementById(`recover-task-${orderId}`);
   const taskId = taskInput ? taskInput.value.trim() : "";
-  if (!taskId) { showToast("⚠️ Enter the kie.ai task ID first"); return; }
-  showToast("🔁 Recovering Veo3 video from kie.ai… this may take a minute");
+  if (!taskId) { showToast("Enter the recovery task ID first"); return; }
+  showToast("Recovering the submitted cinematic video. This may take a minute.");
   try {
     const resp = await fetch("/api/recover-veo3", {
       method: "POST",
