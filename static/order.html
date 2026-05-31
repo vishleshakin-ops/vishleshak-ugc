@@ -1017,6 +1017,21 @@
       font-weight: 800;
       padding: 10px 14px;
     }
+    .safety-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 1.45rem;
+      font-weight: 900;
+    }
+    .modal-confirm.safety-ok {
+      background: linear-gradient(135deg, #dc2626, #f97316);
+    }
     /* Premium order-desk polish */
     body {
       background:
@@ -2128,6 +2143,16 @@
         </div>
       </div>
     </div>
+    <div class="modal-backdrop" id="safety-modal">
+      <div class="modal-box">
+        <div class="safety-icon">!</div>
+        <p class="modal-title">Reference image is not allowed</p>
+        <p class="modal-sub">For swimwear, intimate, condoms, and sexual-wellness products, use AI generated or Product only. Uploaded/reference person photos are not allowed.</p>
+        <div class="modal-actions">
+          <button class="modal-confirm safety-ok" id="safety-ok-btn" type="button" onclick="closeSafetyModal()">Use AI generated</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -2227,6 +2252,16 @@
       if (thumb) thumb.removeAttribute("src");
     }
 
+    function showSafetyModal() {
+      const modal = document.getElementById("safety-modal");
+      if (modal) modal.style.display = "flex";
+    }
+
+    function closeSafetyModal() {
+      const modal = document.getElementById("safety-modal");
+      if (modal) modal.style.display = "none";
+    }
+
     function selectPresenterSource(nextPresenter, showWarning = true) {
       if (nextPresenter === "uploaded" && isPersonRestrictedCreative()) {
         selectedPresenter = "ai";
@@ -2234,7 +2269,7 @@
         document.querySelectorAll("#presenter-group button").forEach(button => button.classList.remove("active"));
         document.querySelector("#presenter-group [data-presenter='ai']").classList.add("active");
         if (showWarning) {
-          showError("For swimwear, intimate, condoms, and sexual-wellness products, use AI generated or Product only. Uploaded/reference person photos are not allowed.");
+          showSafetyModal();
         }
         updateSummary();
         return;
@@ -2714,6 +2749,9 @@
     document.getElementById("model-change-btn").addEventListener("click", openModelModal);
     document.getElementById("model-modal").addEventListener("click", event => {
       if (event.target.id === "model-modal") cancelModel();
+    });
+    document.getElementById("safety-modal").addEventListener("click", event => {
+      if (event.target.id === "safety-modal") closeSafetyModal();
     });
   </script>
 </body>
