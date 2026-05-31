@@ -237,6 +237,33 @@ body { font-family: 'Inter', sans-serif; color: #1a1a2e; overflow-x: hidden; }
   width: 100%; height: 100%;
   object-fit: cover; display: block;
 }
+.hero-audio {
+  position: absolute;
+  left: 50%; bottom: 12px;
+  transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 32px;
+  padding: 7px 11px;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 999px;
+  background: rgba(8, 8, 18, 0.72);
+  color: white;
+  font-size: 11px; font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.18s, border-color 0.18s;
+}
+.hero-audio svg {
+  width: 14px; height: 14px;
+  flex: 0 0 auto;
+}
+.hero-audio.is-on {
+  background: rgba(37, 211, 102, 0.88);
+  border-color: rgba(255,255,255,0.35);
+}
 .phone-home-bar {
   width: 80px; height: 4px;
   background: rgba(255,255,255,0.25);
@@ -933,6 +960,10 @@ footer {
           <div class="phone-notch"></div>
           <div class="phone-screen">
             <video id="hero-video" autoplay muted playsinline></video>
+            <button class="hero-audio" id="hero-audio-btn" type="button" aria-label="Play hero video with audio">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+              <span>Tap for audio</span>
+            </button>
           </div>
           <div class="phone-home-bar"></div>
         </div>
@@ -962,9 +993,9 @@ footer {
 
 <!-- FEATURES -->
 <section class="features" id="services">
-  <p class="section-label">What We Offer</p>
-  <h2 class="section-title">Our Core Services</h2>
-  <p class="section-sub">Everything your business needs to grow with AI — fast, affordable, and effective.</p>
+  <p class="section-label">AI Services</p>
+  <h2 class="section-title">Sell, Support, and Book Faster</h2>
+  <p class="section-sub">Practical AI tools for content, WhatsApp conversations, and customer calls.</p>
   <div class="features-grid">
     <div class="feature-card">
       <div class="feature-icon-wrap purple">🤖</div>
@@ -1067,9 +1098,9 @@ footer {
 
 <!-- LIVE DEMOS -->
 <section class="demo-section" id="demo">
-  <p class="section-label demo-label">Live Demos</p>
-  <h2 class="section-title demo-title">Try Before You Buy</h2>
-  <p class="section-sub demo-sub">Chat with our restaurant bot, call our AI dental receptionist, or try an AI video ad — live, right now. No sign-up needed.</p>
+  <p class="section-label demo-label">Experience It Live</p>
+  <h2 class="section-title demo-title">Test the AI Yourself</h2>
+  <p class="section-sub demo-sub">Chat with a bot, place a sample request, or call the AI receptionist before you decide.</p>
 
   <div class="demo-cards">
 
@@ -1128,9 +1159,9 @@ footer {
 
 <!-- TESTIMONIALS -->
 <section class="testimonials" id="testimonials">
-  <p class="section-label">Testimonials</p>
-  <h2 class="section-title">What Our Clients Say</h2>
-  <p class="section-sub">Real results from real businesses using Vishleshak AI tools.</p>
+  <p class="section-label">Client Proof</p>
+  <h2 class="section-title">Results From Real Businesses</h2>
+  <p class="section-sub">How Vishleshak helps owners save time, answer faster, and generate more leads.</p>
   <div class="testimonials-grid">
     <div class="testi-card">
       <div class="testi-stars">★★★★★</div>
@@ -1302,6 +1333,7 @@ footer {
 // Hero phone: cycle sample videos in random order, never repeat back-to-back
 (function() {
   const heroVideo = document.getElementById('hero-video');
+  const heroAudioButton = document.getElementById('hero-audio-btn');
   if (!heroVideo) return;
   let samples = [
     '/static/samples/sample2.mp4',
@@ -1327,6 +1359,19 @@ footer {
   heroVideo.addEventListener('ended', () => {
     lastIndex = playRandom(lastIndex);
   });
+
+  if (heroAudioButton) {
+    heroAudioButton.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const shouldUnmute = heroVideo.muted;
+      heroVideo.muted = !shouldUnmute;
+      heroVideo.play().catch(() => {});
+      heroAudioButton.classList.toggle('is-on', shouldUnmute);
+      heroAudioButton.querySelector('span').textContent = shouldUnmute ? 'Sound on' : 'Tap for audio';
+      heroAudioButton.setAttribute('aria-label', shouldUnmute ? 'Mute hero video' : 'Play hero video with audio');
+    });
+  }
 
   function posterFromVideoUrl(url) {
     const cleanUrl = String(url || '').split('?')[0];
