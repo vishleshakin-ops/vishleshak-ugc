@@ -419,6 +419,7 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
 RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
 credit_otp_store: dict[str, dict] = {}
+last_credit_otp_error = ""
 TRACKING_DB_FILE = os.getenv(
     "TRACKING_DB_FILE",
     os.path.join(os.path.dirname(__file__), "client_tracking.sqlite3"),
@@ -3070,6 +3071,8 @@ async def _send_whatsapp_notification(order: dict):
 
 async def _send_credit_otp(phone: str, otp: str) -> bool:
     """Send package-credit OTP by SMS first, with WhatsApp as a fallback."""
+    global last_credit_otp_error
+    last_credit_otp_error = ""
     normalized_phone = _normalize_phone(phone)
     if FAST2SMS_API_KEY:
         try:
@@ -3091,9 +3094,13 @@ async def _send_credit_otp(phone: str, otp: str) -> bool:
                     return bool(resp.json().get("return"))
                 except Exception:
                     return True
-            print(f"Fast2SMS OTP failed: {resp.status_code} {resp.text[:200]}")
+            last_credit_otp_error = f"Fast2SMS rejected OTP: {resp.status_code} {resp.text[:200]}"
+            print(last_credit_otp_error)
         except Exception as e:
-            print(f"Fast2SMS OTP failed: {e}")
+            last_credit_otp_error = f"Fast2SMS OTP failed: {e}"
+            print(last_credit_otp_error)
+    else:
+        last_credit_otp_error = "FAST2SMS_API_KEY is not configured"
 
     if not CALLMEBOT_API_KEY:
         return False
@@ -3113,7 +3120,8 @@ async def _send_credit_otp(phone: str, otp: str) -> bool:
             )
         return resp.status_code < 400
     except Exception as e:
-        print(f"Credit OTP WhatsApp failed: {e}")
+        last_credit_otp_error = f"Credit OTP WhatsApp failed: {e}"
+        print(last_credit_otp_error)
         return False
 
 
@@ -3237,6 +3245,15 @@ async def send_credit_otp(request: Request):
         credit_otp_store.pop(phone, None)
         raise HTTPException(status_code=503, detail="Could not send OTP. Please pay online for this order.")
     return {"sent": True, "expires_in_seconds": 600}
+
+
+@app.get("/api/clients/credit-otp-status")
+async def credit_otp_status():
+    return {
+        "fast2sms_configured": bool(FAST2SMS_API_KEY),
+        "callmebot_configured": bool(CALLMEBOT_API_KEY),
+        "last_error": last_credit_otp_error,
+    }
 
 
 @app.post("/api/clients/verify-credit-otp")
