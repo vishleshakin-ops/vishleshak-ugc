@@ -411,6 +411,7 @@ OWNER_EMAIL        = os.getenv("OWNER_EMAIL", "")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 OWNER_WHATSAPP     = os.getenv("OWNER_WHATSAPP", "919953910987")
 CALLMEBOT_API_KEY  = os.getenv("CALLMEBOT_API_KEY", "")
+FAST2SMS_API_KEY   = os.getenv("FAST2SMS_API_KEY", "")
 
 # Razorpay test/live keys are read from env vars only. Never commit secrets.
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
@@ -3068,7 +3069,32 @@ async def _send_whatsapp_notification(order: dict):
 
 
 async def _send_credit_otp(phone: str, otp: str) -> bool:
-    """Send package-credit OTP to the customer's WhatsApp number."""
+    """Send package-credit OTP by SMS first, with WhatsApp as a fallback."""
+    normalized_phone = _normalize_phone(phone)
+    if FAST2SMS_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(
+                    "https://www.fast2sms.com/dev/bulkV2",
+                    headers={
+                        "authorization": FAST2SMS_API_KEY,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    data={
+                        "variables_values": otp,
+                        "route": "otp",
+                        "numbers": normalized_phone,
+                    },
+                )
+            if resp.status_code < 400:
+                try:
+                    return bool(resp.json().get("return"))
+                except Exception:
+                    return True
+            print(f"Fast2SMS OTP failed: {resp.status_code} {resp.text[:200]}")
+        except Exception as e:
+            print(f"Fast2SMS OTP failed: {e}")
+
     if not CALLMEBOT_API_KEY:
         return False
     msg = (
@@ -3080,7 +3106,7 @@ async def _send_credit_otp(phone: str, otp: str) -> bool:
             resp = await client.get(
                 "https://api.callmebot.com/whatsapp.php",
                 params={
-                    "phone": f"91{_normalize_phone(phone)}",
+                    "phone": f"91{normalized_phone}",
                     "text": msg,
                     "apikey": CALLMEBOT_API_KEY,
                 },
@@ -3209,7 +3235,7 @@ async def send_credit_otp(request: Request):
     sent = await _send_credit_otp(phone, otp)
     if not sent:
         credit_otp_store.pop(phone, None)
-        raise HTTPException(status_code=503, detail="Could not send OTP on WhatsApp. Please pay online for this order.")
+        raise HTTPException(status_code=503, detail="Could not send OTP. Please pay online for this order.")
     return {"sent": True, "expires_in_seconds": 600}
 
 
