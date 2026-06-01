@@ -417,6 +417,7 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
 RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
+credit_otp_store: dict[str, dict] = {}
 TRACKING_DB_FILE = os.getenv(
     "TRACKING_DB_FILE",
     os.path.join(os.path.dirname(__file__), "client_tracking.sqlite3"),
@@ -558,6 +559,46 @@ def _normalize_phone(phone: str) -> str:
     if len(digits) > 10 and digits.startswith("91"):
         digits = digits[-10:]
     return digits
+
+def _credit_otp_secret() -> str:
+    return RAZORPAY_WEBHOOK_SECRET or RAZORPAY_KEY_SECRET or CALLMEBOT_API_KEY or "vishleshak-credit-otp"
+
+def _credit_otp_hash(phone: str, otp: str) -> str:
+    msg = f"{phone}:{otp}".encode("utf-8")
+    return hmac.new(_credit_otp_secret().encode("utf-8"), msg, hashlib.sha256).hexdigest()
+
+def _credit_token_signature(payload_b64: str) -> str:
+    return hmac.new(_credit_otp_secret().encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256).hexdigest()
+
+def _sign_credit_otp_token(phone: str) -> str:
+    payload = {
+        "phone": _normalize_phone(phone),
+        "exp": int((datetime.utcnow() + timedelta(minutes=30)).timestamp()),
+    }
+    payload_b64 = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode("utf-8")).decode("ascii").rstrip("=")
+    return f"{payload_b64}.{_credit_token_signature(payload_b64)}"
+
+def _verify_credit_otp_token(phone: str, token: str) -> bool:
+    if not token or "." not in token:
+        return False
+    payload_b64, signature = token.rsplit(".", 1)
+    expected = _credit_token_signature(payload_b64)
+    if not hmac.compare_digest(signature, expected):
+        return False
+    try:
+        padded = payload_b64 + ("=" * (-len(payload_b64) % 4))
+        payload = json.loads(base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8"))
+    except Exception:
+        return False
+    if payload.get("phone") != _normalize_phone(phone):
+        return False
+    return int(payload.get("exp") or 0) >= int(datetime.utcnow().timestamp())
+
+def _cleanup_credit_otps():
+    now_ts = datetime.utcnow().timestamp()
+    for phone, record in list(credit_otp_store.items()):
+        if float(record.get("expires_at") or 0) < now_ts:
+            credit_otp_store.pop(phone, None)
 
 class _TrackingConnection:
     def __init__(self):
@@ -2656,6 +2697,7 @@ async def submit_order(
     video_cta_text: str = Form(""),
     custom_script: str = Form(""),
     video_style: str = Form("kling"),
+    credit_otp_token: str = Form(""),
     product_image: UploadFile = File(...),
     model_reference: UploadFile = File(None),
 ):
@@ -2731,7 +2773,15 @@ async def submit_order(
     client = _upsert_client_from_order(order)
     if client:
         order["client_id"] = client["id"]
-        credit_used, credit_reason = _consume_client_credit(client["id"], order)
+        credit_status = _client_credit_status(client)
+        credits_needed = _credit_cost_for_order(order)
+        if credit_status["active"] and credit_status["credits_left"] >= credits_needed:
+            if _verify_credit_otp_token(customer_phone, credit_otp_token):
+                credit_used, credit_reason = _consume_client_credit(client["id"], order)
+            else:
+                credit_used, credit_reason = False, "otp_required"
+        else:
+            credit_used, credit_reason = _consume_client_credit(client["id"], order)
         order["package_credit_status"] = credit_reason
         if credit_used:
             order["payment_status"] = "package_credit"
@@ -3017,6 +3067,30 @@ async def _send_whatsapp_notification(order: dict):
         print(f"WhatsApp notification failed: {e}")
 
 
+async def _send_credit_otp(phone: str, otp: str) -> bool:
+    """Send package-credit OTP to the customer's WhatsApp number."""
+    if not CALLMEBOT_API_KEY:
+        return False
+    msg = (
+        f"Your Vishleshak credit OTP is {otp}. "
+        "It is valid for 10 minutes. Do not share it with anyone."
+    )
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                "https://api.callmebot.com/whatsapp.php",
+                params={
+                    "phone": f"91{_normalize_phone(phone)}",
+                    "text": msg,
+                    "apikey": CALLMEBOT_API_KEY,
+                },
+            )
+        return resp.status_code < 400
+    except Exception as e:
+        print(f"Credit OTP WhatsApp failed: {e}")
+        return False
+
+
 @app.get("/api/orders/poll-new")
 async def poll_new_orders():
     """Frontend polls this to detect new orders for browser notifications."""
@@ -3111,6 +3185,53 @@ async def lookup_client(phone: str):
         "video_credit_cost": CREDIT_COST_VIDEO,
         "active": status["active"],
     }
+
+
+@app.post("/api/clients/send-credit-otp")
+async def send_credit_otp(request: Request):
+    body = await request.json()
+    phone = _normalize_phone(body.get("phone", ""))
+    if len(phone) != 10:
+        raise HTTPException(status_code=400, detail="Enter a valid WhatsApp number.")
+    client = _get_client_by_phone(phone)
+    if not client:
+        return {"sent": False, "reason": "client_not_found"}
+    status = _client_credit_status(client)
+    if not status["active"] or status["credits_left"] <= 0:
+        return {"sent": False, "reason": "no_active_credits"}
+    _cleanup_credit_otps()
+    otp = f"{random.SystemRandom().randint(100000, 999999)}"
+    credit_otp_store[phone] = {
+        "otp_hash": _credit_otp_hash(phone, otp),
+        "expires_at": (datetime.utcnow() + timedelta(minutes=10)).timestamp(),
+        "attempts": 0,
+    }
+    sent = await _send_credit_otp(phone, otp)
+    if not sent:
+        credit_otp_store.pop(phone, None)
+        raise HTTPException(status_code=503, detail="Could not send OTP on WhatsApp. Please pay online for this order.")
+    return {"sent": True, "expires_in_seconds": 600}
+
+
+@app.post("/api/clients/verify-credit-otp")
+async def verify_credit_otp(request: Request):
+    body = await request.json()
+    phone = _normalize_phone(body.get("phone", ""))
+    otp = re.sub(r"\D", "", str(body.get("otp", "")))[:6]
+    record = credit_otp_store.get(phone)
+    if len(phone) != 10 or len(otp) != 6 or not record:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP.")
+    if float(record.get("expires_at") or 0) < datetime.utcnow().timestamp():
+        credit_otp_store.pop(phone, None)
+        raise HTTPException(status_code=400, detail="OTP expired. Please send it again.")
+    if int(record.get("attempts") or 0) >= 5:
+        credit_otp_store.pop(phone, None)
+        raise HTTPException(status_code=429, detail="Too many OTP attempts. Please send a new OTP.")
+    record["attempts"] = int(record.get("attempts") or 0) + 1
+    if not hmac.compare_digest(record.get("otp_hash", ""), _credit_otp_hash(phone, otp)):
+        raise HTTPException(status_code=400, detail="Incorrect OTP.")
+    credit_otp_store.pop(phone, None)
+    return {"verified": True, "credit_otp_token": _sign_credit_otp_token(phone)}
 
 
 @app.post("/api/clients")

@@ -474,6 +474,31 @@
       background: #fff7ed;
       color: #9a3412;
     }
+    .credit-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .credit-actions input {
+      width: 120px;
+      min-height: 38px;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+    .credit-actions button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--accent-strong);
+      padding: 0 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .credit-actions button:disabled { opacity: 0.65; cursor: not-allowed; }
     .choice-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1266,9 +1291,9 @@
       margin: 0 auto;
       padding: 80px 0 40px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 250px;
+      grid-template-columns: minmax(0, 1fr) 280px;
       gap: 64px;
-      align-items: start;
+      align-items: center;
       background: transparent;
       border-radius: 0;
       overflow: visible;
@@ -1308,7 +1333,7 @@
       letter-spacing: 1.5px;
     }
     .ugc-visual {
-      width: 250px;
+      width: 280px;
       min-height: auto;
       display: flex;
       align-items: center;
@@ -1316,7 +1341,7 @@
       flex: none;
     }
     .ugc-phone {
-      width: clamp(240px, 22vw, 320px);
+      width: 260px;
       margin: 0;
       padding: 0;
       border-radius: 24px;
@@ -1552,6 +1577,16 @@
       background: rgba(251,146,60,0.12);
       color: rgba(255,255,255,0.84);
     }
+    .credit-actions input {
+      border-color: rgba(167,139,250,0.25);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .credit-actions button {
+      border-color: rgba(167,139,250,0.25);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
     .choice-card,
     .seg button {
       border: 1px solid var(--order-border);
@@ -1711,7 +1746,7 @@
       .success-card { padding: 20px; }
       .submit-row { padding: 0 20px 20px; }
       .ugc-phone {
-        width: min(286px, calc(100vw - 72px));
+        width: min(260px, calc(100vw - 72px));
       }
     }
     @media (max-width: 430px) {
@@ -2319,9 +2354,28 @@
 
     let creditLookupTimer = null;
     let lastCreditLookupPhone = "";
+    let creditOtpToken = "";
+    let creditOtpPhone = "";
+    let creditOtpVerified = false;
 
     function normalizePhone(value) {
       return String(value || "").replace(/^\+?91/, "").replace(/\D/g, "").slice(-10);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function resetCreditOtp() {
+      creditOtpToken = "";
+      creditOtpPhone = "";
+      creditOtpVerified = false;
     }
 
     function setCreditLookup(message, state = "") {
@@ -2338,15 +2392,74 @@
       box.innerHTML = message;
     }
 
+    function wireCreditOtpActions(phone) {
+      const sendBtn = document.getElementById("send-credit-otp");
+      const verifyBtn = document.getElementById("verify-credit-otp");
+      const otpInput = document.getElementById("credit-otp-input");
+      const status = document.getElementById("credit-otp-status");
+      if (!sendBtn || !verifyBtn || !otpInput || !status) return;
+
+      sendBtn.addEventListener("click", async () => {
+        sendBtn.disabled = true;
+        status.textContent = "Sending OTP...";
+        try {
+          const resp = await fetch("/api/clients/send-credit-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone })
+          });
+          const data = await resp.json();
+          if (!resp.ok || !data.sent) throw new Error(data.detail || "Could not send OTP.");
+          otpInput.disabled = false;
+          verifyBtn.disabled = false;
+          status.textContent = "OTP sent on WhatsApp. Enter it here to use credits.";
+          otpInput.focus();
+        } catch (error) {
+          status.textContent = error.message || "Could not send OTP. You can still pay online.";
+          sendBtn.disabled = false;
+        }
+      });
+
+      verifyBtn.addEventListener("click", async () => {
+        const otp = otpInput.value.trim();
+        if (otp.length !== 6) {
+          status.textContent = "Enter the 6 digit OTP.";
+          return;
+        }
+        verifyBtn.disabled = true;
+        status.textContent = "Verifying OTP...";
+        try {
+          const resp = await fetch("/api/clients/verify-credit-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone, otp })
+          });
+          const data = await resp.json();
+          if (!resp.ok || !data.verified) throw new Error(data.detail || "OTP verification failed.");
+          creditOtpToken = data.credit_otp_token || "";
+          creditOtpPhone = phone;
+          creditOtpVerified = true;
+          otpInput.disabled = true;
+          sendBtn.disabled = true;
+          status.textContent = "Verified. Credits will be used for this order.";
+        } catch (error) {
+          verifyBtn.disabled = false;
+          status.textContent = error.message || "OTP verification failed.";
+        }
+      });
+    }
+
     async function lookupCreditsForPhone() {
       const phone = normalizePhone(document.getElementById("customer-phone").value);
       if (phone.length < 10) {
         lastCreditLookupPhone = "";
+        resetCreditOtp();
         setCreditLookup("");
         return;
       }
       if (phone === lastCreditLookupPhone) return;
       lastCreditLookupPhone = phone;
+      resetCreditOtp();
       setCreditLookup("Checking available credits...", "inactive");
       try {
         const resp = await fetch(`/api/clients/lookup?phone=${encodeURIComponent(phone)}`);
@@ -2362,7 +2475,17 @@
         const expiry = data.package_expires_at
           ? new Date(data.package_expires_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
           : "";
-        setCreditLookup(`<strong>${data.credits_left || 0} credits left</strong> in ${data.package_name || "your package"}${expiry ? ` · valid till ${expiry}` : ""}.`, "active");
+        setCreditLookup(`
+          <strong>${data.credits_left || 0} credits left</strong> in ${escapeHtml(data.package_name || "your package")}${expiry ? ` · valid till ${expiry}` : ""}.<br />
+          Verify OTP to use credits. Without verification, this order will continue with Razorpay payment.
+          <div class="credit-actions">
+            <button type="button" id="send-credit-otp">Send OTP</button>
+            <input type="text" id="credit-otp-input" placeholder="6 digit OTP" inputmode="numeric" maxlength="6" disabled />
+            <button type="button" id="verify-credit-otp" disabled>Verify</button>
+            <span id="credit-otp-status"></span>
+          </div>
+        `, "active");
+        wireCreditOtpActions(phone);
       } catch (error) {
         setCreditLookup("Could not check credits right now. You can still continue.", "inactive");
       }
@@ -2751,6 +2874,7 @@
       fd.append("video_cta_text", selectedOutput === "video" ? document.getElementById("video-cta-text").value.trim() : "");
       fd.append("custom_script", document.getElementById("script-edit-area").value.trim());
       fd.append("video_style", selectedStyle);
+      fd.append("credit_otp_token", creditOtpVerified && creditOtpPhone === normalizePhone(fields.phone) ? creditOtpToken : "");
       fd.append("product_image", productFile);
       if (modelFile && !isPersonRestrictedCreative()) fd.append("model_reference", modelFile);
 
