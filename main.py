@@ -3575,7 +3575,8 @@ async def send_credit_email_otp(request: Request):
         credit_otp_store.pop(phone, None)
         last_credit_email_error = str(e)
         print(f"Credit email OTP failed: {e}")
-        raise HTTPException(status_code=503, detail="Could not send email OTP. Please use phone OTP or pay online.")
+        detail = f"Could not send email OTP: {last_credit_email_error[:180]}"
+        raise HTTPException(status_code=503, detail=detail)
     return {"sent": True, "expires_in_seconds": 600, "email": email}
 
 
