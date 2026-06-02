@@ -3918,6 +3918,18 @@ async def adjust_client_credits(client_id: str, request: Request):
     return client
 
 
+@app.post("/api/clients/adjust-credits-by-phone")
+async def adjust_client_credits_by_phone(request: Request):
+    body = await request.json()
+    phone = _normalize_phone(body.get("phone", ""))
+    if len(phone) != 10:
+        raise HTTPException(status_code=400, detail="Enter a valid phone number.")
+    client = _get_client_by_phone(phone)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return await adjust_client_credits(client["id"], request)
+
+
 @app.get("/api/clients/{client_id}/usage")
 async def client_usage(client_id: str):
     if not _get_client_by_id(client_id):
