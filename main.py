@@ -413,6 +413,9 @@ OWNER_EMAIL        = os.getenv("OWNER_EMAIL", "")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 OWNER_WHATSAPP     = os.getenv("OWNER_WHATSAPP", "919953910987")
 CALLMEBOT_API_KEY  = os.getenv("CALLMEBOT_API_KEY", "")
+RESEND_API_KEY     = os.getenv("RESEND_API_KEY", "").strip()
+RESEND_FROM_EMAIL  = os.getenv("RESEND_FROM_EMAIL", OWNER_EMAIL).strip()
+RESEND_API_URL     = os.getenv("RESEND_API_URL", "https://api.resend.com/emails").strip()
 FAST2SMS_API_KEY   = os.getenv("FAST2SMS_API_KEY", "").strip()
 FAST2SMS_WHATSAPP_API_KEY = os.getenv("FAST2SMS_WHATSAPP_API_KEY", "").strip() or FAST2SMS_API_KEY
 FAST2SMS_WHATSAPP_VERSION = os.getenv("FAST2SMS_WHATSAPP_VERSION", "v24.0").strip()
@@ -2925,7 +2928,47 @@ def _send_credit_email_otp_sync(email: str, otp: str, package_name: str = ""):
         server.sendmail(OWNER_EMAIL, recipient, msg.as_string())
 
 
+async def _send_credit_email_otp_resend(email: str, otp: str, package_name: str = ""):
+    recipient = _normalize_email(email)
+    if not RESEND_API_KEY:
+        raise RuntimeError("RESEND_API_KEY is not configured")
+    if not RESEND_FROM_EMAIL:
+        raise RuntimeError("RESEND_FROM_EMAIL is not configured")
+    if not recipient:
+        raise RuntimeError("Valid email is required")
+    safe_package = html.escape(package_name or "your package")
+    body = f"""
+<html><body style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#111827">
+  <h2 style="margin:0 0 12px;color:#4f46e5">Vishleshak credit verification</h2>
+  <p>Use this code to verify credits for <strong>{safe_package}</strong>:</p>
+  <div style="font-size:28px;font-weight:800;letter-spacing:4px;background:#f3f4f6;border-radius:10px;padding:16px 20px;text-align:center">{otp}</div>
+  <p style="color:#6b7280">This code is valid for 10 minutes. Do not share it with anyone.</p>
+  <p style="color:#9ca3af;font-size:12px">Vishleshak AI Content Studio</p>
+</body></html>
+"""
+    payload = {
+        "from": RESEND_FROM_EMAIL,
+        "to": [recipient],
+        "subject": "Your Vishleshak credit verification code",
+        "html": body,
+    }
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        resp = await client.post(
+            RESEND_API_URL,
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+    if resp.status_code >= 400:
+        raise RuntimeError(f"Resend rejected email OTP: {resp.status_code} {resp.text[:200]}")
+
+
 async def _send_credit_email_otp(email: str, otp: str, package_name: str = ""):
+    if RESEND_API_KEY:
+        await _send_credit_email_otp_resend(email, otp, package_name)
+        return
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, _send_credit_email_otp_sync, email, otp, package_name)
 
@@ -3542,7 +3585,8 @@ async def credit_otp_status():
         "twofactor_configured": bool(TWOFACTOR_API_KEY),
         "twofactor_template": bool(TWOFACTOR_TEMPLATE_NAME),
         "twofactor_mode": TWOFACTOR_MODE,
-        "email_otp_configured": bool(OWNER_EMAIL and GMAIL_APP_PASSWORD),
+        "email_otp_configured": bool(RESEND_API_KEY and RESEND_FROM_EMAIL) or bool(OWNER_EMAIL and GMAIL_APP_PASSWORD),
+        "resend_configured": bool(RESEND_API_KEY and RESEND_FROM_EMAIL),
         "last_email_error": last_credit_email_error,
         "fast2sms_configured": bool(FAST2SMS_API_KEY),
         "fast2sms_whatsapp_configured": _fast2sms_whatsapp_ready(),
