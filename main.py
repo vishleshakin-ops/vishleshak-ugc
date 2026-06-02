@@ -448,6 +448,7 @@ RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
 credit_otp_store: dict[str, dict] = {}
 last_credit_otp_error = ""
 last_credit_otp_channel = ""
+last_credit_email_error = ""
 TRACKING_DB_FILE = os.getenv(
     "TRACKING_DB_FILE",
     os.path.join(os.path.dirname(__file__), "client_tracking.sqlite3"),
@@ -2919,7 +2920,7 @@ def _send_credit_email_otp_sync(email: str, otp: str, package_name: str = ""):
 </body></html>
 """
     msg.attach(MIMEText(body, "html"))
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=12) as server:
         server.login(OWNER_EMAIL, GMAIL_APP_PASSWORD)
         server.sendmail(OWNER_EMAIL, recipient, msg.as_string())
 
@@ -3496,6 +3497,8 @@ async def send_credit_otp(request: Request):
 
 @app.post("/api/clients/send-credit-email-otp")
 async def send_credit_email_otp(request: Request):
+    global last_credit_email_error
+    last_credit_email_error = ""
     body = await request.json()
     phone = _normalize_phone(body.get("phone", ""))
     email = _normalize_email(body.get("email", ""))
@@ -3527,6 +3530,7 @@ async def send_credit_email_otp(request: Request):
         await _send_credit_email_otp(email, otp, client.get("package_name", ""))
     except Exception as e:
         credit_otp_store.pop(phone, None)
+        last_credit_email_error = str(e)
         print(f"Credit email OTP failed: {e}")
         raise HTTPException(status_code=503, detail="Could not send email OTP. Please use phone OTP or pay online.")
     return {"sent": True, "expires_in_seconds": 600, "email": email}
@@ -3539,6 +3543,7 @@ async def credit_otp_status():
         "twofactor_template": bool(TWOFACTOR_TEMPLATE_NAME),
         "twofactor_mode": TWOFACTOR_MODE,
         "email_otp_configured": bool(OWNER_EMAIL and GMAIL_APP_PASSWORD),
+        "last_email_error": last_credit_email_error,
         "fast2sms_configured": bool(FAST2SMS_API_KEY),
         "fast2sms_whatsapp_configured": _fast2sms_whatsapp_ready(),
         "fast2sms_whatsapp_template": bool(FAST2SMS_WHATSAPP_TEMPLATE_NAME),
