@@ -591,28 +591,28 @@ CREDIT_PACK_DEFS = {
         "price_inr": 49,
         "credits": CREDIT_COST_IMAGE,
         "validity_days": 30,
-        "description": "Use for image or video orders",
+        "description": "Good for 1 image, usable across image or video orders",
     },
-    "image_four_149": {
+    "image_five_199": {
         "name": "Creator Credits",
-        "price_inr": 149,
-        "credits": CREDIT_COST_IMAGE * 4,
+        "price_inr": 199,
+        "credits": CREDIT_COST_IMAGE * 5,
         "validity_days": 30,
-        "description": "Use across any image or video order",
+        "description": "Good for 5 images, usable across image or video orders",
     },
     "short_video_499": {
         "name": "Pro Credits",
         "price_inr": 499,
         "credits": CREDIT_COST_VIDEO,
         "validity_days": 30,
-        "description": "Use across any image or video order",
+        "description": "Good for 1 short video, usable across image or video orders",
     },
     "short_video_three_999": {
         "name": "Growth Credits",
-        "price_inr": 999,
+        "price_inr": 1199,
         "credits": CREDIT_COST_VIDEO * 3,
         "validity_days": 30,
-        "description": "Use across any image or video order",
+        "description": "Good for 3 short videos, usable across image or video orders",
     },
 }
 
@@ -4024,6 +4024,11 @@ async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks):
                 client_id = payment["client_id"]
                 pack_id = payment["package_id"]
         if event in ("payment_link.paid", "payment.captured") and client_id and pack_id:
+            with _tracking_conn() as conn:
+                row = conn.execute("SELECT * FROM package_payments WHERE id=?", (payment_id,)).fetchone()
+                existing_payment = _row_to_dict(row) if row else None
+            if existing_payment and existing_payment.get("status") == "paid":
+                return {"status": "credit_pack_already_applied", "client_id": client_id, "pack_id": pack_id}
             client = _apply_credit_pack_to_client(client_id, pack_id, f"Razorpay credit pack payment {payment_entity.get('id') or entity.get('id') or ''}")
             with _tracking_conn() as conn:
                 conn.execute("""
