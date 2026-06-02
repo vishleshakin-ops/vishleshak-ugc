@@ -504,6 +504,30 @@
       margin-top: 8px;
       opacity: 0.82;
     }
+    .credit-pack-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .credit-pack-list button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      padding: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .credit-pack-list strong,
+    .credit-pack-list span {
+      display: block;
+    }
+    .credit-pack-list span {
+      margin-top: 3px;
+      font-size: 0.78rem;
+      opacity: 0.76;
+    }
     .choice-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1593,6 +1617,11 @@
       color: #fff;
     }
     .credit-hint { color: rgba(255,255,255,0.72); }
+    .credit-pack-list button {
+      border-color: rgba(167,139,250,0.25);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
     .choice-card,
     .seg button {
       border: 1px solid var(--order-border);
@@ -2364,6 +2393,7 @@
     let creditOtpPhone = "";
     let creditOtpMethod = "";
     let creditOtpVerified = false;
+    let creditPacksCache = null;
 
     function normalizePhone(value) {
       return String(value || "").replace(/^\+?91/, "").replace(/\D/g, "").slice(-10);
@@ -2398,6 +2428,69 @@
       if (state) box.classList.add(state);
       box.style.display = "block";
       box.innerHTML = message;
+    }
+
+    async function getCreditPacks() {
+      if (creditPacksCache) return creditPacksCache;
+      const resp = await fetch("/api/credit-packs");
+      if (!resp.ok) throw new Error("Could not load credit packs.");
+      creditPacksCache = await resp.json();
+      return creditPacksCache;
+    }
+
+    async function showCreditPacks(phone, targetId = "credit-pack-area") {
+      const area = document.getElementById(targetId);
+      const status = document.getElementById("credit-otp-status") || area;
+      if (!area) return;
+      area.innerHTML = "Loading credit packs...";
+      try {
+        const packs = await getCreditPacks();
+        area.innerHTML = `
+          <div class="credit-pack-list">
+            ${packs.map(pack => `
+              <button type="button" class="buy-credit-pack" data-pack-id="${escapeHtml(pack.id)}">
+                <strong>${escapeHtml(pack.name)} · Rs. ${pack.price_inr}</strong>
+                <span>${pack.credits} credits · ${escapeHtml(pack.description || "")}</span>
+              </button>
+            `).join("")}
+          </div>
+        `;
+        area.querySelectorAll(".buy-credit-pack").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const email = document.getElementById("customer-email").value.trim();
+            const name = document.getElementById("customer-name").value.trim();
+            if (!email) {
+              if (status) status.textContent = "Enter email above before buying credits.";
+              document.getElementById("customer-email").focus();
+              return;
+            }
+            btn.disabled = true;
+            if (status) status.textContent = "Creating payment link...";
+            try {
+              const resp = await fetch("/api/credit-packs/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pack_id: btn.dataset.packId, phone, email, name })
+              });
+              const data = await resp.json();
+              if (!resp.ok || !data.payment_url) throw new Error(data.detail || "Could not create payment link.");
+              if (status) status.textContent = "Opening secure payment page...";
+              window.location.href = data.payment_url;
+            } catch (error) {
+              btn.disabled = false;
+              if (status) status.textContent = error.message || "Could not create payment link.";
+            }
+          });
+        });
+      } catch (error) {
+        area.innerHTML = `<span class="credit-hint">${escapeHtml(error.message || "Could not load credit packs.")}</span>`;
+      }
+    }
+
+    function wireBuyCredits(phone) {
+      const buyBtn = document.getElementById("buy-credit-pack");
+      if (!buyBtn) return;
+      buyBtn.addEventListener("click", () => showCreditPacks(phone));
     }
 
     function wireCreditOtpActions(phone) {
@@ -2511,11 +2604,27 @@
         const resp = await fetch(`/api/clients/lookup?phone=${encodeURIComponent(phone)}`);
         const data = await resp.json();
         if (!data.found) {
-          setCreditLookup("No active package found for this number. Payment will be required before generation.", "inactive");
+          setCreditLookup(`
+            No active credits found for this number. You can buy credits or continue with per-order payment.
+            <div class="credit-actions">
+              <button type="button" id="buy-credit-pack">Buy Credits</button>
+              <span id="credit-otp-status"></span>
+            </div>
+            <div id="credit-pack-area"></div>
+          `, "inactive");
+          wireBuyCredits(phone);
           return;
         }
         if (!data.active) {
-          setCreditLookup(`<strong>${data.package_name || "Package"}</strong> found, but it is inactive or expired. Credits left: <strong>${data.credits_left || 0}</strong>.`, "inactive");
+          setCreditLookup(`
+            <strong>${escapeHtml(data.display_package_name || data.package_name || "UGC Credit Wallet")}</strong> found, but it is inactive or expired. Credits left: <strong>${data.credits_left || 0}</strong>.
+            <div class="credit-actions">
+              <button type="button" id="buy-credit-pack">Buy Credits</button>
+              <span id="credit-otp-status"></span>
+            </div>
+            <div id="credit-pack-area"></div>
+          `, "inactive");
+          wireBuyCredits(phone);
           return;
         }
         const expiry = data.package_expires_at
@@ -2524,19 +2633,23 @@
         const emailHint = data.email_fallback_available
           ? `<span class="credit-hint">If phone OTP does not arrive, enter the package email${data.masked_email ? ` (${escapeHtml(data.masked_email)})` : ""} above and use email OTP.</span>`
           : `<span class="credit-hint">Email fallback is not available for this package yet.</span>`;
+        const walletLabel = data.display_package_name || data.package_name || "UGC Credit Wallet";
         setCreditLookup(`
-          <strong>${data.credits_left || 0} credits left</strong> in ${escapeHtml(data.package_name || "your package")}${expiry ? ` · valid till ${expiry}` : ""}.<br />
+          <strong>${data.credits_left || 0} credits left</strong> in ${escapeHtml(walletLabel)}${expiry ? ` · valid till ${expiry}` : ""}.<br />
           Verify OTP to use credits. Without verification, this order will continue with Razorpay payment.
           <div class="credit-actions">
             <button type="button" id="send-credit-otp">Send OTP</button>
             ${data.email_fallback_available ? `<button type="button" id="send-credit-email-otp">Email OTP</button>` : ""}
+            <button type="button" id="buy-credit-pack">Buy Credits</button>
             <input type="text" id="credit-otp-input" placeholder="6 digit OTP" inputmode="numeric" maxlength="6" disabled />
             <button type="button" id="verify-credit-otp" disabled>Verify</button>
             <span id="credit-otp-status"></span>
           </div>
+          <div id="credit-pack-area"></div>
           ${emailHint}
         `, "active");
         wireCreditOtpActions(phone);
+        wireBuyCredits(phone);
       } catch (error) {
         setCreditLookup("Could not check credits right now. You can still continue.", "inactive");
       }

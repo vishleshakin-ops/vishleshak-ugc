@@ -585,6 +585,30 @@ PACKAGE_DEFS = {
     },
 }
 
+CREDIT_PACK_DEFS = {
+    "image_once_49": {
+        "name": "1 Image Credit",
+        "price_inr": 49,
+        "credits": CREDIT_COST_IMAGE,
+        "validity_days": 30,
+        "description": "Good for one image creative",
+    },
+    "image_three_99": {
+        "name": "3 Image Pack",
+        "price_inr": 99,
+        "credits": CREDIT_COST_IMAGE * 3,
+        "validity_days": 30,
+        "description": "Good for three image creatives",
+    },
+    "short_video_499": {
+        "name": "1 Short Video Credit",
+        "price_inr": 499,
+        "credits": CREDIT_COST_VIDEO,
+        "validity_days": 30,
+        "description": "Good for one short UGC video",
+    },
+}
+
 def _utc_now_iso() -> str:
     return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -928,11 +952,69 @@ def _assign_package_to_client(client_id: str, package_id: str, note: str = "") -
         """, (str(uuid.uuid4()), client_id, note or f"Assigned {package['name']}", now))
     return _get_client_by_id(client_id)
 
+def _apply_credit_pack_to_client(client_id: str, pack_id: str, note: str = "") -> dict:
+    pack = CREDIT_PACK_DEFS.get(pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Credit pack not found")
+    client = _get_client_by_id(client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    now_dt = datetime.utcnow()
+    current_expiry = client.get("package_expires_at") or ""
+    try:
+        base_expiry = datetime.strptime(current_expiry, "%Y-%m-%dT%H:%M:%SZ")
+        if base_expiry < now_dt:
+            base_expiry = now_dt
+    except Exception:
+        base_expiry = now_dt
+    expires_at = (base_expiry + timedelta(days=int(pack["validity_days"]))).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = now_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    with _tracking_conn() as conn:
+        conn.execute("""
+            UPDATE clients SET
+                status='active',
+                package_id=?,
+                package_name=?,
+                package_started_at=CASE WHEN package_started_at='' THEN ? ELSE package_started_at END,
+                package_expires_at=?,
+                credits_total=credits_total+?,
+                updated_at=?
+            WHERE id=?
+        """, (
+            pack_id,
+            pack["name"],
+            now,
+            expires_at,
+            int(pack["credits"]),
+            now,
+            client_id,
+        ))
+        conn.execute("""
+            INSERT INTO usage_logs (id, client_id, usage_type, quantity, note, created_at)
+            VALUES (?, ?, 'credit_pack_purchased', ?, ?, ?)
+        """, (
+            str(uuid.uuid4()),
+            client_id,
+            int(pack["credits"]),
+            note or f"Purchased {pack['name']}",
+            now,
+        ))
+    return _get_client_by_id(client_id)
+
 def _client_credit_status(client: dict) -> dict:
     credits_left = max(0, int(client.get("credits_total") or 0) - int(client.get("credits_used") or 0))
     expires_at = client.get("package_expires_at") or ""
     active = client.get("status") == "active" and bool(expires_at) and expires_at >= _utc_now_iso()
     return {"active": active, "credits_left": credits_left}
+
+def _client_display_package_name(client: dict) -> str:
+    package_name = client.get("package_name") or ""
+    package_id = client.get("package_id") or ""
+    if package_id in CREDIT_PACK_DEFS:
+        return "UGC Credit Wallet"
+    if package_id == "food_creatives_999" and int(client.get("credits_total") or 0) != int(PACKAGE_DEFS["food_creatives_999"]["credits"]):
+        return "UGC Credit Wallet"
+    return package_name or "UGC Credit Wallet"
 
 def _credit_cost_for_order(order: dict) -> int:
     return max(1, _estimate_order_amount_inr(order))
@@ -1012,6 +1094,63 @@ async def _create_razorpay_payment_link(order: dict) -> dict:
     if resp.status_code >= 400:
         raise RuntimeError(f"Razorpay payment link failed: {resp.text}")
     return resp.json()
+
+async def _create_credit_pack_payment_link(client: dict, pack_id: str) -> dict:
+    if not RAZORPAY_ENABLED:
+        raise RuntimeError("Razorpay keys are not configured")
+    pack = CREDIT_PACK_DEFS.get(pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Credit pack not found")
+    payment_id = str(uuid.uuid4())
+    reference_id = f"pack_{payment_id}"
+    payload = {
+        "amount": int(pack["price_inr"]) * 100,
+        "currency": "INR",
+        "accept_partial": False,
+        "description": f"Vishleshak {pack['name']}",
+        "reference_id": reference_id,
+        "customer": {
+            "name": client.get("contact_name") or client.get("business_name") or "Vishleshak Customer",
+            "contact": _normalize_phone(client.get("phone", "")),
+            "email": client.get("email", ""),
+        },
+        "notify": {"sms": False, "email": False},
+        "reminder_enable": True,
+        "callback_url": f"{_public_base_url()}/order?credits=paid",
+        "callback_method": "get",
+        "notes": {
+            "source": "vishleshak_credit_pack",
+            "payment_id": payment_id,
+            "client_id": client["id"],
+            "pack_id": pack_id,
+        },
+    }
+    async with httpx.AsyncClient(timeout=30.0) as client_http:
+        resp = await client_http.post(
+            "https://api.razorpay.com/v1/payment_links",
+            auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+            json=payload,
+        )
+    if resp.status_code >= 400:
+        raise RuntimeError(f"Razorpay credit pack link failed: {resp.text}")
+    link = resp.json()
+    now = _utc_now_iso()
+    with _tracking_conn() as conn:
+        conn.execute("""
+            INSERT INTO package_payments (
+                id, client_id, package_id, order_id, razorpay_payment_link_id,
+                amount_inr, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+        """, (
+            payment_id,
+            client["id"],
+            pack_id,
+            reference_id,
+            link.get("id", ""),
+            int(pack["price_inr"]),
+            now,
+        ))
+    return {"payment_id": payment_id, "payment_url": link.get("short_url", ""), "pack": pack}
 
 MODEL_DIR  = os.path.join(os.path.dirname(__file__), "model")
 VIDEOS_DIR = os.path.join(os.path.dirname(__file__), "static", "videos")
@@ -3478,6 +3617,51 @@ async def list_packages():
     return [_row_to_dict(row) for row in rows]
 
 
+@app.get("/api/credit-packs")
+async def list_credit_packs():
+    return [
+        {"id": pack_id, **pack}
+        for pack_id, pack in CREDIT_PACK_DEFS.items()
+    ]
+
+
+@app.post("/api/credit-packs/checkout")
+async def create_credit_pack_checkout(request: Request):
+    body = await request.json()
+    pack_id = (body.get("pack_id") or "").strip()
+    pack = CREDIT_PACK_DEFS.get(pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Credit pack not found")
+    phone = _normalize_phone(body.get("phone", ""))
+    email = _normalize_email(body.get("email", ""))
+    name = (body.get("name") or "").strip() or "Vishleshak Customer"
+    if len(phone) != 10:
+        raise HTTPException(status_code=400, detail="Enter a valid WhatsApp number before buying credits.")
+    if not email:
+        raise HTTPException(status_code=400, detail="Enter an email before buying credits.")
+    client = _get_client_by_phone(phone)
+    now = _utc_now_iso()
+    if client:
+        with _tracking_conn() as conn:
+            conn.execute("""
+                UPDATE clients SET contact_name=?, business_name=?, email=?, updated_at=? WHERE id=?
+            """, (name, client.get("business_name") or name, email, now, client["id"]))
+        client = _get_client_by_id(client["id"])
+    else:
+        client_id = str(uuid.uuid4())
+        with _tracking_conn() as conn:
+            conn.execute("""
+                INSERT INTO clients (
+                    id, business_name, contact_name, phone, email, niche, status, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, 'UGC credits', 'lead', ?, ?)
+            """, (client_id, name, name, phone, email, now, now))
+        client = _get_client_by_id(client_id)
+    try:
+        return await _create_credit_pack_payment_link(client, pack_id)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Could not create payment link: {str(e)[:180]}")
+
+
 @app.get("/api/clients")
 async def list_clients():
     with _tracking_conn() as conn:
@@ -3500,6 +3684,7 @@ async def lookup_client(phone: str):
         "found": True,
         "business_name": client.get("business_name", ""),
         "package_name": client.get("package_name", ""),
+        "display_package_name": _client_display_package_name(client),
         "package_expires_at": client.get("package_expires_at", ""),
         "credits_left": status["credits_left"],
         "image_credit_cost": CREDIT_COST_IMAGE,
@@ -3818,6 +4003,39 @@ async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks):
         or (entity.get("notes") or {}).get("order_id")
         or (payment_entity.get("notes") or {}).get("order_id")
     )
+    notes = entity.get("notes") or payment_entity.get("notes") or {}
+    if notes.get("source") == "vishleshak_credit_pack":
+        payment_id = notes.get("payment_id", "")
+        client_id = notes.get("client_id", "")
+        pack_id = notes.get("pack_id", "")
+        if not payment_id and order_id:
+            with _tracking_conn() as conn:
+                row = conn.execute("SELECT * FROM package_payments WHERE order_id=?", (order_id,)).fetchone()
+                payment = _row_to_dict(row) if row else None
+            if payment:
+                payment_id = payment["id"]
+                client_id = payment["client_id"]
+                pack_id = payment["package_id"]
+        if event in ("payment_link.paid", "payment.captured") and client_id and pack_id:
+            client = _apply_credit_pack_to_client(client_id, pack_id, f"Razorpay credit pack payment {payment_entity.get('id') or entity.get('id') or ''}")
+            with _tracking_conn() as conn:
+                conn.execute("""
+                    UPDATE package_payments
+                    SET status='paid', razorpay_payment_id=?, razorpay_payment_link_id=?, paid_at=?
+                    WHERE id=?
+                """, (
+                    payment_entity.get("id", ""),
+                    entity.get("id", ""),
+                    _utc_now_iso(),
+                    payment_id,
+                ))
+            client.update(_client_credit_status(client))
+            return {"status": "credit_pack_applied", "client_id": client_id, "pack_id": pack_id}
+        if event in ("payment.failed", "payment_link.cancelled", "payment_link.expired") and payment_id:
+            with _tracking_conn() as conn:
+                conn.execute("UPDATE package_payments SET status=? WHERE id=?", ("failed", payment_id))
+            return {"status": "credit_pack_payment_failed", "payment_id": payment_id}
+        return {"status": "credit_pack_ignored", "event": event}
     if not order_id:
         return {"status": "ignored", "reason": "missing_order_id"}
 
