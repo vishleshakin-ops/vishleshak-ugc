@@ -15,7 +15,7 @@ import sqlite3
 import html
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.utils import parseaddr
+from email.utils import formataddr, parseaddr
 from urllib.parse import quote
 import httpx
 import fal_client
@@ -630,6 +630,15 @@ def _normalize_email(email: str) -> str:
     if not parsed or "@" not in parsed:
         return ""
     return parsed
+
+def _normalize_sender_email(sender: str) -> tuple[str, str]:
+    name, email = parseaddr(sender or "")
+    email = _normalize_email(email)
+    if not email:
+        return "", ""
+    if name:
+        return formataddr((name.strip(), email)), email
+    return email, email
 
 def _mask_email(email: str) -> str:
     normalized = _normalize_email(email)
@@ -3082,6 +3091,9 @@ async def _send_credit_email_otp_resend(email: str, otp: str, package_name: str 
         raise RuntimeError("RESEND_FROM_EMAIL is not configured")
     if not recipient:
         raise RuntimeError("Valid email is required")
+    sender, sender_email = _normalize_sender_email(RESEND_FROM_EMAIL)
+    if not sender_email:
+        raise RuntimeError("RESEND_FROM_EMAIL must be a valid email address")
     safe_package = html.escape(package_name or "your package")
     body = f"""
 <html><body style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#111827">
@@ -3092,8 +3104,7 @@ async def _send_credit_email_otp_resend(email: str, otp: str, package_name: str 
   <p style="color:#9ca3af;font-size:12px">Vishleshak AI Content Studio</p>
 </body></html>
 """
-    payload = {
-        "from": RESEND_FROM_EMAIL,
+    payload_base = {
         "to": [recipient],
         "subject": "Your Vishleshak credit verification code",
         "html": body,
@@ -3105,8 +3116,17 @@ async def _send_credit_email_otp_resend(email: str, otp: str, package_name: str 
                 "Authorization": f"Bearer {RESEND_API_KEY}",
                 "Content-Type": "application/json",
             },
-            json=payload,
+            json={"from": sender, **payload_base},
         )
+        if resp.status_code == 422 and sender != sender_email and "from" in resp.text.lower():
+            resp = await client.post(
+                RESEND_API_URL,
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={"from": sender_email, **payload_base},
+            )
     if resp.status_code >= 400:
         raise RuntimeError(f"Resend rejected email OTP: {resp.status_code} {resp.text[:200]}")
 
