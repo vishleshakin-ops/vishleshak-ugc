@@ -499,6 +499,11 @@
       cursor: pointer;
     }
     .credit-actions button:disabled { opacity: 0.65; cursor: not-allowed; }
+    .credit-hint {
+      display: block;
+      margin-top: 8px;
+      opacity: 0.82;
+    }
     .choice-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1587,6 +1592,7 @@
       background: rgba(255,255,255,0.1);
       color: #fff;
     }
+    .credit-hint { color: rgba(255,255,255,0.72); }
     .choice-card,
     .seg button {
       border: 1px solid var(--order-border);
@@ -2356,6 +2362,7 @@
     let lastCreditLookupPhone = "";
     let creditOtpToken = "";
     let creditOtpPhone = "";
+    let creditOtpMethod = "";
     let creditOtpVerified = false;
 
     function normalizePhone(value) {
@@ -2375,6 +2382,7 @@
     function resetCreditOtp() {
       creditOtpToken = "";
       creditOtpPhone = "";
+      creditOtpMethod = "";
       creditOtpVerified = false;
     }
 
@@ -2394,14 +2402,24 @@
 
     function wireCreditOtpActions(phone) {
       const sendBtn = document.getElementById("send-credit-otp");
+      const emailBtn = document.getElementById("send-credit-email-otp");
       const verifyBtn = document.getElementById("verify-credit-otp");
       const otpInput = document.getElementById("credit-otp-input");
       const status = document.getElementById("credit-otp-status");
       if (!sendBtn || !verifyBtn || !otpInput || !status) return;
 
+      function prepareOtpInput(method, message) {
+        creditOtpMethod = method;
+        otpInput.value = "";
+        otpInput.disabled = false;
+        verifyBtn.disabled = false;
+        status.textContent = message;
+        otpInput.focus();
+      }
+
       sendBtn.addEventListener("click", async () => {
         sendBtn.disabled = true;
-        status.textContent = "Sending OTP...";
+        status.textContent = "Sending phone OTP...";
         try {
           const resp = await fetch("/api/clients/send-credit-otp", {
             method: "POST",
@@ -2410,15 +2428,37 @@
           });
           const data = await resp.json();
           if (!resp.ok || !data.sent) throw new Error(data.detail || "Could not send OTP.");
-          otpInput.disabled = false;
-          verifyBtn.disabled = false;
-          status.textContent = "OTP sent to your phone. Enter it here to use credits.";
-          otpInput.focus();
+          prepareOtpInput("phone", "OTP sent to your phone. Enter it here to use credits.");
         } catch (error) {
           status.textContent = error.message || "Could not send OTP. You can still pay online.";
           sendBtn.disabled = false;
         }
       });
+
+      if (emailBtn) {
+        emailBtn.addEventListener("click", async () => {
+          const email = document.getElementById("customer-email").value.trim();
+          if (!email) {
+            status.textContent = "Enter the package email above, then send email OTP.";
+            return;
+          }
+          emailBtn.disabled = true;
+          status.textContent = "Sending email OTP...";
+          try {
+            const resp = await fetch("/api/clients/send-credit-email-otp", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ phone, email })
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data.sent) throw new Error(data.detail || "Could not send email OTP.");
+            prepareOtpInput("email", "OTP sent to your email. Enter it here to use credits.");
+          } catch (error) {
+            status.textContent = error.message || "Could not send email OTP.";
+            emailBtn.disabled = false;
+          }
+        });
+      }
 
       verifyBtn.addEventListener("click", async () => {
         const otp = otpInput.value.trim();
@@ -2432,7 +2472,12 @@
           const resp = await fetch("/api/clients/verify-credit-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone, otp })
+            body: JSON.stringify({
+              phone,
+              otp,
+              method: creditOtpMethod || "phone",
+              email: document.getElementById("customer-email").value.trim()
+            })
           });
           const data = await resp.json();
           if (!resp.ok || !data.verified) throw new Error(data.detail || "OTP verification failed.");
@@ -2441,6 +2486,7 @@
           creditOtpVerified = true;
           otpInput.disabled = true;
           sendBtn.disabled = true;
+          if (emailBtn) emailBtn.disabled = true;
           status.textContent = "Verified. Credits will be used for this order.";
         } catch (error) {
           verifyBtn.disabled = false;
@@ -2475,15 +2521,20 @@
         const expiry = data.package_expires_at
           ? new Date(data.package_expires_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
           : "";
+        const emailHint = data.email_fallback_available
+          ? `<span class="credit-hint">If phone OTP does not arrive, enter the package email${data.masked_email ? ` (${escapeHtml(data.masked_email)})` : ""} above and use email OTP.</span>`
+          : `<span class="credit-hint">Email fallback is not available for this package yet.</span>`;
         setCreditLookup(`
           <strong>${data.credits_left || 0} credits left</strong> in ${escapeHtml(data.package_name || "your package")}${expiry ? ` · valid till ${expiry}` : ""}.<br />
           Verify OTP to use credits. Without verification, this order will continue with Razorpay payment.
           <div class="credit-actions">
             <button type="button" id="send-credit-otp">Send OTP</button>
+            ${data.email_fallback_available ? `<button type="button" id="send-credit-email-otp">Email OTP</button>` : ""}
             <input type="text" id="credit-otp-input" placeholder="6 digit OTP" inputmode="numeric" maxlength="6" disabled />
             <button type="button" id="verify-credit-otp" disabled>Verify</button>
             <span id="credit-otp-status"></span>
           </div>
+          ${emailHint}
         `, "active");
         wireCreditOtpActions(phone);
       } catch (error) {

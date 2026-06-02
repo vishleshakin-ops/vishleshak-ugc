@@ -12,8 +12,10 @@ import re
 import hmac
 import hashlib
 import sqlite3
+import html
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import parseaddr
 from urllib.parse import quote
 import httpx
 import fal_client
@@ -588,11 +590,28 @@ def _normalize_phone(phone: str) -> str:
         digits = digits[-10:]
     return digits
 
+def _normalize_email(email: str) -> str:
+    parsed = parseaddr(email or "")[1].strip().lower()
+    if not parsed or "@" not in parsed:
+        return ""
+    return parsed
+
+def _mask_email(email: str) -> str:
+    normalized = _normalize_email(email)
+    if not normalized or "@" not in normalized:
+        return ""
+    name, domain = normalized.split("@", 1)
+    if len(name) <= 2:
+        masked_name = name[:1] + "*"
+    else:
+        masked_name = name[:1] + ("*" * min(4, len(name) - 2)) + name[-1:]
+    return f"{masked_name}@{domain}"
+
 def _credit_otp_secret() -> str:
     return RAZORPAY_WEBHOOK_SECRET or RAZORPAY_KEY_SECRET or CALLMEBOT_API_KEY or "vishleshak-credit-otp"
 
-def _credit_otp_hash(phone: str, otp: str) -> str:
-    msg = f"{phone}:{otp}".encode("utf-8")
+def _credit_otp_hash(phone: str, otp: str, method: str = "phone", email: str = "") -> str:
+    msg = f"{_normalize_phone(phone)}:{_normalize_email(email)}:{method}:{otp}".encode("utf-8")
     return hmac.new(_credit_otp_secret().encode("utf-8"), msg, hashlib.sha256).hexdigest()
 
 def _credit_token_signature(payload_b64: str) -> str:
@@ -833,7 +852,7 @@ def _upsert_client_from_order(order: dict) -> dict | None:
             """, (
                 order.get("image_brand_name") or order.get("video_brand_name") or existing["business_name"],
                 order.get("customer_name", ""),
-                order.get("customer_email", ""),
+                _normalize_email(order.get("customer_email", "")) or existing.get("email", ""),
                 now,
                 existing["id"],
             ))
@@ -2879,6 +2898,37 @@ async def _send_order_email(order: dict):
     await loop.run_in_executor(None, _send_order_email_sync, order)
 
 
+def _send_credit_email_otp_sync(email: str, otp: str, package_name: str = ""):
+    recipient = _normalize_email(email)
+    if not OWNER_EMAIL or not GMAIL_APP_PASSWORD:
+        raise RuntimeError("Email OTP is not configured")
+    if not recipient:
+        raise RuntimeError("Valid email is required")
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Your Vishleshak credit verification code"
+    msg["From"] = OWNER_EMAIL
+    msg["To"] = recipient
+    safe_package = html.escape(package_name or "your package")
+    body = f"""
+<html><body style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#111827">
+  <h2 style="margin:0 0 12px;color:#4f46e5">Vishleshak credit verification</h2>
+  <p>Use this code to verify credits for <strong>{safe_package}</strong>:</p>
+  <div style="font-size:28px;font-weight:800;letter-spacing:4px;background:#f3f4f6;border-radius:10px;padding:16px 20px;text-align:center">{otp}</div>
+  <p style="color:#6b7280">This code is valid for 10 minutes. Do not share it with anyone.</p>
+  <p style="color:#9ca3af;font-size:12px">Vishleshak AI Content Studio</p>
+</body></html>
+"""
+    msg.attach(MIMEText(body, "html"))
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(OWNER_EMAIL, GMAIL_APP_PASSWORD)
+        server.sendmail(OWNER_EMAIL, recipient, msg.as_string())
+
+
+async def _send_credit_email_otp(email: str, otp: str, package_name: str = ""):
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _send_credit_email_otp_sync, email, otp, package_name)
+
+
 async def _upload_to_cloudinary(local_path: str, public_id: str, resource_type: str = "video") -> str:
     """Upload a local file to Cloudinary. Returns the secure CDN URL."""
     if not _CLOUDINARY_READY:
@@ -3410,6 +3460,8 @@ async def lookup_client(phone: str):
         "credits_left": status["credits_left"],
         "image_credit_cost": CREDIT_COST_IMAGE,
         "video_credit_cost": CREDIT_COST_VIDEO,
+        "email_fallback_available": bool(_normalize_email(client.get("email", ""))),
+        "masked_email": _mask_email(client.get("email", "")),
         "active": status["active"],
     }
 
@@ -3429,7 +3481,8 @@ async def send_credit_otp(request: Request):
     _cleanup_credit_otps()
     otp = f"{random.SystemRandom().randint(100000, 999999)}"
     credit_otp_store[phone] = {
-        "otp_hash": _credit_otp_hash(phone, otp),
+        "otp_hash": _credit_otp_hash(phone, otp, "phone"),
+        "method": "phone",
         "expires_at": (datetime.utcnow() + timedelta(minutes=10)).timestamp(),
         "attempts": 0,
     }
@@ -3441,12 +3494,51 @@ async def send_credit_otp(request: Request):
     return {"sent": True, "expires_in_seconds": 600}
 
 
+@app.post("/api/clients/send-credit-email-otp")
+async def send_credit_email_otp(request: Request):
+    body = await request.json()
+    phone = _normalize_phone(body.get("phone", ""))
+    email = _normalize_email(body.get("email", ""))
+    if len(phone) != 10:
+        raise HTTPException(status_code=400, detail="Enter a valid WhatsApp number.")
+    if not email:
+        raise HTTPException(status_code=400, detail="Enter the package email to receive email OTP.")
+    client = _get_client_by_phone(phone)
+    if not client:
+        return {"sent": False, "reason": "client_not_found"}
+    status = _client_credit_status(client)
+    if not status["active"] or status["credits_left"] <= 0:
+        return {"sent": False, "reason": "no_active_credits"}
+    client_email = _normalize_email(client.get("email", ""))
+    if not client_email:
+        raise HTTPException(status_code=400, detail="No email is saved for this package. Please use phone OTP.")
+    if email != client_email:
+        raise HTTPException(status_code=403, detail="Email does not match this package. Use the package email.")
+    _cleanup_credit_otps()
+    otp = f"{random.SystemRandom().randint(100000, 999999)}"
+    credit_otp_store[phone] = {
+        "otp_hash": _credit_otp_hash(phone, otp, "email", email),
+        "method": "email",
+        "email": email,
+        "expires_at": (datetime.utcnow() + timedelta(minutes=10)).timestamp(),
+        "attempts": 0,
+    }
+    try:
+        await _send_credit_email_otp(email, otp, client.get("package_name", ""))
+    except Exception as e:
+        credit_otp_store.pop(phone, None)
+        print(f"Credit email OTP failed: {e}")
+        raise HTTPException(status_code=503, detail="Could not send email OTP. Please use phone OTP or pay online.")
+    return {"sent": True, "expires_in_seconds": 600, "email": email}
+
+
 @app.get("/api/clients/credit-otp-status")
 async def credit_otp_status():
     return {
         "twofactor_configured": bool(TWOFACTOR_API_KEY),
         "twofactor_template": bool(TWOFACTOR_TEMPLATE_NAME),
         "twofactor_mode": TWOFACTOR_MODE,
+        "email_otp_configured": bool(OWNER_EMAIL and GMAIL_APP_PASSWORD),
         "fast2sms_configured": bool(FAST2SMS_API_KEY),
         "fast2sms_whatsapp_configured": _fast2sms_whatsapp_ready(),
         "fast2sms_whatsapp_template": bool(FAST2SMS_WHATSAPP_TEMPLATE_NAME),
@@ -3464,6 +3556,8 @@ async def verify_credit_otp(request: Request):
     body = await request.json()
     phone = _normalize_phone(body.get("phone", ""))
     otp = re.sub(r"\D", "", str(body.get("otp", "")))[:6]
+    method = (body.get("method") or "phone").strip().lower()
+    email = _normalize_email(body.get("email", ""))
     record = credit_otp_store.get(phone)
     if len(phone) != 10 or len(otp) != 6 or not record:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP.")
@@ -3474,7 +3568,12 @@ async def verify_credit_otp(request: Request):
         credit_otp_store.pop(phone, None)
         raise HTTPException(status_code=429, detail="Too many OTP attempts. Please send a new OTP.")
     record["attempts"] = int(record.get("attempts") or 0) + 1
-    if record.get("provider") == "twofactor" and record.get("twofactor_session_id"):
+    if record.get("method") == "email":
+        if method != "email" or email != _normalize_email(record.get("email", "")):
+            raise HTTPException(status_code=400, detail="Email OTP does not match this verification request.")
+        if not hmac.compare_digest(record.get("otp_hash", ""), _credit_otp_hash(phone, otp, "email", email)):
+            raise HTTPException(status_code=400, detail="Incorrect OTP.")
+    elif record.get("provider") == "twofactor" and record.get("twofactor_session_id"):
         try:
             verified = await _verify_credit_otp_twofactor(record.get("twofactor_session_id", ""), otp)
         except Exception as e:
@@ -3482,7 +3581,7 @@ async def verify_credit_otp(request: Request):
             raise HTTPException(status_code=400, detail="Could not verify OTP. Please try again.")
         if not verified:
             raise HTTPException(status_code=400, detail="Incorrect OTP.")
-    elif not hmac.compare_digest(record.get("otp_hash", ""), _credit_otp_hash(phone, otp)):
+    elif not hmac.compare_digest(record.get("otp_hash", ""), _credit_otp_hash(phone, otp, "phone")):
         raise HTTPException(status_code=400, detail="Incorrect OTP.")
     credit_otp_store.pop(phone, None)
     return {"verified": True, "credit_otp_token": _sign_credit_otp_token(phone)}
@@ -3510,7 +3609,7 @@ async def create_or_update_client(request: Request):
             """, (
                 business_name,
                 body.get("contact_name", ""),
-                body.get("email", ""),
+                _normalize_email(body.get("email", "")) or existing.get("email", ""),
                 body.get("niche", ""),
                 now,
                 existing["id"],
