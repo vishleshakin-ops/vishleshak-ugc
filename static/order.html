@@ -2412,7 +2412,7 @@
           if (!resp.ok || !data.sent) throw new Error(data.detail || "Could not send OTP.");
           otpInput.disabled = false;
           verifyBtn.disabled = false;
-          status.textContent = "OTP sent on WhatsApp. Enter it here to use credits.";
+          status.textContent = "OTP sent to your phone. Enter it here to use credits.";
           otpInput.focus();
         } catch (error) {
           status.textContent = error.message || "Could not send OTP. You can still pay online.";
