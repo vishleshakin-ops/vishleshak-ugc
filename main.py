@@ -420,9 +420,18 @@ FAST2SMS_WHATSAPP_TEMPLATE_LANGUAGE = os.getenv("FAST2SMS_WHATSAPP_TEMPLATE_LANG
 FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE = os.getenv("FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE", "").strip().splitlines()[0] if os.getenv("FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE", "").strip() else ""
 TWOFACTOR_API_KEY = os.getenv("TWOFACTOR_API_KEY", "").strip()
 TWOFACTOR_TEMPLATE_NAME = os.getenv("TWOFACTOR_TEMPLATE_NAME", "Vishleshak_UGC").strip()
+TWOFACTOR_MODE = os.getenv("TWOFACTOR_MODE", "autogen").strip().lower()
 TWOFACTOR_OTP_URL_TEMPLATE = os.getenv(
     "TWOFACTOR_OTP_URL_TEMPLATE",
     "https://2factor.in/API/V1/{api_key}/SMS/{phone}/{otp}",
+).strip().splitlines()[0]
+TWOFACTOR_AUTOGEN_URL_TEMPLATE = os.getenv(
+    "TWOFACTOR_AUTOGEN_URL_TEMPLATE",
+    "https://2factor.in/API/V1/{api_key}/SMS/{phone}/AUTOGEN/{template_name}",
+).strip().splitlines()[0]
+TWOFACTOR_VERIFY_URL_TEMPLATE = os.getenv(
+    "TWOFACTOR_VERIFY_URL_TEMPLATE",
+    "https://2factor.in/API/V1/{api_key}/SMS/VERIFY/{session_id}/{otp}",
 ).strip().splitlines()[0]
 CREDIT_OTP_CHANNEL_ORDER = os.getenv(
     "CREDIT_OTP_CHANNEL_ORDER",
@@ -3197,6 +3206,26 @@ async def _send_credit_otp_twofactor(phone: str, otp: str) -> bool:
         raise RuntimeError("TWOFACTOR_API_KEY is not configured")
     if not TWOFACTOR_TEMPLATE_NAME:
         raise RuntimeError("TWOFACTOR_TEMPLATE_NAME is not configured")
+    if TWOFACTOR_MODE == "autogen":
+        url = TWOFACTOR_AUTOGEN_URL_TEMPLATE.format(
+            api_key=quote(TWOFACTOR_API_KEY),
+            phone=normalized_phone,
+            phone_with_country=f"91{normalized_phone}",
+            otp=quote(otp),
+            template_name=quote(TWOFACTOR_TEMPLATE_NAME),
+        )
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(url)
+        if resp.status_code >= 400:
+            raise RuntimeError(f"2Factor rejected OTP: {resp.status_code} {resp.text[:200]}")
+        payload = resp.json()
+        if str(payload.get("Status", "")).lower() != "success":
+            raise RuntimeError(f"2Factor did not send OTP: {resp.text[:200]}")
+        session_id = str(payload.get("Details", "")).strip()
+        if not session_id:
+            raise RuntimeError(f"2Factor did not return session id: {resp.text[:200]}")
+        return {"provider": "twofactor", "twofactor_session_id": session_id, "otp_hash": ""}
+
     url = TWOFACTOR_OTP_URL_TEMPLATE.format(
         api_key=quote(TWOFACTOR_API_KEY),
         phone=normalized_phone,
@@ -3211,13 +3240,34 @@ async def _send_credit_otp_twofactor(phone: str, otp: str) -> bool:
     try:
         payload = resp.json()
         if str(payload.get("Status", "")).lower() == "success":
-            return True
+            return {"provider": "local"}
         raise RuntimeError(f"2Factor did not send OTP: {resp.text[:200]}")
     except Exception:
         body = resp.text.lower()
         if "success" in body or "sent" in body:
-            return True
+            return {"provider": "local"}
         raise RuntimeError(f"2Factor did not send OTP: {resp.text[:200]}")
+
+
+async def _verify_credit_otp_twofactor(session_id: str, otp: str) -> bool:
+    if not TWOFACTOR_API_KEY:
+        raise RuntimeError("TWOFACTOR_API_KEY is not configured")
+    if not session_id:
+        return False
+    url = TWOFACTOR_VERIFY_URL_TEMPLATE.format(
+        api_key=quote(TWOFACTOR_API_KEY),
+        session_id=quote(session_id),
+        otp=quote(otp),
+    )
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.get(url)
+    if resp.status_code >= 400:
+        raise RuntimeError(f"2Factor rejected OTP verify: {resp.status_code} {resp.text[:200]}")
+    try:
+        payload = resp.json()
+        return str(payload.get("Status", "")).lower() == "success"
+    except Exception:
+        return "success" in resp.text.lower()
 
 
 async def _send_credit_otp_callmebot(phone: str, otp: str) -> bool:
@@ -3242,7 +3292,7 @@ async def _send_credit_otp_callmebot(phone: str, otp: str) -> bool:
     return True
 
 
-async def _send_credit_otp(phone: str, otp: str) -> bool:
+async def _send_credit_otp(phone: str, otp: str):
     """Send package-credit OTP with configured fallbacks."""
     global last_credit_otp_error, last_credit_otp_channel
     last_credit_otp_error = ""
@@ -3256,9 +3306,10 @@ async def _send_credit_otp(phone: str, otp: str) -> bool:
     }
     for channel in _otp_channel_order():
         try:
-            if await senders[channel](phone, otp):
+            result = await senders[channel](phone, otp)
+            if result:
                 last_credit_otp_channel = channel
-                return True
+                return result if isinstance(result, dict) else {"provider": "local"}
             errors.append(f"{channel}: provider returned false")
         except Exception as e:
             errors.append(f"{channel}: {e}")
@@ -3382,10 +3433,11 @@ async def send_credit_otp(request: Request):
         "expires_at": (datetime.utcnow() + timedelta(minutes=10)).timestamp(),
         "attempts": 0,
     }
-    sent = await _send_credit_otp(phone, otp)
-    if not sent:
+    send_meta = await _send_credit_otp(phone, otp)
+    if not send_meta:
         credit_otp_store.pop(phone, None)
         raise HTTPException(status_code=503, detail="Could not send OTP. Please pay online for this order.")
+    credit_otp_store[phone].update(send_meta)
     return {"sent": True, "expires_in_seconds": 600}
 
 
@@ -3394,6 +3446,7 @@ async def credit_otp_status():
     return {
         "twofactor_configured": bool(TWOFACTOR_API_KEY),
         "twofactor_template": bool(TWOFACTOR_TEMPLATE_NAME),
+        "twofactor_mode": TWOFACTOR_MODE,
         "fast2sms_configured": bool(FAST2SMS_API_KEY),
         "fast2sms_whatsapp_configured": _fast2sms_whatsapp_ready(),
         "fast2sms_whatsapp_template": bool(FAST2SMS_WHATSAPP_TEMPLATE_NAME),
@@ -3421,7 +3474,15 @@ async def verify_credit_otp(request: Request):
         credit_otp_store.pop(phone, None)
         raise HTTPException(status_code=429, detail="Too many OTP attempts. Please send a new OTP.")
     record["attempts"] = int(record.get("attempts") or 0) + 1
-    if not hmac.compare_digest(record.get("otp_hash", ""), _credit_otp_hash(phone, otp)):
+    if record.get("provider") == "twofactor" and record.get("twofactor_session_id"):
+        try:
+            verified = await _verify_credit_otp_twofactor(record.get("twofactor_session_id", ""), otp)
+        except Exception as e:
+            print(f"2Factor OTP verify failed: {e}")
+            raise HTTPException(status_code=400, detail="Could not verify OTP. Please try again.")
+        if not verified:
+            raise HTTPException(status_code=400, detail="Incorrect OTP.")
+    elif not hmac.compare_digest(record.get("otp_hash", ""), _credit_otp_hash(phone, otp)):
         raise HTTPException(status_code=400, detail="Incorrect OTP.")
     credit_otp_store.pop(phone, None)
     return {"verified": True, "credit_otp_token": _sign_credit_otp_token(phone)}
