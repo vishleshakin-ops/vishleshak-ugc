@@ -587,25 +587,32 @@ PACKAGE_DEFS = {
 
 CREDIT_PACK_DEFS = {
     "image_once_49": {
-        "name": "1 Image Credit",
+        "name": "Starter Credits",
         "price_inr": 49,
         "credits": CREDIT_COST_IMAGE,
         "validity_days": 30,
-        "description": "Good for one image creative",
+        "description": "Use for image or video orders",
     },
-    "image_three_99": {
-        "name": "3 Image Pack",
-        "price_inr": 99,
-        "credits": CREDIT_COST_IMAGE * 3,
+    "image_four_149": {
+        "name": "Creator Credits",
+        "price_inr": 149,
+        "credits": CREDIT_COST_IMAGE * 4,
         "validity_days": 30,
-        "description": "Good for three image creatives",
+        "description": "Use across any image or video order",
     },
     "short_video_499": {
-        "name": "1 Short Video Credit",
+        "name": "Pro Credits",
         "price_inr": 499,
         "credits": CREDIT_COST_VIDEO,
         "validity_days": 30,
-        "description": "Good for one short UGC video",
+        "description": "Use across any image or video order",
+    },
+    "short_video_three_999": {
+        "name": "Growth Credits",
+        "price_inr": 999,
+        "credits": CREDIT_COST_VIDEO * 3,
+        "validity_days": 30,
+        "description": "Use across any image or video order",
     },
 }
 
@@ -1102,7 +1109,7 @@ async def _create_credit_pack_payment_link(client: dict, pack_id: str) -> dict:
     if not pack:
         raise HTTPException(status_code=404, detail="Credit pack not found")
     payment_id = str(uuid.uuid4())
-    reference_id = f"pack_{payment_id}"
+    reference_id = f"cp_{payment_id.replace('-', '')[:24]}"
     payload = {
         "amount": int(pack["price_inr"]) * 100,
         "currency": "INR",

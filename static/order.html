@@ -2450,7 +2450,7 @@
             ${packs.map(pack => `
               <button type="button" class="buy-credit-pack" data-pack-id="${escapeHtml(pack.id)}">
                 <strong>${escapeHtml(pack.name)} · Rs. ${pack.price_inr}</strong>
-                <span>${pack.credits} credits · ${escapeHtml(pack.description || "")}</span>
+                <span>${pack.credits} wallet credits · ${escapeHtml(pack.description || "")}</span>
               </button>
             `).join("")}
           </div>
@@ -2460,7 +2460,7 @@
             const email = document.getElementById("customer-email").value.trim();
             const name = document.getElementById("customer-name").value.trim();
             if (!email) {
-              if (status) status.textContent = "Enter email above before buying credits.";
+              if (status) status.textContent = "Email is required before buying credits.";
               document.getElementById("customer-email").focus();
               return;
             }
@@ -2606,6 +2606,7 @@
         if (!data.found) {
           setCreditLookup(`
             No active credits found for this number. You can buy credits or continue with per-order payment.
+            <span class="credit-hint">Email is required for credit purchases and future email OTP verification.</span>
             <div class="credit-actions">
               <button type="button" id="buy-credit-pack">Buy Credits</button>
               <span id="credit-otp-status"></span>
@@ -2618,6 +2619,7 @@
         if (!data.active) {
           setCreditLookup(`
             <strong>${escapeHtml(data.display_package_name || data.package_name || "UGC Credit Wallet")}</strong> found, but it is inactive or expired. Credits left: <strong>${data.credits_left || 0}</strong>.
+            <span class="credit-hint">Email is required for credit purchases and future email OTP verification.</span>
             <div class="credit-actions">
               <button type="button" id="buy-credit-pack">Buy Credits</button>
               <span id="credit-otp-status"></span>
