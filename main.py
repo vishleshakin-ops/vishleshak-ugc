@@ -422,7 +422,7 @@ TWOFACTOR_API_KEY = os.getenv("TWOFACTOR_API_KEY", "").strip()
 TWOFACTOR_TEMPLATE_NAME = os.getenv("TWOFACTOR_TEMPLATE_NAME", "Vishleshak_UGC").strip()
 TWOFACTOR_OTP_URL_TEMPLATE = os.getenv(
     "TWOFACTOR_OTP_URL_TEMPLATE",
-    "https://2factor.in/API/V1/{api_key}/SMS/{phone}/{otp}/{template_name}",
+    "https://2factor.in/API/V1/{api_key}/SMS/{phone}/{otp}",
 ).strip().splitlines()[0]
 CREDIT_OTP_CHANNEL_ORDER = os.getenv(
     "CREDIT_OTP_CHANNEL_ORDER",
@@ -3205,15 +3205,19 @@ async def _send_credit_otp_twofactor(phone: str, otp: str) -> bool:
         template_name=quote(TWOFACTOR_TEMPLATE_NAME),
     )
     async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.get(url)
+        resp = await client.post(url)
     if resp.status_code >= 400:
         raise RuntimeError(f"2Factor rejected OTP: {resp.status_code} {resp.text[:200]}")
     try:
         payload = resp.json()
-        return str(payload.get("Status", "")).lower() == "success"
+        if str(payload.get("Status", "")).lower() == "success":
+            return True
+        raise RuntimeError(f"2Factor did not send OTP: {resp.text[:200]}")
     except Exception:
         body = resp.text.lower()
-        return "success" in body or "sent" in body
+        if "success" in body or "sent" in body:
+            return True
+        raise RuntimeError(f"2Factor did not send OTP: {resp.text[:200]}")
 
 
 async def _send_credit_otp_callmebot(phone: str, otp: str) -> bool:
