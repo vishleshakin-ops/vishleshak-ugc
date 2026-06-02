@@ -416,6 +416,7 @@ CALLMEBOT_API_KEY  = os.getenv("CALLMEBOT_API_KEY", "")
 RESEND_API_KEY     = os.getenv("RESEND_API_KEY", "").strip()
 RESEND_FROM_EMAIL  = os.getenv("RESEND_FROM_EMAIL", OWNER_EMAIL).strip()
 RESEND_API_URL     = os.getenv("RESEND_API_URL", "https://api.resend.com/emails").strip()
+DEFAULT_RESEND_FROM_EMAIL = os.getenv("DEFAULT_RESEND_FROM_EMAIL", "noreply@mail.vishleshak.in").strip()
 FAST2SMS_API_KEY   = os.getenv("FAST2SMS_API_KEY", "").strip()
 FAST2SMS_WHATSAPP_API_KEY = os.getenv("FAST2SMS_WHATSAPP_API_KEY", "").strip() or FAST2SMS_API_KEY
 FAST2SMS_WHATSAPP_VERSION = os.getenv("FAST2SMS_WHATSAPP_VERSION", "v24.0").strip()
@@ -639,6 +640,14 @@ def _normalize_sender_email(sender: str) -> tuple[str, str]:
     if name:
         return formataddr((name.strip(), email)), email
     return email, email
+
+def _resend_sender_candidates() -> list[tuple[str, str]]:
+    candidates = []
+    for raw_sender in (RESEND_FROM_EMAIL, DEFAULT_RESEND_FROM_EMAIL):
+        sender, sender_email = _normalize_sender_email(raw_sender)
+        if sender_email and (sender, sender_email) not in candidates:
+            candidates.append((sender, sender_email))
+    return candidates
 
 def _mask_email(email: str) -> str:
     normalized = _normalize_email(email)
@@ -3091,8 +3100,8 @@ async def _send_credit_email_otp_resend(email: str, otp: str, package_name: str 
         raise RuntimeError("RESEND_FROM_EMAIL is not configured")
     if not recipient:
         raise RuntimeError("Valid email is required")
-    sender, sender_email = _normalize_sender_email(RESEND_FROM_EMAIL)
-    if not sender_email:
+    sender_candidates = _resend_sender_candidates()
+    if not sender_candidates:
         raise RuntimeError("RESEND_FROM_EMAIL must be a valid email address")
     safe_package = html.escape(package_name or "your package")
     body = f"""
@@ -3109,26 +3118,35 @@ async def _send_credit_email_otp_resend(email: str, otp: str, package_name: str 
         "subject": "Your Vishleshak credit verification code",
         "html": body,
     }
+    last_resp = None
     async with httpx.AsyncClient(timeout=20.0) as client:
-        resp = await client.post(
-            RESEND_API_URL,
-            headers={
-                "Authorization": f"Bearer {RESEND_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={"from": sender, **payload_base},
-        )
-        if resp.status_code == 422 and sender != sender_email and "from" in resp.text.lower():
+        for sender, sender_email in sender_candidates:
             resp = await client.post(
                 RESEND_API_URL,
                 headers={
                     "Authorization": f"Bearer {RESEND_API_KEY}",
                     "Content-Type": "application/json",
                 },
-                json={"from": sender_email, **payload_base},
+                json={"from": sender, **payload_base},
             )
-    if resp.status_code >= 400:
-        raise RuntimeError(f"Resend rejected email OTP: {resp.status_code} {resp.text[:200]}")
+            last_resp = resp
+            if resp.status_code < 400:
+                return
+            if resp.status_code == 422 and sender != sender_email and "from" in resp.text.lower():
+                resp = await client.post(
+                    RESEND_API_URL,
+                    headers={
+                        "Authorization": f"Bearer {RESEND_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={"from": sender_email, **payload_base},
+                )
+                last_resp = resp
+                if resp.status_code < 400:
+                    return
+    if last_resp and last_resp.status_code >= 400:
+        raise RuntimeError(f"Resend rejected email OTP: {last_resp.status_code} {last_resp.text[:200]}")
+    raise RuntimeError("Resend rejected email OTP")
 
 
 async def _send_credit_email_otp(email: str, otp: str, package_name: str = ""):
