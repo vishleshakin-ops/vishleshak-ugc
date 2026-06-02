@@ -412,6 +412,22 @@ GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 OWNER_WHATSAPP     = os.getenv("OWNER_WHATSAPP", "919953910987")
 CALLMEBOT_API_KEY  = os.getenv("CALLMEBOT_API_KEY", "")
 FAST2SMS_API_KEY   = os.getenv("FAST2SMS_API_KEY", "")
+FAST2SMS_WHATSAPP_API_KEY = os.getenv("FAST2SMS_WHATSAPP_API_KEY", "") or FAST2SMS_API_KEY
+FAST2SMS_WHATSAPP_VERSION = os.getenv("FAST2SMS_WHATSAPP_VERSION", "v24.0")
+FAST2SMS_WHATSAPP_PHONE_NUMBER_ID = os.getenv("FAST2SMS_WHATSAPP_PHONE_NUMBER_ID", "")
+FAST2SMS_WHATSAPP_TEMPLATE_NAME = os.getenv("FAST2SMS_WHATSAPP_TEMPLATE_NAME", "")
+FAST2SMS_WHATSAPP_TEMPLATE_LANGUAGE = os.getenv("FAST2SMS_WHATSAPP_TEMPLATE_LANGUAGE", "en_US")
+FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE = os.getenv("FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE", "")
+TWOFACTOR_API_KEY = os.getenv("TWOFACTOR_API_KEY", "")
+TWOFACTOR_TEMPLATE_NAME = os.getenv("TWOFACTOR_TEMPLATE_NAME", "Vishleshak_UGC")
+TWOFACTOR_OTP_URL_TEMPLATE = os.getenv(
+    "TWOFACTOR_OTP_URL_TEMPLATE",
+    "https://2factor.in/API/V1/{api_key}/SMS/{phone}/{otp}/{template_name}",
+)
+CREDIT_OTP_CHANNEL_ORDER = os.getenv(
+    "CREDIT_OTP_CHANNEL_ORDER",
+    os.getenv("FAST2SMS_OTP_CHANNEL_ORDER", "twofactor,whatsapp,sms,callmebot"),
+)
 
 # Razorpay test/live keys are read from env vars only. Never commit secrets.
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
@@ -420,6 +436,7 @@ RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
 RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
 credit_otp_store: dict[str, dict] = {}
 last_credit_otp_error = ""
+last_credit_otp_channel = ""
 TRACKING_DB_FILE = os.getenv(
     "TRACKING_DB_FILE",
     os.path.join(os.path.dirname(__file__), "client_tracking.sqlite3"),
@@ -3069,60 +3086,181 @@ async def _send_whatsapp_notification(order: dict):
         print(f"WhatsApp notification failed: {e}")
 
 
-async def _send_credit_otp(phone: str, otp: str) -> bool:
-    """Send package-credit OTP by SMS first, with WhatsApp as a fallback."""
-    global last_credit_otp_error
-    last_credit_otp_error = ""
-    normalized_phone = _normalize_phone(phone)
-    if FAST2SMS_API_KEY:
-        try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                resp = await client.post(
-                    "https://www.fast2sms.com/dev/bulkV2",
-                    headers={
-                        "authorization": FAST2SMS_API_KEY,
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    data={
-                        "variables_values": otp,
-                        "route": "otp",
-                        "numbers": normalized_phone,
-                    },
-                )
-            if resp.status_code < 400:
-                try:
-                    return bool(resp.json().get("return"))
-                except Exception:
-                    return True
-            last_credit_otp_error = f"Fast2SMS rejected OTP: {resp.status_code} {resp.text[:200]}"
-            print(last_credit_otp_error)
-        except Exception as e:
-            last_credit_otp_error = f"Fast2SMS OTP failed: {e}"
-            print(last_credit_otp_error)
-    else:
-        last_credit_otp_error = "FAST2SMS_API_KEY is not configured"
+def _otp_channel_order() -> list[str]:
+    channels = []
+    for raw in (CREDIT_OTP_CHANNEL_ORDER or "").split(","):
+        channel = raw.strip().lower()
+        if channel in ("twofactor", "whatsapp", "sms", "callmebot") and channel not in channels:
+            channels.append(channel)
+    return channels or ["twofactor", "whatsapp", "sms", "callmebot"]
 
+
+def _fast2sms_whatsapp_ready() -> bool:
+    if FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE and FAST2SMS_WHATSAPP_API_KEY:
+        return True
+    return bool(
+        FAST2SMS_WHATSAPP_API_KEY
+        and FAST2SMS_WHATSAPP_PHONE_NUMBER_ID
+        and FAST2SMS_WHATSAPP_TEMPLATE_NAME
+    )
+
+
+async def _send_credit_otp_fast2sms_whatsapp(phone: str, otp: str) -> bool:
+    normalized_phone = _normalize_phone(phone)
+    if not _fast2sms_whatsapp_ready():
+        raise RuntimeError("Fast2SMS WhatsApp OTP template/API is not configured")
+
+    if FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE:
+        url = FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE.format(
+            api_key=quote(FAST2SMS_WHATSAPP_API_KEY),
+            phone=normalized_phone,
+            mobile_number=normalized_phone,
+            phone_with_country=f"91{normalized_phone}",
+            mobile_number_with_country=f"91{normalized_phone}",
+            otp=quote(otp),
+            variables_values=quote(otp),
+        )
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(url)
+        if resp.status_code >= 400:
+            raise RuntimeError(f"Fast2SMS WhatsApp rejected OTP: {resp.status_code} {resp.text[:200]}")
+        return "success" in resp.text.lower() or "sent" in resp.text.lower() or resp.status_code < 400
+
+    url = (
+        "https://www.fast2sms.com/dev/whatsapp/"
+        f"{FAST2SMS_WHATSAPP_VERSION}/{FAST2SMS_WHATSAPP_PHONE_NUMBER_ID}/messages"
+    )
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": f"91{normalized_phone}",
+        "type": "template",
+        "template": {
+            "name": FAST2SMS_WHATSAPP_TEMPLATE_NAME,
+            "language": {"code": FAST2SMS_WHATSAPP_TEMPLATE_LANGUAGE},
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [{"type": "text", "text": otp}],
+                },
+                {
+                    "type": "button",
+                    "sub_type": "url",
+                    "index": "0",
+                    "parameters": [{"type": "text", "text": otp}],
+                },
+            ],
+        },
+    }
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.post(
+            url,
+            headers={
+                "Authorization": FAST2SMS_WHATSAPP_API_KEY,
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+    if resp.status_code >= 400:
+        raise RuntimeError(f"Fast2SMS WhatsApp rejected OTP: {resp.status_code} {resp.text[:200]}")
+    return True
+
+
+async def _send_credit_otp_fast2sms_sms(phone: str, otp: str) -> bool:
+    normalized_phone = _normalize_phone(phone)
+    if not FAST2SMS_API_KEY:
+        raise RuntimeError("FAST2SMS_API_KEY is not configured")
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.post(
+            "https://www.fast2sms.com/dev/bulkV2",
+            headers={
+                "authorization": FAST2SMS_API_KEY,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            data={
+                "variables_values": otp,
+                "route": "otp",
+                "numbers": normalized_phone,
+            },
+        )
+    if resp.status_code >= 400:
+        raise RuntimeError(f"Fast2SMS SMS rejected OTP: {resp.status_code} {resp.text[:200]}")
+    try:
+        return bool(resp.json().get("return"))
+    except Exception:
+        return True
+
+
+async def _send_credit_otp_twofactor(phone: str, otp: str) -> bool:
+    normalized_phone = _normalize_phone(phone)
+    if not TWOFACTOR_API_KEY:
+        raise RuntimeError("TWOFACTOR_API_KEY is not configured")
+    if not TWOFACTOR_TEMPLATE_NAME:
+        raise RuntimeError("TWOFACTOR_TEMPLATE_NAME is not configured")
+    url = TWOFACTOR_OTP_URL_TEMPLATE.format(
+        api_key=quote(TWOFACTOR_API_KEY),
+        phone=normalized_phone,
+        phone_with_country=f"91{normalized_phone}",
+        otp=quote(otp),
+        template_name=quote(TWOFACTOR_TEMPLATE_NAME),
+    )
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.get(url)
+    if resp.status_code >= 400:
+        raise RuntimeError(f"2Factor rejected OTP: {resp.status_code} {resp.text[:200]}")
+    try:
+        payload = resp.json()
+        return str(payload.get("Status", "")).lower() == "success"
+    except Exception:
+        body = resp.text.lower()
+        return "success" in body or "sent" in body
+
+
+async def _send_credit_otp_callmebot(phone: str, otp: str) -> bool:
+    normalized_phone = _normalize_phone(phone)
     if not CALLMEBOT_API_KEY:
-        return False
+        raise RuntimeError("CALLMEBOT_API_KEY is not configured")
     msg = (
         f"Your Vishleshak credit OTP is {otp}. "
         "It is valid for 10 minutes. Do not share it with anyone."
     )
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
-                "https://api.callmebot.com/whatsapp.php",
-                params={
-                    "phone": f"91{normalized_phone}",
-                    "text": msg,
-                    "apikey": CALLMEBOT_API_KEY,
-                },
-            )
-        return resp.status_code < 400
-    except Exception as e:
-        last_credit_otp_error = f"Credit OTP WhatsApp failed: {e}"
-        print(last_credit_otp_error)
-        return False
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(
+            "https://api.callmebot.com/whatsapp.php",
+            params={
+                "phone": f"91{normalized_phone}",
+                "text": msg,
+                "apikey": CALLMEBOT_API_KEY,
+            },
+        )
+    if resp.status_code >= 400:
+        raise RuntimeError(f"CallMeBot WhatsApp rejected OTP: {resp.status_code} {resp.text[:200]}")
+    return True
+
+
+async def _send_credit_otp(phone: str, otp: str) -> bool:
+    """Send package-credit OTP with configured fallbacks."""
+    global last_credit_otp_error, last_credit_otp_channel
+    last_credit_otp_error = ""
+    last_credit_otp_channel = ""
+    errors = []
+    senders = {
+        "twofactor": _send_credit_otp_twofactor,
+        "whatsapp": _send_credit_otp_fast2sms_whatsapp,
+        "sms": _send_credit_otp_fast2sms_sms,
+        "callmebot": _send_credit_otp_callmebot,
+    }
+    for channel in _otp_channel_order():
+        try:
+            if await senders[channel](phone, otp):
+                last_credit_otp_channel = channel
+                return True
+            errors.append(f"{channel}: provider returned false")
+        except Exception as e:
+            errors.append(f"{channel}: {e}")
+            print(f"Credit OTP {channel} failed: {e}")
+    last_credit_otp_error = " | ".join(errors)
+    return False
 
 
 @app.get("/api/orders/poll-new")
@@ -3250,8 +3388,16 @@ async def send_credit_otp(request: Request):
 @app.get("/api/clients/credit-otp-status")
 async def credit_otp_status():
     return {
+        "twofactor_configured": bool(TWOFACTOR_API_KEY),
+        "twofactor_template": bool(TWOFACTOR_TEMPLATE_NAME),
         "fast2sms_configured": bool(FAST2SMS_API_KEY),
+        "fast2sms_whatsapp_configured": _fast2sms_whatsapp_ready(),
+        "fast2sms_whatsapp_template": bool(FAST2SMS_WHATSAPP_TEMPLATE_NAME),
+        "fast2sms_whatsapp_phone_number_id": bool(FAST2SMS_WHATSAPP_PHONE_NUMBER_ID),
+        "fast2sms_whatsapp_url_template": bool(FAST2SMS_WHATSAPP_OTP_URL_TEMPLATE),
         "callmebot_configured": bool(CALLMEBOT_API_KEY),
+        "channel_order": _otp_channel_order(),
+        "last_channel": last_credit_otp_channel,
         "last_error": last_credit_otp_error,
     }
 
