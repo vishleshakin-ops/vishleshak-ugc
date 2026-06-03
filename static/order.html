@@ -504,6 +504,11 @@
       margin-top: 8px;
       opacity: 0.82;
     }
+    .credit-pack-heading {
+      margin-top: 12px;
+      font-weight: 900;
+      color: var(--accent-strong);
+    }
     .credit-pack-list {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1617,6 +1622,7 @@
       color: #fff;
     }
     .credit-hint { color: rgba(255,255,255,0.72); }
+    .credit-pack-heading { color: #fff; }
     .credit-pack-list button {
       border-color: rgba(167,139,250,0.25);
       background: rgba(255,255,255,0.08);
@@ -1762,9 +1768,17 @@
       .form-grid,
       .choice-grid,
       .choice-grid.four,
+      .credit-pack-list,
       .order-stats,
       .sidebar {
         grid-template-columns: 1fr;
+      }
+      .credit-actions {
+        align-items: stretch;
+      }
+      .credit-actions button,
+      .credit-actions input {
+        min-height: 46px;
       }
       .order-stats {
         gap: 12px;
@@ -1795,6 +1809,16 @@
       .ugc-visual { width: 100%; }
       .ugc-phone {
         width: min(274px, calc(100vw - 72px));
+      }
+      .credit-actions {
+        flex-direction: column;
+      }
+      .credit-actions button,
+      .credit-actions input {
+        width: 100%;
+      }
+      .credit-pack-list button {
+        min-height: 58px;
       }
     }
   </style>
@@ -2438,6 +2462,16 @@
       return creditPacksCache;
     }
 
+    function creditPackIncludedText(pack) {
+      const labels = {
+        image_once_49: "Enough for 1 image",
+        image_five_199: "Enough for 5 images",
+        short_video_499: "Enough for 1 short video",
+        short_video_three_999: "Enough for 3 short videos"
+      };
+      return labels[pack.id] || pack.description || "";
+    }
+
     async function showCreditPacks(phone, targetId = "credit-pack-area") {
       const area = document.getElementById(targetId);
       const status = document.getElementById("credit-otp-status") || area;
@@ -2446,14 +2480,16 @@
       try {
         const packs = await getCreditPacks();
         area.innerHTML = `
+          <div class="credit-pack-heading">Buy Creative Credits</div>
           <div class="credit-pack-list">
             ${packs.map(pack => `
               <button type="button" class="buy-credit-pack" data-pack-id="${escapeHtml(pack.id)}">
-                <strong>${escapeHtml(pack.name)} · Rs. ${pack.price_inr}</strong>
-                <span>${pack.credits} wallet credits · ${escapeHtml(pack.description || "")}</span>
+                <strong>${escapeHtml(pack.name.replace(" Credits", ""))}: Rs. ${pack.price_inr}</strong>
+                <span>${escapeHtml(creditPackIncludedText(pack))}</span>
               </button>
             `).join("")}
           </div>
+          <span class="credit-hint">Credits can be used across eligible image or video orders.</span>
         `;
         area.querySelectorAll(".buy-credit-pack").forEach(btn => {
           btn.addEventListener("click", async () => {
