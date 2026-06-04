@@ -42,7 +42,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, PlainTextResponse
 import anthropic
 import imageio_ffmpeg
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from dotenv import load_dotenv, set_key
 
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
@@ -2191,110 +2191,191 @@ def _has_branding(branding: dict | None, keys: list[str]) -> bool:
     return any((branding.get(key) or "").strip() for key in keys)
 
 
+def _draw_centered_text(draw, xy, text: str, font, fill):
+    x, y, w, h = xy
+    box = draw.textbbox((0, 0), text, font=font)
+    tw = box[2] - box[0]
+    th = box[3] - box[1]
+    draw.text(
+        (x + (w - tw) / 2 - box[0], y + (h - th) / 2 - box[1]),
+        text,
+        font=font,
+        fill=fill,
+    )
+
+
 def _render_video_end_card(job_id: str, aspect_ratio: str, branding: dict) -> str:
     brand = (branding.get("brand_name") or "").strip()
     mobile = _format_display_phone(branding.get("brand_mobile") or "")
     details = (branding.get("details") or "").strip()
     cta = (branding.get("cta_text") or "").strip()
+    product_image_path = (branding.get("product_image_path") or "").strip()
     width, height = ASPECT_RATIO_DIMS.get(aspect_ratio, ASPECT_RATIO_DIMS["9:16"])
     videos_dir = os.path.join(os.path.dirname(__file__), "static", "videos")
     os.makedirs(videos_dir, exist_ok=True)
 
-    image = Image.new("RGB", (width, height), (13, 6, 64))
+    image = Image.new("RGB", (width, height), (34, 26, 44))
     draw = ImageDraw.Draw(image)
 
-    # Subtle diagonal brand band without relying on AI-generated text.
-    for i in range(0, height, max(height // 48, 24)):
-        color = (22 + (i * 14 // max(height, 1)), 12, 78 + (i * 28 // max(height, 1)))
-        draw.rectangle((0, i, width, i + max(height // 48, 24)), fill=color)
-    margin = max(int(width * 0.07), 64)
-    card = (margin, margin, width - margin, height - margin)
-    draw.rounded_rectangle(card, radius=max(width // 55, 18), fill=(255, 255, 255), outline=(196, 181, 253), width=max(width // 220, 4))
-
-    brand_font = _load_overlay_font(max(int(width * 0.07), 42), bold=True)
-    cta_font = _load_overlay_font(max(int(width * 0.042), 30), bold=True)
-    details_font = _load_overlay_font(max(int(width * 0.032), 24), bold=False)
-    small_font = _load_overlay_font(max(int(width * 0.028), 20), bold=True)
-
-    content_w = card[2] - card[0] - (margin * 2)
-    y = card[1] + max(int(height * 0.16), 120)
-    center_x = width // 2
-
-    title = brand or "Thank you"
-    for line in _wrap_text(draw, title, brand_font, content_w, max_lines=2):
-        tw, th = _text_size(draw, line, brand_font)
-        draw.text((center_x - tw // 2, y), line, font=brand_font, fill=(31, 10, 78))
-        y += th + max(height // 90, 16)
-
-    if cta:
-        y += max(height // 60, 18)
-        cta_line = _fit_text(draw, cta, cta_font, content_w)
-        tw, th = _text_size(draw, cta_line, cta_font)
-        pill_pad_x = max(width // 35, 28)
-        pill_pad_y = max(height // 120, 14)
-        draw.rounded_rectangle(
-            (center_x - tw // 2 - pill_pad_x, y - pill_pad_y, center_x + tw // 2 + pill_pad_x, y + th + pill_pad_y),
-            radius=max(width // 60, 16),
-            fill=(37, 211, 102),
+    for y in range(height):
+        mix = y / max(height - 1, 1)
+        color = (
+            int(32 + 20 * mix),
+            int(24 + 12 * mix),
+            int(44 + 28 * mix),
         )
-        draw.text((center_x - tw // 2, y), cta_line, font=cta_font, fill=(255, 255, 255))
-        y += th + (pill_pad_y * 2) + max(height // 55, 22)
+        draw.line((0, y, width, y), fill=color)
 
-    info_lines = []
-    if mobile:
-        info_lines.append(f"WhatsApp: {mobile}")
+    pink = (244, 122, 164)
+    cream = (255, 246, 250)
+    muted = (223, 205, 218)
+    panel = (255, 255, 255)
+
+    logo_font = _load_overlay_font(max(int(width * 0.12), 78), bold=True)
+    brand_font = _load_overlay_font(max(int(width * 0.043), 34), bold=True)
+    cta_font = _load_overlay_font(max(int(width * 0.06), 46), bold=True)
+    details_font = _load_overlay_font(max(int(width * 0.032), 24), bold=True)
+    phone_font = _load_overlay_font(max(int(width * 0.048), 38), bold=True)
+    footer_font = _load_overlay_font(max(int(width * 0.024), 18), bold=True)
+
+    margin = max(int(width * 0.065), 46)
+    center_x = width // 2
+    y = max(int(height * 0.07), 50)
+
+    if product_image_path and os.path.exists(product_image_path):
+        try:
+            product = Image.open(product_image_path).convert("RGB")
+            image_w = int(width * 0.74)
+            image_h = int(height * 0.38)
+            image_x = (width - image_w) // 2
+            product.thumbnail((image_w, image_h), Image.LANCZOS)
+            frame = Image.new("RGB", (image_w, image_h), (42, 34, 54))
+            paste_x = (image_w - product.width) // 2
+            paste_y = (image_h - product.height) // 2
+            frame.paste(product, (paste_x, paste_y))
+            mask = Image.new("L", (image_w, image_h), 0)
+            mdraw = ImageDraw.Draw(mask)
+            mdraw.rounded_rectangle((0, 0, image_w, image_h), radius=max(width // 34, 20), fill=255)
+            image.paste(frame, (image_x, y), mask)
+            draw.rounded_rectangle(
+                (image_x, y, image_x + image_w, y + image_h),
+                radius=max(width // 34, 20),
+                outline=(255, 255, 255),
+                width=max(width // 200, 3),
+            )
+            y += image_h + max(int(height * 0.045), 32)
+        except Exception:
+            y = max(int(height * 0.12), 80)
+
+    initials = "".join(part[0] for part in re.findall(r"[A-Za-z0-9]+", brand or "Vishleshak")[:2]).upper() or "V"
+    logo_r = max(int(width * 0.095), 54)
+    draw.ellipse((center_x - logo_r, y, center_x + logo_r, y + logo_r * 2), outline=pink, width=max(3, width // 260))
+    _draw_centered_text(draw, (center_x - logo_r, y, logo_r * 2, logo_r * 2), initials[:2], logo_font, cream)
+    y += logo_r * 2 + max(int(height * 0.025), 20)
+
+    title = _fit_text(draw, (brand or "Thank you").upper(), brand_font, width - margin * 2)
+    tw, th = _text_size(draw, title, brand_font)
+    draw.text((center_x - tw / 2, y), title, font=brand_font, fill=cream)
+    y += th + max(int(height * 0.045), 34)
+
+    cta_line = cta or "Ready to Order"
+    cta_lines = _wrap_text(draw, cta_line.replace("\n", " "), cta_font, width - margin * 2, max_lines=2)
+    for idx, line in enumerate(cta_lines[:2]):
+        line = _fit_text(draw, line, cta_font, width - margin * 2)
+        tw, th = _text_size(draw, line, cta_font)
+        draw.text((center_x - tw / 2, y), line, font=cta_font, fill=pink if idx == 0 else cream)
+        y += th + max(int(height * 0.012), 10)
+
     if details:
-        info_lines.extend(_wrap_text(draw, details, details_font, content_w, max_lines=2))
-    for line in info_lines[:3]:
-        fitted = _fit_text(draw, line, details_font, content_w)
-        tw, th = _text_size(draw, fitted, details_font)
-        draw.text((center_x - tw // 2, y), fitted, font=details_font, fill=(79, 70, 110))
-        y += th + max(height // 95, 16)
+        y += max(int(height * 0.018), 14)
+        for line in _wrap_text(draw, details, details_font, width - margin * 2, max_lines=2):
+            fitted = _fit_text(draw, line, details_font, width - margin * 2)
+            tw, th = _text_size(draw, fitted, details_font)
+            draw.text((center_x - tw / 2, y), fitted, font=details_font, fill=muted)
+            y += th + max(int(height * 0.012), 10)
+
+    if mobile:
+        y += max(int(height * 0.025), 20)
+        phone_line = _fit_text(draw, mobile, phone_font, width - margin * 2)
+        tw, th = _text_size(draw, phone_line, phone_font)
+        pill_w = min(width - margin * 2, tw + max(int(width * 0.16), 110))
+        pill_h = max(int(height * 0.07), th + max(int(height * 0.032), 26))
+        pill = (center_x - pill_w / 2, y, center_x + pill_w / 2, y + pill_h)
+        draw.rounded_rectangle(pill, radius=pill_h // 2, fill=pink)
+        _draw_centered_text(draw, (pill[0], pill[1], pill_w, pill_h), phone_line, phone_font, (255, 255, 255))
+        y += pill_h + max(int(height * 0.035), 28)
 
     footer = "Powered by Vishleshak AI"
-    tw, th = _text_size(draw, footer, small_font)
-    draw.text((center_x - tw // 2, card[3] - margin - th), footer, font=small_font, fill=(124, 58, 237))
+    tw, th = _text_size(draw, footer, footer_font)
+    draw.text((center_x - tw // 2, height - max(int(height * 0.055), 42) - th), footer, font=footer_font, fill=(184, 166, 214))
 
     path = os.path.join(videos_dir, f"{job_id}_end_card.jpg")
     image.save(path, format="JPEG", quality=94, optimize=True)
     return path
 
 
+def _extract_end_card_preview(ffmpeg_exe: str, input_path: str, job_id: str) -> str:
+    videos_dir = os.path.join(os.path.dirname(__file__), "static", "videos")
+    preview_path = os.path.join(videos_dir, f"{job_id}_end_preview.jpg")
+    cmd = [
+        ffmpeg_exe,
+        "-y",
+        "-ss",
+        "0.35",
+        "-i",
+        input_path,
+        "-frames:v",
+        "1",
+        "-q:v",
+        "2",
+        preview_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode == 0 and os.path.exists(preview_path):
+        return preview_path
+    return ""
+
+
 async def append_video_end_card(final_url: str, job_id: str, aspect_ratio: str, branding: dict | None = None) -> str:
     if not _has_branding(branding, ["brand_name", "brand_mobile", "details", "cta_text"]):
         return final_url
 
+    branding = dict(branding or {})
     videos_dir = os.path.join(os.path.dirname(__file__), "static", "videos")
     input_path = os.path.join(os.path.dirname(__file__), final_url.lstrip("/").replace("/", os.sep))
     if not os.path.exists(input_path):
         return final_url
 
     width, height = ASPECT_RATIO_DIMS.get(aspect_ratio, ASPECT_RATIO_DIMS["9:16"])
-    card_path = await asyncio.to_thread(_render_video_end_card, job_id, aspect_ratio, branding or {})
     output_path = os.path.join(videos_dir, f"{job_id}_endcard_tmp.mp4")
     ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-    vf0 = f"scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=yuv420p"
-    vf1 = f"scale={width}:{height},setsar=1,format=yuv420p"
+    preview_path = await asyncio.to_thread(_extract_end_card_preview, ffmpeg_exe, input_path, job_id)
+    if preview_path:
+        branding["product_image_path"] = preview_path
+    card_path = await asyncio.to_thread(_render_video_end_card, job_id, aspect_ratio, branding)
+    vf0 = f"scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=24,format=yuv420p,setpts=PTS-STARTPTS"
+    vf1 = f"scale={width}:{height},setsar=1,fps=24,format=yuv420p,setpts=PTS-STARTPTS"
+    end_card_seconds = "3"
     with_audio = [
         ffmpeg_exe, "-y",
         "-i", input_path,
-        "-loop", "1", "-t", "2", "-i", card_path,
-        "-f", "lavfi", "-t", "2", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
+        "-loop", "1", "-t", end_card_seconds, "-i", card_path,
+        "-f", "lavfi", "-t", end_card_seconds, "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
         "-filter_complex",
-        f"[0:v]{vf0}[v0];[1:v]{vf1}[v1];[0:a]aresample=44100[a0];[2:a]aresample=44100[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]",
+        f"[0:v]{vf0}[v0];[1:v]{vf1}[v1];[0:a]aresample=48000,asetpts=PTS-STARTPTS[a0];[2:a]aresample=48000,asetpts=PTS-STARTPTS[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]",
         "-map", "[v]", "-map", "[a]",
-        "-c:v", "libx264", "-preset", "slow", "-crf", "18",
-        "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart",
         output_path,
     ]
     no_audio = [
         ffmpeg_exe, "-y",
         "-i", input_path,
-        "-loop", "1", "-t", "2", "-i", card_path,
+        "-loop", "1", "-t", end_card_seconds, "-i", card_path,
         "-filter_complex",
         f"[0:v]{vf0}[v0];[1:v]{vf1}[v1];[v0][v1]concat=n=2:v=1:a=0[v]",
         "-map", "[v]",
-        "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-movflags", "+faststart",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-movflags", "+faststart",
         output_path,
     ]
 
@@ -2365,6 +2446,147 @@ async def get_history():
     """Return the last 12 completed video entries."""
     history = load_history()
     return history[:12]
+
+
+def _rss_node_text(parent, tag: str) -> str:
+    child = parent.find(tag)
+    if child is None or child.text is None:
+        return ""
+    return html.unescape(child.text.strip())
+
+
+def _rss_items_from_xml(xml_text: str, limit: int = 8) -> list[dict]:
+    import xml.etree.ElementTree as ET
+    from email.utils import parsedate_to_datetime
+
+    root = ET.fromstring(xml_text)
+    channel = root.find("channel")
+    items = channel.findall("item") if channel is not None else root.findall(".//item")
+    parsed = []
+    for item in items[: max(limit * 3, limit)]:
+        title = _rss_node_text(item, "title")
+        link = _rss_node_text(item, "link")
+        description = re.sub(r"<[^>]+>", " ", _rss_node_text(item, "description"))
+        description = re.sub(r"\s+", " ", description).strip()
+        published = _rss_node_text(item, "pubDate")
+        published_iso = published
+        if published:
+            try:
+                published_iso = parsedate_to_datetime(published).isoformat()
+            except Exception:
+                pass
+        if title and link:
+            parsed.append({
+                "title": title,
+                "link": link,
+                "summary": description[:220],
+                "published": published_iso,
+            })
+        if len(parsed) >= limit:
+            break
+    return parsed
+
+
+@app.get("/api/news/feed")
+async def news_feed(limit: int = 8):
+    """Local feed test for Vishleshak Market Brief."""
+    result = await _fetch_news_feed(limit)
+    return result
+
+
+async def _fetch_news_feed(limit: int = 8) -> dict:
+    feed_urls = [
+        url.strip()
+        for url in os.getenv(
+            "NEWS_FEED_URLS",
+            "https://www.business-standard.com/rss/markets/stock-market-news-10618.rss,"
+            "https://news.google.com/rss/search?q=Indian%20stock%20market%20Sensex%20Nifty&hl=en-IN&gl=IN&ceid=IN:en,"
+            "https://www.moneycontrol.com/rss/latestnews.xml,"
+            "https://www.moneycontrol.com/rss/business.xml,"
+            "https://www.moneycontrol.com/rss/marketreports.xml",
+        ).split(",")
+        if url.strip()
+    ]
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+        "Accept": "application/rss+xml, application/xml, text/xml, */*",
+    }
+    last_error = ""
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True, headers=headers) as client:
+        for feed_url in feed_urls:
+            try:
+                resp = await client.get(feed_url)
+                resp.raise_for_status()
+                items = _rss_items_from_xml(resp.text, max(1, min(limit, 20)))
+                if items:
+                    return {
+                        "status": "ok",
+                        "source": feed_url,
+                        "fetched_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "items": items,
+                    }
+                last_error = f"No RSS items found at {feed_url}"
+            except Exception as exc:
+                last_error = f"{feed_url}: {exc}"
+                print(f"[NewsFeed] {last_error}")
+    return {
+        "status": "error",
+        "source": "",
+        "fetched_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "error": last_error or "No feed URL configured",
+        "items": [],
+    }
+
+
+@app.get("/api/news/brief")
+async def news_brief(slot: str = "morning", limit: int = 6):
+    """Create a local template-based brief preview from fetched headlines."""
+    feed = await _fetch_news_feed(max(3, min(limit, 10)))
+    slot = (slot or "morning").strip().lower()
+    items = feed.get("items", [])
+    top_titles = [item.get("title", "").strip() for item in items if item.get("title")]
+    if slot not in {"morning", "close"}:
+        slot = "morning"
+
+    if slot == "morning":
+        title = "9 AM Market Watchlist"
+        hook = "3 things smart money watches before 10 AM"
+        caption = (
+            "Vishleshak Market Brief - 9 AM watchlist. "
+            "Top market headlines and cues to track before the first hour settles. "
+            "Educational only. Not investment advice."
+        )
+        bullets = top_titles[:3]
+    else:
+        title = "4 PM Market Close"
+        hook = "Today's market close in simple takeaways"
+        caption = (
+            "Vishleshak Market Brief - 4 PM close. "
+            "Top movers, sector mood, and simple market takeaways. "
+            "Educational only. Not investment advice."
+        )
+        bullets = top_titles[:5]
+
+    if not bullets:
+        bullets = [
+            "Feed could not fetch live headlines yet.",
+            "Check source availability or add another RSS/API.",
+            "Template preview is still working locally.",
+        ]
+
+    return {
+        "status": feed.get("status", "error"),
+        "slot": slot,
+        "title": title,
+        "hook": hook,
+        "caption": caption,
+        "source": feed.get("source", ""),
+        "fetched_at": feed.get("fetched_at", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")),
+        "bullets": bullets,
+        "source_items": items[: len(bullets)],
+        "error": feed.get("error", ""),
+    }
 
 
 @app.post("/api/generate-script")
@@ -2876,6 +3098,10 @@ async def get_status(job_id: str):
 async def serve_root():
     return FileResponse("static/index.html")
 
+@app.get("/admin")
+async def serve_admin_dashboard():
+    return FileResponse("static/index.html")
+
 @app.get("/favicon.svg")
 async def serve_favicon_svg():
     return FileResponse("static/favicon.svg", media_type="image/svg+xml")
@@ -3212,6 +3438,7 @@ def _order_video_end_card(order: dict) -> dict:
         "brand_mobile": order.get("video_brand_mobile", ""),
         "details": order.get("video_brand_details", ""),
         "cta_text": order.get("video_cta_text", ""),
+        "product_image_path": order.get("product_image_path", ""),
     }
 
 
@@ -4224,6 +4451,58 @@ async def approve_order_veo3(order_id: str, background_tasks: BackgroundTasks):
     return {"job_id": job_id, "status": "processing"}
 
 
+@app.post("/api/orders/{order_id}/approve-gemini-omni")
+async def approve_order_gemini_omni(order_id: str, background_tasks: BackgroundTasks):
+    """Approve and generate using Gemini Omni (Google I/O 2026) — multimodal cinematic UGC video + voiceover."""
+    orders = load_orders()
+    order = next((o for o in orders if o["id"] == order_id), None)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order["status"] not in ("pending", "failed"):
+        raise HTTPException(status_code=400, detail="Order already processed")
+    img_path = order["product_image_path"]
+    if not os.path.exists(img_path):
+        raise HTTPException(status_code=400, detail="Product image missing")
+    with open(img_path, "rb") as f:
+        image_data = f.read()
+    job_id = str(uuid.uuid4())
+    jobs[job_id] = {"status": "processing", "step": "analyzing", "script": None, "video_url": None, "image_url": None, "error": None, "order_id": order_id}
+    customization = {
+        "presenter_source":    order.get("presenter_source", "ai"),
+        "output_type":         "video",
+        "video_duration":      str(order.get("duration", "8")),
+        "duration":            int(order.get("duration", 8)),
+        "video_quality":       "standard",
+        "auto_mode":           True,
+        "language":            order.get("language", "hindi"),
+        "model_gender":        "female",
+        "skin_tone":           "wheatish",
+        "scene":               "studio",
+        "custom_scene":        "",
+        "model_action":        order.get("notes", ""),
+        "custom_instructions": order.get("notes", ""),
+        "aspect_ratio":        order.get("aspect_ratio", "9:16"),
+        "custom_script":       order.get("custom_script", ""),
+        "order_model_path":    order.get("model_image_path") or "",
+        "image_branding":      _order_image_branding(order),
+        "video_end_card":      _order_video_end_card(order),
+    }
+    order["status"]      = "processing"
+    order["job_id"]      = job_id
+    order["video_style"] = "gemini_omni"
+    save_order(order)
+    background_tasks.add_task(
+        process_job_gemini_omni,
+        job_id, image_data, order.get("product_mime", "image/jpeg"),
+        model_image_url, customization,
+    )
+    wa_from = order.get("wa_from")
+    if wa_from:
+        product_name = order.get("notes", "your product").replace("WhatsApp order for: ", "")
+        background_tasks.add_task(notify_wa_on_complete, job_id, order_id, wa_from, product_name)
+    return {"job_id": job_id, "status": "processing", "pipeline": "gemini_omni"}
+
+
 @app.post("/api/orders/{order_id}/reject")
 async def reject_order(order_id: str, reason: str = Form("")):
     orders = load_orders()
@@ -5080,7 +5359,7 @@ async def process_job(job_id: str, image_data: bytes, content_type: str, avatar_
                     model_with_product_url,
                     job_id,
                     c.get("image_branding"),
-                    apply_overlay=False,
+                    apply_overlay=True,
                 )
                 jobs[job_id].update({"status": "completed", "step": "completed", "image_url": final_image_url})
                 save_to_history({
@@ -5847,6 +6126,704 @@ async def process_job_veo3(job_id: str, image_data: bytes, content_type: str, av
 
     except Exception as e:
         jobs[job_id].update({"status": "failed", "error": str(e)})
+
+
+# ── Gemini Omni pipeline (via kie.ai) ────────────────────────────────────────
+
+# Product-type optimized prompts for Gemini Omni UGC videos
+GEMINI_OMNI_PRODUCT_PROMPTS = {
+    "jewelry": (
+        "Close-up cinematic shot of the jewelry piece glowing under warm studio light. "
+        "The model's hand gracefully lifts the product toward the camera — sparkle and shimmer catch the light beautifully. "
+        "Slow 360-degree product rotation. Camera dollies in gently. Rich bokeh background. "
+        "Elegant and luxurious mood. No text, no subtitles, no watermark."
+    ),
+    "clothing": (
+        "Cinematic lifestyle shot. Model wearing the outfit walks confidently toward the camera on a softly lit street. "
+        "Fabric flows naturally. Camera tracks smoothly alongside. Warm golden-hour light. "
+        "Outfit clearly visible from head to toe. Fashion editorial mood. No text, no subtitles, no watermark."
+    ),
+    "boutique": (
+        "Cinematic boutique display shot. Model picks up the product lovingly, holds it at eye level, smiles. "
+        "Camera slowly pushes in. Warm interior store lighting. Lifestyle feel — aspirational and friendly. "
+        "No text, no subtitles, no watermark."
+    ),
+    "salon": (
+        "Beauty salon cinematic shot. Stylist or model demonstrates the beauty product or hairstyle with graceful hand motions. "
+        "Soft diffused lighting. Camera slowly orbits around the model's face and hair. "
+        "Fresh, clean, aspirational beauty mood. No text, no subtitles, no watermark."
+    ),
+    "skincare": (
+        "Skincare product cinematic close-up. Model applies product to glowing skin with gentle fingertip motions. "
+        "Soft natural daylight from the side. Extreme close-up on texture and absorption. "
+        "Clean, fresh, dermatologist-approved aesthetic. No text, no subtitles, no watermark."
+    ),
+    "food": (
+        "Cinematic food reveal shot. Steam rises slowly from the dish. Camera pulls back from extreme close-up. "
+        "Rich warm lighting highlights the texture, color, and freshness of the food. "
+        "Hands elegantly plate or garnish the dish. Appetite-inducing, editorial food photography style. "
+        "No text, no subtitles, no watermark."
+    ),
+    "electronics": (
+        "Cinematic product launch style shot. The device is placed on a sleek reflective surface. "
+        "Subtle dramatic lighting with lens flare. Camera slowly orbits the product. "
+        "Model's hand picks it up and interacts confidently. Tech, premium, aspirational feel. "
+        "No text, no subtitles, no watermark."
+    ),
+    "fitness": (
+        "High-energy cinematic fitness shot. Model demonstrates the product or exercise with dynamic motion. "
+        "Camera follows the action with smooth tracking. Gym or outdoor setting. "
+        "Motivational, energetic, powerful mood. Slow-motion moment highlights the product. "
+        "No text, no subtitles, no watermark."
+    ),
+    "home_decor": (
+        "Cinematic interior lifestyle shot. Product is beautifully placed in a stylish home setting. "
+        "Camera slowly pushes into the scene, revealing the product as the hero. "
+        "Warm ambient interior lighting. Aspirational home living aesthetic. "
+        "No text, no subtitles, no watermark."
+    ),
+    "bags": (
+        "Fashion editorial bag shot. Model confidently holds or carries the bag. "
+        "Camera follows with smooth tracking on a lifestyle street or studio setting. "
+        "Focus pulls to highlight the bag's texture, hardware, and craftsmanship. "
+        "Luxury, aspirational, street-style mood. No text, no subtitles, no watermark."
+    ),
+    "kids_eyewear": (
+        "Bright cheerful cinematic shot. An adorable child puts on the colorful eyeglasses and looks "
+        "straight at the camera with a big confident smile. "
+        "Camera slowly pushes in to a close-up on the glasses — vibrant colors and fun frame details pop. "
+        "Child tilts head playfully. Soft natural daylight. Warm, joyful, playful mood. "
+        "No text, no subtitles, no watermark."
+    ),
+    "eyewear": (
+        "Cinematic eyewear showcase. Model puts on the glasses and gazes confidently at the camera. "
+        "Camera slowly orbits around the face — frame design, lens clarity, and fit all visible. "
+        "Soft studio rim lighting highlights the frame shape and texture. "
+        "Smart, stylish, premium mood. No text, no subtitles, no watermark."
+    ),
+    # ── Indian Ethnic & Fashion ───────────────────────────────────────────────
+    "saree": (
+        "Cinematic ethnic fashion shot. Model drapes the saree elegantly and turns slowly toward the camera. "
+        "Rich fabric shimmers under warm golden studio light — zari, embroidery, or print details pop beautifully. "
+        "Camera does a graceful full-length sweep from feet to face. "
+        "Festive, bridal, or everyday elegance mood. No text, no subtitles, no watermark."
+    ),
+    "kurta": (
+        "Lifestyle cinematic shot. Model wearing the kurta walks through a softly lit ethnic interior or courtyard. "
+        "Fabric drapes and flows naturally. Camera tracks alongside at medium distance. "
+        "Ethnic Indian aesthetic — earthy warm tones, wooden furniture or floral background. "
+        "Casual yet elegant Indian daily wear mood. No text, no subtitles, no watermark."
+    ),
+    "lehenga": (
+        "Bridal cinematic spin shot. Model wearing the lehenga does a slow graceful spin. "
+        "Heavy embroidery, mirror work, and dupatta fly out beautifully. "
+        "Camera slowly pulls back to reveal the full outfit. Warm golden backlight creates a halo effect. "
+        "Dreamy bridal fairytale mood. No text, no subtitles, no watermark."
+    ),
+    "ethnic_wear": (
+        "Festive cinematic shot. Model dressed in rich ethnic outfit poses confidently in a traditionally decorated setting. "
+        "Camera slowly pushes in from full body to medium close-up highlighting fabric detail and embroidery. "
+        "Warm Diwali-style ambient lighting. Celebratory, proud Indian culture mood. "
+        "No text, no subtitles, no watermark."
+    ),
+    "footwear": (
+        "Cinematic footwear showcase. Close-up of model's feet stepping forward stylishly in the product. "
+        "Camera follows at ground level, then rises to full body. "
+        "Clean studio floor or cobblestone street setting. Warm lifestyle lighting. "
+        "Confident, fashionable, all-day comfort mood. No text, no subtitles, no watermark."
+    ),
+    "mojari": (
+        "Artisan cinematic shot. Close-up of the handcrafted mojari/jutis on a wooden surface. "
+        "Intricate embroidery, sequins and thread work catch warm studio light. "
+        "Model's hand lifts and turns the mojari gracefully. "
+        "Heritage craftmanship, ethnic pride mood. No text, no subtitles, no watermark."
+    ),
+    "watches": (
+        "Luxury product cinematic shot. Watch placed on a dark velvet surface, light reflecting off the dial. "
+        "Camera slowly orbits around the watch — face, strap, crown all visible. "
+        "Model's wrist slips on the watch and holds it up toward camera. "
+        "Premium, precision, timeless mood. No text, no subtitles, no watermark."
+    ),
+    "sunglasses": (
+        "Cinematic street style shot. Model puts on the sunglasses smoothly and looks at the camera confidently. "
+        "Camera pushes in slowly. Sun flare catches the lens edge beautifully. "
+        "Urban outdoor setting with lifestyle energy. "
+        "Cool, bold, summer vibes mood. No text, no subtitles, no watermark."
+    ),
+    "dupatta": (
+        "Flowing cinematic shot. Model holds the dupatta and lets it fly elegantly in slow motion. "
+        "Rich fabric, embroidery and print details shimmer under golden light. "
+        "Camera captures the full flow from close-up texture to wide lifestyle shot. "
+        "Graceful, festive, feminine Indian mood. No text, no subtitles, no watermark."
+    ),
+    # ── Beauty & Personal Care ────────────────────────────────────────────────
+    "makeup": (
+        "Beauty editorial cinematic shot. Model applies makeup confidently — lipstick swipe, eyeshadow blend, or foundation. "
+        "Extreme close-up on the eyes or lips. Camera slowly zooms out to reveal full glam face. "
+        "Soft beauty lighting with ring light catch in the eyes. "
+        "Bold, confident, glamorous mood. No text, no subtitles, no watermark."
+    ),
+    "haircare": (
+        "Cinematic hair beauty shot. Model runs fingers through healthy, shiny, voluminous hair in slow motion. "
+        "Camera captures the hair movement from close-up to full head shot. "
+        "Soft backlit studio glow makes hair shimmer. "
+        "Fresh, healthy, confident hair mood. No text, no subtitles, no watermark."
+    ),
+    "perfume": (
+        "Luxury cinematic fragrance shot. Model holds the perfume bottle elegantly, sprays it on the neck. "
+        "Slow-motion mist cloud catches dramatic side lighting. "
+        "Camera pushes in on the bottle close-up — label, cap, liquid color all visible. "
+        "Sensuous, premium, aspirational mood. No text, no subtitles, no watermark."
+    ),
+    "ayurvedic": (
+        "Clean cinematic wellness shot. Ayurvedic product placed among natural ingredients — herbs, roots, flowers. "
+        "Model applies or uses the product with a calm, mindful expression. "
+        "Soft natural daylight from a window. Earthy green and gold tones. "
+        "Ancient wisdom, natural healing, trusted wellness mood. No text, no subtitles, no watermark."
+    ),
+    "herbal": (
+        "Cinematic nature-to-bottle story. Fresh herbs and botanicals fill the frame, camera transitions to the product. "
+        "Model holds the product with trust and confidence. "
+        "Soft green natural light. Earthy authentic feel. "
+        "Pure, natural, chemical-free, trustworthy Indian brand mood. No text, no subtitles, no watermark."
+    ),
+    "supplements": (
+        "Health cinematic shot. Model opens the supplement bottle confidently in a gym or bright kitchen setting. "
+        "Close-up on the capsules or powder. Model flexes or shows energy after taking it. "
+        "Clean white or gym-steel background. Energy and vitality lighting. "
+        "Strong, healthy, performance mood. No text, no subtitles, no watermark."
+    ),
+    # ── Food & Beverage ───────────────────────────────────────────────────────
+    "spices": (
+        "Cinematic masala reveal shot. Vibrant spices pour slowly from a hand into a rustic bowl. "
+        "Camera captures the color explosion — turmeric yellow, chili red, coriander green. "
+        "Warm kitchen lighting with steam or dust particles catching light. "
+        "Aromatic, authentic, home-cooked Indian flavor mood. No text, no subtitles, no watermark."
+    ),
+    "snacks": (
+        "Appetizing cinematic snack shot. Hands reach into a bowl of crispy namkeen or snacks. "
+        "Close-up on the texture and crunch. Camera pulls back to a lifestyle snack moment — family or friends. "
+        "Warm fun lighting. Playful, crunchy, irresistible mood. "
+        "No text, no subtitles, no watermark."
+    ),
+    "sweets": (
+        "Festive cinematic mithai shot. A beautiful box of Indian sweets opens slowly — gulab jamun, ladoo, barfi. "
+        "Camera pushes in on the rich golden and colorful sweets. "
+        "A hand picks one up and takes a small bite with delight. "
+        "Warm festive lighting. Celebratory, gifting, joyful Indian mood. No text, no subtitles, no watermark."
+    ),
+    "dry_fruits": (
+        "Premium cinematic dry fruits shot. Assorted almonds, cashews, pistachios spill from an ornate bowl. "
+        "Camera does a slow close-up sweep highlighting texture and freshness. "
+        "Warm amber studio lighting on dark wood surface. "
+        "Premium, healthy, gifting, festive Indian mood. No text, no subtitles, no watermark."
+    ),
+    "tea": (
+        "Cinematic chai story. Hot chai pours from a saucepan into a kulhad — steam rises beautifully. "
+        "Camera follows the steam upward then dollies in to the cup close-up. "
+        "Model wraps both hands around the warm cup and closes eyes in contentment. "
+        "Warm, cozy, desi chai moment mood. No text, no subtitles, no watermark."
+    ),
+    "coffee": (
+        "Cinematic café-style shot. Coffee pours in slow motion into a cup — rich crema forms. "
+        "Overhead camera transitions to eye-level close-up. "
+        "Minimal clean background. Warm café morning light. "
+        "Premium, energizing, modern Indian coffee culture mood. No text, no subtitles, no watermark."
+    ),
+    "organic_food": (
+        "Farm-to-table cinematic shot. Fresh organic produce fills the frame — vegetables, fruits, grains. "
+        "Camera transitions to the packaged product held by a model in a clean kitchen. "
+        "Bright natural daylight. Green and earthy tones. "
+        "Pure, healthy, chemical-free, trusted Indian family mood. No text, no subtitles, no watermark."
+    ),
+    "dairy": (
+        "Pure cinematic dairy shot. Fresh milk pours in slow motion into a glass. "
+        "Camera captures the splash and cream surface. Model drinks and smiles with satisfaction. "
+        "Bright clean white and blue tones. Morning sunlight. "
+        "Pure, fresh, nourishing, trusted desi dairy mood. No text, no subtitles, no watermark."
+    ),
+    "pickle": (
+        "Homestyle cinematic shot. A glass jar of pickle opened — vibrant colors, mustard seeds, and oil visible. "
+        "A spoon scoops out the pickle in slow motion. Close-up on texture and freshness. "
+        "Warm rustic kitchen lighting. Nostalgic grandmother's recipe feel. "
+        "Authentic, tangy, homemade Indian flavor mood. No text, no subtitles, no watermark."
+    ),
+    # ── Home & Kitchen ────────────────────────────────────────────────────────
+    "cookware": (
+        "Cinematic kitchen lifestyle shot. Model places a gleaming cookware piece on a stove. "
+        "Camera close-up on the surface quality — non-stick, stainless, or iron. "
+        "Warm kitchen ambient light. Steam rises as food cooks beautifully inside. "
+        "Modern Indian kitchen, confident home chef mood. No text, no subtitles, no watermark."
+    ),
+    "kitchen_appliances": (
+        "Cinematic kitchen product launch. The appliance is placed on a clean marble kitchen counter. "
+        "Model presses the button — the machine hums to life confidently. "
+        "Camera orbits slowly around the product. "
+        "Modern, efficient, smart Indian kitchen mood. No text, no subtitles, no watermark."
+    ),
+    "bedding": (
+        "Cinematic bedroom lifestyle shot. Model runs a hand over the soft bedsheet or pillow cover. "
+        "Camera pushes in slowly on the fabric texture — softness and quality visible. "
+        "Warm morning light floods a beautifully made bed. "
+        "Comfortable, premium, peaceful home mood. No text, no subtitles, no watermark."
+    ),
+    "curtains": (
+        "Cinematic home styling shot. Light breeze gently moves the curtain. "
+        "Camera captures the fabric draping elegantly — color, pattern, and texture visible. "
+        "Warm natural window light silhouettes the curtain beautifully. "
+        "Elegant, airy, stylish Indian home interior mood. No text, no subtitles, no watermark."
+    ),
+    "lighting": (
+        "Cinematic interior mood shot. The light switches on — warm glow fills the room slowly. "
+        "Camera does a slow push-in toward the light fixture, capturing the design. "
+        "Bokeh background of a well-lit room. "
+        "Warm, cozy, design-forward modern Indian home mood. No text, no subtitles, no watermark."
+    ),
+    "furniture": (
+        "Cinematic interior reveal. Camera slowly pans across a beautifully styled room highlighting the furniture piece. "
+        "Model sits or interacts with the furniture naturally. "
+        "Warm ambient interior lighting. "
+        "Premium, modern Indian home living aspirational mood. No text, no subtitles, no watermark."
+    ),
+    # ── Handicrafts & Artisan ─────────────────────────────────────────────────
+    "handicrafts": (
+        "Artisan cinematic shot. Craftsperson's hands shape or display the handmade product with care. "
+        "Camera transitions to a beauty close-up of the finished piece — colors, texture, detail. "
+        "Warm earthy studio lighting. "
+        "Indian heritage, skilled artisan, pride of craft mood. No text, no subtitles, no watermark."
+    ),
+    "pottery": (
+        "Cinematic pottery story. Clay spins on a wheel — artisan's hands shape it beautifully. "
+        "Camera transitions to the finished painted or glazed product on a natural surface. "
+        "Earthy warm light. Raw clay texture and colors pop. "
+        "Heritage Indian craft, handmade with love mood. No text, no subtitles, no watermark."
+    ),
+    "brass_copper": (
+        "Cinematic metal craft shot. Gleaming brass or copper product placed on a dark stone surface. "
+        "Warm studio light reflects off the polished surface. "
+        "Camera orbits slowly highlighting engravings and craftsmanship. "
+        "Traditional Indian décor, heritage, spiritual elegance mood. No text, no subtitles, no watermark."
+    ),
+    "paintings": (
+        "Cinematic art reveal. Artist's hand adds a final brushstroke to the painting. "
+        "Camera slowly pulls back to reveal the full artwork. "
+        "Warm soft gallery lighting. Rich colors pop beautifully. "
+        "Creative, cultural, proud Indian art mood. No text, no subtitles, no watermark."
+    ),
+    "puja_items": (
+        "Spiritual cinematic shot. Puja thali or religious item placed on a decorated altar. "
+        "Diya flame flickers gently. Camera slowly pushes in on the product — intricate design and craftsmanship visible. "
+        "Warm golden candlelight. Incense haze softly in the background. "
+        "Devotional, peaceful, sacred Indian home mood. No text, no subtitles, no watermark."
+    ),
+    # ── Kids & Baby ───────────────────────────────────────────────────────────
+    "toys": (
+        "Joyful cinematic kids shot. A child's eyes light up seeing the toy for the first time. "
+        "Camera follows the child playing with the toy — expressive, fun, energetic. "
+        "Bright colorful playroom lighting. "
+        "Pure joy, imagination, childhood magic mood. No text, no subtitles, no watermark."
+    ),
+    "baby_products": (
+        "Tender cinematic baby moment. Parent gently uses the baby product — lotion, diaper, or feeding item — on the baby. "
+        "Camera close-up on the baby's happy, healthy skin or expression. "
+        "Soft warm nursery lighting. "
+        "Gentle, safe, loving, trusted parenting mood. No text, no subtitles, no watermark."
+    ),
+    "school_supplies": (
+        "Motivational cinematic study shot. Child opens a fresh new notebook or picks up the stationery. "
+        "Camera close-up on the product quality — smooth pages, vibrant colors. "
+        "Bright clean desk lighting. "
+        "Smart, curious, back-to-school excitement mood. No text, no subtitles, no watermark."
+    ),
+    # ── Sports & Outdoor ─────────────────────────────────────────────────────
+    "sportswear": (
+        "High-energy cinematic sports shot. Model in sportswear sprints, jumps, or stretches dynamically. "
+        "Camera tracks with smooth slow-motion action. Sweat glistens. "
+        "Outdoor track, gym, or stadium setting. "
+        "Athletic, powerful, unstoppable Indian sports mood. No text, no subtitles, no watermark."
+    ),
+    "yoga": (
+        "Serene cinematic yoga shot. Model transitions through a yoga pose gracefully in the yoga wear or with the product. "
+        "Camera slowly orbits. Soft morning light or peaceful studio. "
+        "Minimal, calm, zen aesthetic. "
+        "Mindful, balanced, wellness Indian lifestyle mood. No text, no subtitles, no watermark."
+    ),
+    "cricket": (
+        "Cinematic cricket lifestyle shot. Model grips the cricket bat or holds the product confidently. "
+        "Dynamic camera movement — low angle to high. Cricket ground or stadium lighting. "
+        "Passionate, energetic, Indian sports hero mood. No text, no subtitles, no watermark."
+    ),
+    # ── Tech & Accessories ───────────────────────────────────────────────────
+    "mobile_accessories": (
+        "Cinematic tech lifestyle shot. Model attaches the case, charger, or earbuds to a smartphone. "
+        "Camera close-up on the product fit and finish — premium materials. "
+        "Clean white or dark tech surface. Soft dramatic lighting. "
+        "Modern, functional, sleek Indian tech user mood. No text, no subtitles, no watermark."
+    ),
+    "laptop_bags": (
+        "Professional cinematic shot. Model confidently picks up the laptop bag and heads out. "
+        "Camera tracks alongside — bag's pockets, zipper quality, and strap comfort highlighted. "
+        "Modern office or urban setting. "
+        "Ambitious, professional, on-the-go Indian career mood. No text, no subtitles, no watermark."
+    ),
+    # ── Travel & Lifestyle ────────────────────────────────────────────────────
+    "luggage": (
+        "Travel cinematic shot. Model wheels the luggage confidently through an airport or hotel lobby. "
+        "Camera tracks alongside at ground level then rises to eye-level. "
+        "Smooth, sturdy trolley motion. Premium lifestyle travel setting. "
+        "Wanderlust, modern Indian traveler mood. No text, no subtitles, no watermark."
+    ),
+    "travel_accessories": (
+        "Cinematic travel moment. Model packs or uses the travel product in a hotel room or airport lounge. "
+        "Camera pushes in on the product functionality. "
+        "Warm travel light. Globe-trotter aesthetic. "
+        "Smart packing, prepared traveler, modern India mood. No text, no subtitles, no watermark."
+    ),
+    # ── Vehicle ──────────────────────────────────────────────────────────────
+    "car_accessories": (
+        "Cinematic car lifestyle shot. Model installs or demonstrates the car accessory confidently. "
+        "Camera close-up on the product fit — quality, shine, and finish. "
+        "Car exterior or interior ambient lighting. "
+        "Car enthusiast, premium upgrade, pride of ownership mood. No text, no subtitles, no watermark."
+    ),
+    "bike_accessories": (
+        "Cinematic riding lifestyle shot. Model on a bike demonstrates or fits the bike accessory. "
+        "Camera low angle to high — bike and product clearly visible. "
+        "Outdoor road or garage setting. Golden hour light. "
+        "Freedom, adventure, Indian biker culture mood. No text, no subtitles, no watermark."
+    ),
+    # ── Gifts & Occasions ─────────────────────────────────────────────────────
+    "gift_sets": (
+        "Festive cinematic unboxing shot. Hands untie a ribbon and open a beautifully wrapped gift box. "
+        "Camera pushes in slowly as the contents are revealed — premium packaging and products. "
+        "Warm festive golden lighting. "
+        "Joyful gifting, celebration, love and care Indian mood. No text, no subtitles, no watermark."
+    ),
+    "festive_decor": (
+        "Cinematic festive home reveal. Camera pans across a beautifully decorated room — diyas, flowers, rangoli. "
+        "Product placed elegantly as part of the decor. "
+        "Warm Diwali or celebration ambient lighting. "
+        "Festive, vibrant, proud Indian celebration mood. No text, no subtitles, no watermark."
+    ),
+    # ── Garden & Plants ──────────────────────────────────────────────────────
+    "plants": (
+        "Cinematic nature lifestyle shot. Model's hands gently repot or water the plant. "
+        "Camera close-up on the healthy green leaves. "
+        "Bright natural daylight from a window or balcony. "
+        "Fresh, calming, urban Indian home garden mood. No text, no subtitles, no watermark."
+    ),
+    "garden_tools": (
+        "Cinematic gardening lifestyle shot. Model uses the garden tool in a lush green garden. "
+        "Camera captures the action — digging, pruning, or planting. "
+        "Warm outdoor daylight. Earthy green tones. "
+        "Therapeutic, productive, green thumb Indian home mood. No text, no subtitles, no watermark."
+    ),
+    # ── Pet Products ─────────────────────────────────────────────────────────
+    "pet_products": (
+        "Heartwarming cinematic pet shot. A pet dog or cat interacts happily with the product. "
+        "Model and pet together — playful, loving moment. "
+        "Camera close-up on the pet's happy expression and the product. "
+        "Joyful, caring, pet-parent Indian family mood. No text, no subtitles, no watermark."
+    ),
+    # ── Stationery & Books ────────────────────────────────────────────────────
+    "stationery": (
+        "Cinematic desk aesthetic shot. Hands arrange premium stationery on a clean desk. "
+        "Camera close-up on product quality — pen glide, notebook texture, vibrant colors. "
+        "Warm study lamp lighting. Minimal clean workspace. "
+        "Productive, creative, aspirational student or professional mood. No text, no subtitles, no watermark."
+    ),
+    "books": (
+        "Cinematic reading moment. Model opens the book with curiosity and starts reading. "
+        "Camera close-up on the book cover, then pulls back to lifestyle shot. "
+        "Warm reading lamp or café light. "
+        "Intellectual, curious, knowledge-seeker Indian mood. No text, no subtitles, no watermark."
+    ),
+    # ── Music ─────────────────────────────────────────────────────────────────
+    "musical_instruments": (
+        "Cinematic music performance shot. Model plays the instrument passionately. "
+        "Camera slowly orbits — close-up on fingers, strings, or keys. "
+        "Warm stage or studio lighting. "
+        "Passionate, soulful, Indian musical tradition mood. No text, no subtitles, no watermark."
+    ),
+    "other": (
+        "Cinematic product showcase. Model presents the product to camera with confidence and warmth. "
+        "Smooth camera push-in. Soft studio lighting highlights product details. "
+        "Aspirational lifestyle mood. Product clearly visible throughout. "
+        "No text, no subtitles, no watermark."
+    ),
+}
+
+
+def get_gemini_omni_prompt(product_type: str, avatar_prompt: str = "", aspect_ratio: str = "9:16") -> str:
+    """Build an optimized Gemini Omni prompt for the given product type."""
+    base = GEMINI_OMNI_PRODUCT_PROMPTS.get(product_type, GEMINI_OMNI_PRODUCT_PROMPTS["other"])
+    orientation = "Vertical 9:16 portrait framing for Instagram Reels." if aspect_ratio == "9:16" else "Horizontal 16:9 cinematic framing."
+    creative = f"Creative direction: {avatar_prompt}." if avatar_prompt else ""
+    return f"{orientation} {base} {creative}".strip()
+
+
+async def create_gemini_omni_via_kie(
+    image_url: str,
+    prompt: str,
+    aspect_ratio: str = "9:16",
+    duration: int = 8,
+    resolution: str = "720p",
+) -> str:
+    """Submit a Gemini Omni video job on kie.ai. Returns task ID."""
+    valid_ratios      = {"9:16", "16:9", "1:1"}
+    valid_resolutions = {"720p", "1080p", "4k"}
+    valid_durations   = {4, 6, 8, 10}
+
+    ar  = aspect_ratio if aspect_ratio in valid_ratios else "9:16"
+    res = resolution   if resolution   in valid_resolutions else "720p"
+    dur = duration     if duration     in valid_durations   else 8
+
+    payload = {
+        "model": "gemini-omni-video",
+        "input": {
+            "prompt":       prompt,
+            "image_urls":   [image_url],
+            "duration":     str(dur),
+            "aspect_ratio": ar,
+            "resolution":   res,
+        },
+    }
+
+    last_err = None
+    for attempt in range(3):
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    f"{KIE_BASE}/jobs/createTask",
+                    headers=_kie_headers(),
+                    json=payload,
+                )
+            data = resp.json()
+            if data.get("code") != 200:
+                raise Exception(f"kie.ai Gemini Omni submit error: {data.get('msg')} : {data}")
+            task_id = data["data"]["taskId"]
+            print(f"[GeminiOmni] Task submitted: {task_id} | {ar} {dur}s {res}")
+            return task_id
+        except (httpx.ConnectError, httpx.TimeoutException, OSError) as e:
+            last_err = e
+            await asyncio.sleep(5 * (attempt + 1))
+    raise Exception(f"kie.ai Gemini Omni submit failed after 3 attempts: {last_err}")
+
+
+async def poll_gemini_omni_task(task_id: str) -> str:
+    """Poll a kie.ai Gemini Omni task until success. Returns video URL. Timeout: 20 minutes."""
+    SUCCESS_STATES = {"success", "succeed", "succeeded", "finish", "finished", "complete", "completed", "done"}
+    FAIL_STATES    = {"fail", "failed", "error", "cancelled", "canceled"}
+
+    async with httpx.AsyncClient() as client:
+        for i in range(240):  # 240 × 5s = 20 minutes
+            await asyncio.sleep(5)
+            try:
+                resp = await client.get(
+                    f"{KIE_BASE}/jobs/recordInfo",
+                    headers={"Authorization": f"Bearer {KIE_API_KEY}"},
+                    params={"taskId": task_id},
+                    timeout=15.0,
+                )
+                body = resp.json()
+            except Exception as e:
+                print(f"[GeminiOmni poll #{i}] Request error: {e} — retrying")
+                continue
+
+            data  = body.get("data") or {}
+            state = (data.get("state") or data.get("status") or "").lower().strip()
+
+            if i % 12 == 0:
+                print(f"[GeminiOmni poll #{i}] taskId={task_id} state={state!r}")
+
+            # Check resultJson first
+            result_json_str = data.get("resultJson")
+            if result_json_str:
+                try:
+                    result = json.loads(result_json_str)
+                    urls = result.get("resultUrls") or result.get("videoUrls") or []
+                    if urls:
+                        print(f"[GeminiOmni poll #{i}] Got URL from resultJson")
+                        return urls[0]
+                except Exception:
+                    pass
+
+            # Direct fields
+            direct_urls = data.get("resultUrls") or data.get("videoUrls") or []
+            if direct_urls:
+                print(f"[GeminiOmni poll #{i}] Got URL from direct field")
+                return direct_urls[0]
+
+            # Nested in response
+            response_obj = data.get("response") or {}
+            nested_urls  = response_obj.get("resultUrls") or response_obj.get("videoUrls") or []
+            if nested_urls:
+                print(f"[GeminiOmni poll #{i}] Got URL from response.resultUrls")
+                return nested_urls[0]
+
+            if state in FAIL_STATES:
+                raise Exception(f"Gemini Omni task failed: state={state!r} data={data}")
+
+    raise Exception(f"Gemini Omni task timed out after 20 minutes (id={task_id})")
+
+
+async def process_job_gemini_omni(
+    job_id: str,
+    image_data: bytes,
+    content_type: str,
+    avatar_url: str,
+    customization: dict | None = None,
+):
+    """Full UGC pipeline using Gemini Omni (kie.ai) — composite + cinematic video + voiceover."""
+    try:
+        c            = customization or {}
+        language     = c.get("language", "hindi")
+        aspect_ratio = c.get("aspect_ratio", "9:16")
+        custom_script = c.get("custom_script", "").strip()
+        duration     = int(c.get("duration", 8))
+        if duration not in {4, 6, 8, 10}:
+            duration = 8
+
+        # ── Step 1: Claude Vision — script + product type analysis ─────────────
+        jobs[job_id]["step"] = "analyzing"
+        image_b64 = base64.b64encode(image_data).decode("utf-8")
+        analyzed_script, analyzed_avatar_prompt, product_type, ai_settings = await asyncio.to_thread(
+            generate_script, image_b64, content_type, c
+        )
+        if custom_script:
+            script        = custom_script
+            avatar_prompt = c.get("model_action", "").strip() or analyzed_avatar_prompt or "model presenting product elegantly"
+        else:
+            script        = analyzed_script
+            avatar_prompt = analyzed_avatar_prompt
+        jobs[job_id]["script"] = script
+
+        if c.get("auto_mode") and ai_settings:
+            c = {**c, **ai_settings}
+        product_type = _force_product_type(product_type, _combined_generation_text(c, script, avatar_prompt))
+        gender       = c.get("model_gender", "female")
+
+        print(f"[GeminiOmni] product_type={product_type} | duration={duration}s | aspect={aspect_ratio}")
+
+        # ── Step 2: Composite image (model + product) ──────────────────────────
+        jobs[job_id]["step"] = "compositing_product"
+        composite_url = await generate_model_with_product(
+            avatar_url, image_data, content_type, product_type, avatar_prompt, c
+        )
+
+        # ── Step 3: TTS voiceover (edge-tts) ──────────────────────────────────
+        jobs[job_id]["step"] = "generating_audio"
+        voice_map = {
+            "hindi":    ("hi-IN-SwaraNeural"   if gender == "female" else "hi-IN-MadhurNeural"),
+            "english":  ("en-IN-NeerjaNeural"  if gender == "female" else "en-IN-PrabhatNeural"),
+            "hinglish": ("hi-IN-SwaraNeural"   if gender == "female" else "hi-IN-MadhurNeural"),
+        }
+        voice      = voice_map.get(language, "hi-IN-SwaraNeural")
+        audio_path = os.path.join(tempfile.gettempdir(), f"{job_id}_omni_tts.mp3")
+
+        if edge_tts:
+            communicate = edge_tts.Communicate(script, voice)
+            await communicate.save(audio_path)
+        else:
+            audio_path = None
+
+        # ── Step 4: Gemini Omni video generation ──────────────────────────────
+        jobs[job_id]["step"] = "generating_video"
+        omni_prompt = get_gemini_omni_prompt(product_type, avatar_prompt, aspect_ratio)
+        task_id     = await create_gemini_omni_via_kie(composite_url, omni_prompt, aspect_ratio, duration, "720p")
+        jobs[job_id]["kie_task_id"] = task_id
+
+        # Persist task_id to orders.json (survives server restart)
+        oid = jobs[job_id].get("order_id")
+        if oid:
+            _orders = load_orders()
+            for _o in _orders:
+                if _o.get("id") == oid:
+                    _o["kie_task_id"] = task_id
+                    break
+            with open(ORDERS_FILE, "w", encoding="utf-8") as _f:
+                json.dump(_orders, _f, ensure_ascii=False, indent=2)
+
+        omni_video_url = await poll_gemini_omni_task(task_id)
+
+        # ── Step 5: Merge audio + re-encode ───────────────────────────────────
+        jobs[job_id]["step"] = "processing_video"
+        raw_path   = os.path.join(tempfile.gettempdir(), f"{job_id}_omni_raw.mp4")
+        final_path = os.path.join(
+            os.path.dirname(__file__), "static", "videos", f"{job_id}.mp4"
+        )
+        os.makedirs(os.path.dirname(final_path), exist_ok=True)
+
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            r = await client.get(omni_video_url)
+            r.raise_for_status()
+        with open(raw_path, "wb") as f:
+            f.write(r.content)
+
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+        if audio_path and os.path.exists(audio_path):
+            # Merge TTS audio with video
+            cmd = [
+                ffmpeg_exe, "-y",
+                "-i", raw_path,
+                "-i", audio_path,
+                "-filter_complex",
+                "[1:a]aresample=async=1000,afade=t=in:st=0:d=0.15,volume=1.3[tts];"
+                "[0:a][tts]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+                "-map", "0:v",
+                "-map", "[aout]",
+                "-c:v", "libx264", "-preset", "fast", "-crf", "22",
+                "-c:a", "aac", "-b:a", "128k",
+                "-movflags", "+faststart",
+                final_path,
+            ]
+        else:
+            # No TTS — just re-encode
+            cmd = [
+                ffmpeg_exe, "-y",
+                "-i", raw_path,
+                "-c:v", "libx264", "-preset", "fast", "-crf", "22",
+                "-c:a", "aac", "-b:a", "128k",
+                "-movflags", "+faststart",
+                final_path,
+            ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"[GeminiOmni] ffmpeg warning: {result.stderr[-500:]}")
+
+        # Cleanup temp files
+        for p in [raw_path, audio_path]:
+            if p and os.path.exists(p):
+                try:
+                    os.unlink(p)
+                except Exception:
+                    pass
+
+        final_url = f"/static/videos/{job_id}.mp4"
+        final_url = await append_video_end_card(final_url, job_id, aspect_ratio, c.get("video_end_card"))
+
+        jobs[job_id].update({"status": "completed", "step": "completed", "video_url": final_url})
+        save_to_history({
+            "id":           job_id,
+            "date":         datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "script":       script,
+            "video_url":    final_url,
+            "product_type": product_type,
+            "language":     language,
+            "pipeline":     "gemini_omni",
+        })
+
+        # ── Step 6: Upload to Cloudinary + push to Railway ────────────────────
+        if oid:
+            cdn_url          = await _upload_to_cloudinary(final_path, job_id)
+            public_video_url = cdn_url or (f"{PUBLIC_URL}{final_url}" if PUBLIC_URL else final_url)
+            asyncio.create_task(_push_result_to_railway(oid, public_video_url, "", script))
+            asyncio.create_task(_delete_model_photos(oid))
+
+    except Exception as e:
+        jobs[job_id].update({"status": "failed", "error": str(e)})
+        print(f"[GeminiOmni] Pipeline error: {e}")
 
 
 # ── Seedance 2.0 pipeline (via kie.ai) ───────────────────────────────────────

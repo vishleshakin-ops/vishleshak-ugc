@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vishleshak News | Daily Market Brief</title>
+<style>
+:root{
+  --bg:#f5f2fb;
+  --ink:#211639;
+  --muted:#7b7190;
+  --purple:#8756f5;
+  --deep:#2a174e;
+  --line:#ded6ea;
+  --panel:#fff;
+  --green:#16a36b;
+  --gold:#f3b90a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  color:var(--ink);
+  font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
+  background:linear-gradient(180deg,#f6f2fb,#fff);
+}
+a{color:inherit;text-decoration:none}
+.nav{
+  background:var(--deep);
+  color:#fff;
+}
+.wrap{width:min(1240px,calc(100% - 48px));margin:0 auto}
+.nav-in{
+  min-height:78px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{
+  width:44px;height:44px;border-radius:13px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#a78bfa,#7c3aed);
+  font-size:24px;font-weight:950;
+}
+.brand strong{display:block;font-size:25px;line-height:1}
+.brand span{display:block;margin-top:3px;color:#b9acd9;font-size:12px}
+.links{display:flex;align-items:center;gap:34px;color:#c9bddf;font-size:16px}
+.links a.active,.links a:hover{color:#fff}
+.hero{padding:54px 0 34px}
+.crumb{color:#9186a8;font-size:15px}
+.hero-grid{
+  margin-top:26px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 360px;
+  gap:38px;
+  align-items:end;
+}
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 15px;
+  border-radius:999px;
+  background:#ede6ff;
+  color:var(--purple);
+  font-size:13px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+h1{
+  max-width:780px;
+  margin-top:18px;
+  font-size:clamp(42px,5vw,72px);
+  line-height:1.02;
+  letter-spacing:-.045em;
+}
+.hero p{max-width:670px;margin-top:18px;color:#5f566f;font-size:19px;line-height:1.55}
+.schedule{
+  padding:24px;
+  border-radius:22px;
+  background:#fff;
+  border:1px solid var(--line);
+  box-shadow:0 20px 50px rgba(43,27,76,.08);
+}
+.schedule b{font-size:19px}
+.schedule div{margin-top:14px;display:grid;gap:10px;color:#5f566f;font-size:15px}
+.tag{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  padding:7px 11px;
+  border-radius:999px;
+  background:#f7f1df;
+  color:#7a5600;
+  font-size:12px;
+  font-weight:900;
+}
+.content{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 330px;
+  gap:28px;
+  padding:18px 0 70px;
+  align-items:start;
+}
+.list{display:grid;gap:18px}
+.post{
+  display:grid;
+  grid-template-columns:160px minmax(0,1fr);
+  gap:24px;
+  padding:22px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid var(--line);
+  box-shadow:0 16px 42px rgba(43,27,76,.07);
+}
+.thumb{
+  min-height:160px;
+  border-radius:18px;
+  padding:18px;
+  color:#fff;
+  background:linear-gradient(155deg,#0b1630,#18385a);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.thumb.red{background:linear-gradient(155deg,#3b0707,#731818)}
+.thumb.green{background:linear-gradient(155deg,#052e25,#0d6b4b)}
+.thumb small{color:var(--gold);font-weight:950}
+.thumb strong{font-size:31px;line-height:1}
+.post h2{font-size:28px;line-height:1.15}
+.meta{margin-top:10px;color:#9186a8;font-size:14px}
+.summary{margin-top:15px;color:#564d65;font-size:16px;line-height:1.55}
+.read{
+  margin-top:18px;
+  display:inline-flex;
+  min-height:42px;
+  align-items:center;
+  justify-content:center;
+  padding:0 18px;
+  border-radius:999px;
+  color:#fff;
+  background:linear-gradient(135deg,#8b5cf6,#7c3aed);
+  font-size:14px;
+  font-weight:900;
+}
+.side{
+  position:sticky;
+  top:20px;
+  padding:22px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid var(--line);
+  box-shadow:0 16px 42px rgba(43,27,76,.07);
+}
+.side h3{font-size:23px}
+.side p{margin-top:10px;color:#665d76;font-size:15px;line-height:1.5}
+.caption-box{
+  margin-top:18px;
+  padding:16px;
+  border-radius:18px;
+  background:#f3eefc;
+  color:#48375f;
+  font-size:14px;
+  line-height:1.55;
+}
+.feed-panel{
+  margin-top:22px;
+  padding:18px;
+  border-radius:20px;
+  background:#fff;
+  border:1px solid var(--line);
+  box-shadow:0 16px 42px rgba(43,27,76,.07);
+}
+.feed-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+.feed-head h3{font-size:22px}
+.feed-head p{margin-top:6px;color:#665d76;font-size:14px;line-height:1.4}
+.feed-status{
+  display:inline-flex;
+  min-height:30px;
+  align-items:center;
+  padding:0 10px;
+  border-radius:999px;
+  background:#f7f1df;
+  color:#7a5600;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.feed-status.ok{background:#dcfce7;color:#166534}
+.feed-status.error{background:#fee2e2;color:#991b1b}
+.feed-list{display:grid;gap:12px;margin-top:16px}
+.feed-item{
+  padding:14px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:#faf8ff;
+}
+.feed-item b{display:block;font-size:15px;line-height:1.3}
+.feed-item p{margin-top:7px;color:#665d76;font-size:13px;line-height:1.45}
+.feed-item a{display:inline-flex;margin-top:9px;color:#7c3aed;font-size:13px;font-weight:900}
+.brief-card{
+  margin-top:18px;
+  padding:20px;
+  border-radius:22px;
+  color:#fff;
+  background:linear-gradient(155deg,#061f1c,#0f5545);
+  border:1px solid rgba(255,255,255,.18);
+}
+.brief-card .brief-kicker{
+  color:#f3b90a;
+  font-size:12px;
+  font-weight:950;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.brief-card h3{margin-top:12px;font-size:28px;line-height:1.12}
+.brief-card ol{margin:16px 0 0 22px;display:grid;gap:10px}
+.brief-card li{padding-left:6px;color:#e8fff8;font-size:14px;line-height:1.42}
+.brief-caption{
+  margin-top:15px;
+  padding:13px;
+  border-radius:15px;
+  background:rgba(255,255,255,.1);
+  color:#d7fff2;
+  font-size:13px;
+  line-height:1.45;
+}
+.footer{
+  background:var(--deep);
+  color:#c9bddf;
+  padding:24px 0;
+  font-size:15px;
+}
+@media(max-width:900px){
+  .hero-grid,.content{grid-template-columns:1fr}
+  .side{position:static}
+}
+@media(max-width:640px){
+  .wrap{width:min(100% - 30px,1240px)}
+  .nav-in{align-items:flex-start;flex-direction:column;padding:15px 0}
+  .links{gap:18px;overflow-x:auto;width:100%;padding-bottom:4px}
+  .post{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="/static/vishleshak_home.html">
+      <div class="mark">V</div>
+      <div><strong>Vishleshak</strong><span>AI Content Studio</span></div>
+    </a>
+    <div class="links">
+      <a href="/static/vishleshak_home.html">Home</a>
+      <a href="/static/vishleshak_home.html#services">Services</a>
+      <a href="/static/vishleshak_home.html#samples">Samples</a>
+      <a class="active" href="/static/news.html">News</a>
+      <a href="/static/vishleshak_home.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="crumb">Home / News / Markets</div>
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><span class="dot"></span> Daily Market Brief</div>
+        <h1>India's business day in simple, shareable market notes.</h1>
+        <p>Each Instagram or Facebook post can point back to a matching Vishleshak news article with more detail, context, and a WhatsApp share option.</p>
+      </div>
+      <aside class="schedule">
+        <span class="tag">Local demo</span>
+        <div>
+          <b>Auto-post plan</b>
+          <span>9:00 AM - pre-market watchlist</span>
+          <span>4:00 PM - closing market summary</span>
+          <span>Website article + social creative + caption</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="list">
+      <article class="post">
+        <div class="thumb">
+          <small>MARKET CLOSE</small>
+          <strong>Top 10<br>Headlines</strong>
+        </div>
+        <div>
+          <h2>Reliance crosses Rs.20 lakh crore market cap milestone</h2>
+          <div class="meta">Markets / 3 June 2026 / 2 min read</div>
+          <p class="summary">Reliance led a strong market session as energy and banking names supported the broader indices. Read the quick context behind the social post.</p>
+          <a class="read" href="/static/news/reliance-rs20-lakh-crore.html">Read full story</a>
+        </div>
+      </article>
+
+      <article class="post">
+        <div class="thumb green">
+          <small>9 AM BRIEF</small>
+          <strong>3 Things<br>To Watch</strong>
+        </div>
+        <div>
+          <h2>Smart money watchlist before the market opens</h2>
+          <div class="meta">Pre-market / Sample / 1 min read</div>
+          <p class="summary">A morning template for RBI cues, sector support zones, and results to track before the first hour of trading settles.</p>
+          <a class="read" href="/static/news/9am-market-watchlist.html">View sample article</a>
+        </div>
+      </article>
+
+      <article class="post">
+        <div class="thumb red">
+          <small>RED DAY</small>
+          <strong>What<br>Held Firm</strong>
+        </div>
+        <div>
+          <h2>Red day, but defensive pockets stayed resilient</h2>
+          <div class="meta">Market close / Sample / 1 min read</div>
+          <p class="summary">A closing template for explaining what fell, what held, and the practical takeaway for the next trading session.</p>
+          <a class="read" href="/static/news/red-day-defensive-pockets.html">View sample article</a>
+        </div>
+      </article>
+    </div>
+
+    <aside class="side">
+      <h3>How social posts connect</h3>
+      <p>Facebook posts can link directly to the article. Instagram feed posts cannot make the image itself clickable, so we use caption URL, bio link, story link sticker, or paid ad destination.</p>
+      <div class="caption-box">
+        Example caption line:<br>
+        Read details: vishleshak.in/news/reliance-rs20-lakh-crore
+      </div>
+      <div class="feed-panel">
+        <div class="feed-head">
+          <div>
+            <h3>Auto-feed test</h3>
+            <p>Checks whether our local backend can fetch market/news headlines.</p>
+          </div>
+          <span id="feed-status" class="feed-status">Checking</span>
+        </div>
+        <div id="feed-list" class="feed-list"></div>
+        <div id="morning-brief" class="brief-card">
+          <div class="brief-kicker">9 AM preview</div>
+          <h3>Loading morning brief...</h3>
+        </div>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">Vishleshak - AI-generated market news, updated twice daily.</div>
+</footer>
+<script>
+(function(){
+  const statusEl = document.getElementById("feed-status");
+  const listEl = document.getElementById("feed-list");
+  if (!statusEl || !listEl) return;
+
+  function setStatus(label, kind){
+    statusEl.textContent = label;
+    statusEl.className = "feed-status" + (kind ? " " + kind : "");
+  }
+
+  function renderItems(items){
+    listEl.innerHTML = "";
+    items.slice(0, 5).forEach(item => {
+      const card = document.createElement("div");
+      card.className = "feed-item";
+      const title = document.createElement("b");
+      title.textContent = item.title || "Untitled";
+      const summary = document.createElement("p");
+      summary.textContent = item.summary || item.published || "Fresh market headline fetched from the feed.";
+      const link = document.createElement("a");
+      link.href = item.link;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "Open source";
+      card.append(title, summary, link);
+      listEl.appendChild(card);
+    });
+  }
+
+  fetch("/api/news/feed?limit=6", { cache: "no-store" })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "ok" && Array.isArray(data.items) && data.items.length) {
+        setStatus("Working", "ok");
+        renderItems(data.items);
+      } else {
+        setStatus("Feed error", "error");
+        listEl.innerHTML = '<div class="feed-item"><b>No live items fetched</b><p>' + (data.error || "Feed returned no items.") + '</p></div>';
+      }
+    })
+    .catch(error => {
+      setStatus("Feed error", "error");
+      listEl.innerHTML = '<div class="feed-item"><b>Request failed</b><p>' + error.message + '</p></div>';
+    });
+
+  const morningEl = document.getElementById("morning-brief");
+  if (morningEl) {
+    fetch("/api/news/brief?slot=morning&limit=6", { cache: "no-store" })
+      .then(response => response.json())
+      .then(data => {
+        const bullets = Array.isArray(data.bullets) ? data.bullets.slice(0, 3) : [];
+        const list = bullets.map(text => "<li>" + text + "</li>").join("");
+        morningEl.innerHTML =
+          '<div class="brief-kicker">9 AM preview</div>' +
+          '<h3>' + (data.hook || "3 things to watch before 10 AM") + '</h3>' +
+          '<ol>' + list + '</ol>' +
+          '<div class="brief-caption">' + (data.caption || "Educational only. Not investment advice.") + '</div>';
+      })
+      .catch(error => {
+        morningEl.innerHTML =
+          '<div class="brief-kicker">9 AM preview</div>' +
+          '<h3>Morning preview failed</h3>' +
+          '<div class="brief-caption">' + error.message + '</div>';
+      });
+  }
+})();
+</script>
+</body>
+</html>
