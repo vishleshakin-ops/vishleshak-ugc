@@ -99,8 +99,18 @@ h1{
   font-size:12px;
   font-weight:900;
 }
+.news-layout{
+  display:grid;
+  grid-template-columns:280px minmax(0,1fr);
+  gap:24px;
+  align-items:start;
+  padding:10px 0 78px;
+}
 .archive{
-  margin:10px 0 22px;
+  position:sticky;
+  top:18px;
+  max-height:calc(100vh - 36px);
+  overflow:auto;
   padding:20px;
   border-radius:24px;
   background:#fff;
@@ -109,15 +119,22 @@ h1{
 }
 .archive-top{
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:20px;
+  align-items:flex-start;
+  flex-direction:column;
+  gap:16px;
   margin-bottom:16px;
 }
 .archive-title h2{font-size:28px;line-height:1.1}
 .archive-title p{margin-top:5px;color:var(--muted);font-size:15px}
-.month-controls{display:flex;gap:10px;align-items:center}
+.month-controls{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  align-items:center;
+}
 .select{
+  width:100%;
   min-height:42px;
   border:1px solid var(--line);
   border-radius:14px;
@@ -127,6 +144,7 @@ h1{
   font-weight:800;
 }
 .today-btn{
+  width:100%;
   min-height:42px;
   border:0;
   border-radius:14px;
@@ -137,17 +155,27 @@ h1{
 }
 .date-strip{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(44px,1fr));
+  grid-template-columns:1fr;
   gap:8px;
 }
 .date-btn{
-  min-height:44px;
+  min-height:46px;
+  width:100%;
   border:1px solid #e8e1f1;
   border-radius:13px;
   background:#faf8ff;
   color:#4e425f;
   font-weight:900;
+  text-align:left;
+  padding:0 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
 }
+.date-btn span{font-size:17px}
+.date-btn small{color:#9a90aa;font-size:11px;font-weight:900;text-transform:uppercase}
+.date-btn.active small{color:rgba(255,255,255,.8)}
 .date-btn:hover{border-color:#bda7f8;color:#5b2fe0}
 .date-btn.active{
   background:linear-gradient(135deg,#8b5cf6,#6d28d9);
@@ -158,7 +186,7 @@ h1{
 .date-btn.today:not(.active){border-color:#12a474;color:#0f7a56;background:#ecfdf5}
 .date-btn.future{opacity:.42}
 .day{
-  padding:0 0 78px;
+  min-width:0;
 }
 .day-head{
   display:flex;
@@ -326,18 +354,21 @@ h1{
 }
 .footer{background:var(--deep);color:#c9bddf;padding:24px 0;font-size:15px}
 @media(max-width:1180px){
+  .news-layout{grid-template-columns:240px minmax(0,1fr)}
   .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .hero-grid,.detail-body{grid-template-columns:1fr}
 }
 @media(max-width:720px){
   .wrap{width:min(100% - 30px,1500px)}
-  .nav-in,.archive-top,.day-head{align-items:flex-start;flex-direction:column}
+  .nav-in,.day-head{align-items:flex-start;flex-direction:column}
   .links{gap:18px;overflow-x:auto;width:100%;padding-bottom:4px}
   .hero{padding-top:30px}
+  .news-layout{display:block;padding-bottom:60px}
+  .archive{position:static;max-height:none;margin-bottom:22px}
   .summary-grid{grid-template-columns:1fr}
   .month-controls{width:100%;display:grid;grid-template-columns:1fr 1fr}
   .today-btn{grid-column:1 / -1}
-  .date-strip{grid-template-columns:repeat(7,1fr)}
+  .date-strip{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -368,7 +399,7 @@ h1{
         <p>Select year, month, and date. Each trading day opens with four summarized sections, and each section expands into details on the same page.</p>
       </div>
       <aside class="schedule">
-        <span class="tag">Live Railway demo</span>
+        <span class="tag">Daily format</span>
         <div>
           <b>Four sections per date</b>
           <span>9 AM - pre-market watchlist</span>
@@ -380,33 +411,35 @@ h1{
     </div>
   </section>
 
-  <section class="archive" aria-label="News archive selector">
-    <div class="archive-top">
-      <div class="archive-title">
-        <h2>News Archive</h2>
-        <p>Today is selected automatically. Click any previous date to review that day.</p>
+  <div class="news-layout">
+    <aside class="archive" aria-label="News archive selector">
+      <div class="archive-top">
+        <div class="archive-title">
+          <h2>News Archive</h2>
+          <p>Today is selected automatically. Click any previous date to review that day.</p>
+        </div>
+        <div class="month-controls">
+          <select id="year-select" class="select" aria-label="Select year"></select>
+          <select id="month-select" class="select" aria-label="Select month"></select>
+          <button id="today-btn" class="today-btn" type="button">Today</button>
+        </div>
       </div>
-      <div class="month-controls">
-        <select id="year-select" class="select" aria-label="Select year"></select>
-        <select id="month-select" class="select" aria-label="Select month"></select>
-        <button id="today-btn" class="today-btn" type="button">Today</button>
-      </div>
-    </div>
-    <div id="date-strip" class="date-strip"></div>
-  </section>
+      <div id="date-strip" class="date-strip"></div>
+    </aside>
 
-  <section class="day">
-    <div class="day-head">
-      <div>
-        <h2 id="selected-date-title">4 June 2026</h2>
-        <p id="selected-date-subtitle">Vishleshak Market Brief for the selected trading day.</p>
+    <section class="day">
+      <div class="day-head">
+        <div>
+          <h2 id="selected-date-title">4 June 2026</h2>
+          <p id="selected-date-subtitle">Vishleshak Market Brief for the selected trading day.</p>
+        </div>
+        <span id="feed-status" class="status-pill pending">Loading daily brief</span>
       </div>
-      <span id="feed-status" class="status-pill pending">Loading daily brief</span>
-    </div>
 
-    <div id="summary-grid" class="summary-grid"></div>
-    <section id="detail-panel" class="detail-panel" hidden></section>
-  </section>
+      <div id="summary-grid" class="summary-grid"></div>
+      <section id="detail-panel" class="detail-panel" hidden></section>
+    </section>
+  </div>
 </main>
 
 <footer class="footer">
@@ -482,8 +515,9 @@ h1{
   function keyFor(year, month, day){ return year + "-" + pad(month + 1) + "-" + pad(day); }
   function isToday(year, month, day){ return year === today.getFullYear() && month === today.getMonth() && day === today.getDate(); }
   function isFuture(year, month, day){
-    const d = new Date(year, month, day, 23, 59, 59);
-    return d.getTime() > today.getTime();
+    const selected = new Date(year, month, day);
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return selected.getTime() > todayStart.getTime();
   }
   function daysInMonth(year, month){ return new Date(year, month + 1, 0).getDate(); }
   function dateLabel(year, month, day){ return day + " " + monthNames[month] + " " + year; }
@@ -523,7 +557,7 @@ h1{
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "date-btn";
-      btn.textContent = String(day);
+      btn.innerHTML = '<span>' + String(day) + '</span><small>' + shortMonths[state.month] + '</small>';
       btn.setAttribute("aria-label", dateLabel(state.year, state.month, day));
       if (day === state.day) btn.classList.add("active");
       if (isToday(state.year, state.month, day)) btn.classList.add("today");
