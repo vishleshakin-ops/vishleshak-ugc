@@ -2589,6 +2589,91 @@ async def news_brief(slot: str = "morning", limit: int = 6):
     }
 
 
+_NSE_HDRS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+    "Referer": "https://www.nseindia.com/",
+}
+_NSE_WANTED = {"NIFTY 50", "NIFTY BANK", "NIFTY IT", "NIFTY MIDCAP 100", "NIFTY SMLCAP 100", "INDIA VIX"}
+
+
+@app.get("/api/market-snapshot")
+async def market_snapshot():
+    """Live Indian market data from NSE India + ExchangeRate-API. No API key required."""
+    result: dict = {
+        "status": "ok",
+        "source": "NSE India",
+        "fetched_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "indices": {},
+        "gainers": [],
+        "losers": [],
+        "forex": {},
+        "market_open": False,
+        "error": "",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
+            # Must hit homepage first to receive session cookies NSE requires
+            await client.get("https://www.nseindia.com", headers=_NSE_HDRS)
+
+            # All indices (Nifty 50, Bank Nifty, VIX, etc.)
+            ir = await client.get("https://www.nseindia.com/api/allIndices", headers=_NSE_HDRS)
+            ir.raise_for_status()
+            for idx in ir.json().get("data", []):
+                name = idx.get("index", "")
+                if name in _NSE_WANTED:
+                    result["indices"][name] = {
+                        "price": idx.get("last"),
+                        "change": idx.get("change"),
+                        "pctChange": idx.get("percentChange"),
+                        "open": idx.get("open"),
+                        "high": idx.get("high"),
+                        "low": idx.get("low"),
+                    }
+
+            # Nifty 50 constituents for gainers / losers
+            nr = await client.get(
+                "https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050",
+                headers=_NSE_HDRS,
+            )
+            nr.raise_for_status()
+            stocks = nr.json().get("data", [])[1:]  # row 0 is the index summary
+            stocks.sort(key=lambda s: float(s.get("pChange") or 0), reverse=True)
+
+            def _stock(s: dict) -> dict:
+                return {
+                    "symbol": s.get("symbol", ""),
+                    "price": s.get("lastPrice"),
+                    "change": s.get("change"),
+                    "pctChange": s.get("pChange"),
+                }
+
+            result["gainers"] = [_stock(s) for s in stocks[:5]]
+            result["losers"] = [_stock(s) for s in stocks[-5:][::-1]]
+            result["market_open"] = bool(stocks)
+
+        # Forex from ExchangeRate-API (free, no key)
+        async with httpx.AsyncClient(timeout=10.0) as fx_client:
+            fxr = await fx_client.get("https://api.exchangerate-api.com/v4/latest/USD")
+            rates = fxr.json().get("rates", {})
+            inr = float(rates.get("INR", 84))
+            eur = float(rates.get("EUR", 0.92))
+            gbp = float(rates.get("GBP", 0.79))
+            result["forex"] = {
+                "USD_INR": round(inr, 2),
+                "EUR_INR": round(inr / eur, 2) if eur else None,
+                "GBP_INR": round(inr / gbp, 2) if gbp else None,
+            }
+
+    except Exception as exc:
+        result["status"] = "error"
+        result["error"] = str(exc)
+        print(f"[MarketSnapshot] {exc}")
+
+    return result
+
+
 @app.post("/api/generate-script")
 async def generate_script_endpoint(
     image: UploadFile = File(...),
