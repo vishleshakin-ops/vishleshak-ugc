@@ -6,17 +6,15 @@
 <title>Vishleshak - AI Content Studio</title>
 <style>
 :root{
-  --bg:#0f172a;
-  --panel:#1a2849;
-  --line:rgba(255,255,255,.12);
-  --text:#fff;
-  --muted:#a5b4d4;
-  --soft:#d1dce8;
-  --purple:#3b82f6;
-  --blue:#f59e0b;
-  --pink:#f97316;
-  --green:#25d366;
-  --teal:#06b6d4;
+  --bg:#0a0f1c;
+  --panel:#111a2e;
+  --line:rgba(255,255,255,.09);
+  --text:#eef1f8;
+  --muted:#8b96b3;
+  --soft:#c3cae0;
+  --accent:#3b6fe0;
+  --accent-soft:rgba(59,111,224,.14);
+  --accent-line:rgba(59,111,224,.35);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -25,26 +23,22 @@ body{
   overflow-x:hidden;
   color:var(--text);
   font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
-  background:
-    radial-gradient(circle at 76% 18%,rgba(59,130,246,.2),transparent 34rem),
-    radial-gradient(circle at 24% 0%,rgba(245,158,11,.14),transparent 27rem),
-    var(--bg);
+  background:var(--bg);
 }
 a{color:inherit;text-decoration:none}
-.wrap{max-width:1200px;margin:0 auto;padding:0 40px}
+svg{display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 40px}
 .nav{
   position:sticky;
   top:0;
   z-index:30;
-  background:rgba(15,23,42,.88);
+  background:rgba(10,15,28,.92);
   border-bottom:1px solid var(--line);
   backdrop-filter:blur(18px);
   width:100%;
-  padding:0;
-  margin:0;
 }
 .nav-in{
-  min-height:62px;
+  min-height:66px;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -52,218 +46,205 @@ a{color:inherit;text-decoration:none}
   padding:0 32px;
   width:100%;
 }
-.brand{display:flex;align-items:center;gap:10px;min-width:max-content;margin-right:auto;margin-left:0;padding-left:0}
+.brand{display:flex;align-items:center;gap:11px;min-width:max-content;margin-right:auto}
 .brand-mark{
-  width:42px;
-  height:42px;
-  border-radius:10px;
+  width:38px;
+  height:38px;
+  border-radius:9px;
   display:grid;
   place-items:center;
-  background:linear-gradient(135deg,#3b82f6,#f59e0b);
-  box-shadow:0 12px 26px rgba(59,130,246,.28);
-  font-size:22px;
-  font-weight:950;
+  background:var(--accent);
+  font-size:18px;
+  font-weight:800;
+  color:#fff;
 }
-.brand-name{font-size:18px;font-weight:950;line-height:1}
-.brand-sub{margin-top:5px;color:#9f91c6;font-size:7px;font-weight:850;letter-spacing:.22em}
-.nav-links{display:flex;align-items:center;gap:24px;color:#c8bedf;font-size:14px;font-weight:700}
-.nav-links a{opacity:.84;white-space:nowrap}
+.brand-name{font-size:16px;font-weight:800;line-height:1;letter-spacing:-.01em}
+.brand-sub{margin-top:4px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.16em}
+.nav-links{display:flex;align-items:center;gap:30px;color:var(--soft);font-size:14px;font-weight:600}
+.nav-links a{opacity:.82;white-space:nowrap}
 .nav-links a:hover,.nav-links a.active{opacity:1;color:#fff}
 .nav-cta{
   opacity:1!important;
   color:#fff!important;
-  padding:8px 15px;
-  border-radius:999px;
-  background:linear-gradient(135deg,var(--purple),var(--blue));
+  padding:9px 18px;
+  border-radius:8px;
+  background:var(--accent);
 }
-.hero{padding:24px 0 20px}
-.hero-head{text-align:center;max-width:720px;margin:0 auto 26px}
+.hero{padding:76px 0 64px;border-bottom:1px solid var(--line)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
 .badge{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  padding:7px 13px;
-  border-radius:999px;
-  background:rgba(59,130,246,.12);
-  border:1px solid rgba(59,130,246,.34);
-  color:#bfdbfe;
-  font-size:11px;
-  font-weight:850;
+  padding:7px 14px;
+  border-radius:6px;
+  background:var(--accent-soft);
+  border:1px solid var(--accent-line);
+  color:#cfe0ff;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.01em;
 }
-.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(37,211,102,.12)}
+.dot{width:6px;height:6px;border-radius:50%;background:#3ecf8e}
 h1{
-  margin-top:18px;
-  font-size:clamp(34px,3.4vw,46px);
-  line-height:1.05;
-  letter-spacing:-.035em;
-  font-weight:950;
+  margin-top:20px;
+  font-size:clamp(32px,3.6vw,50px);
+  line-height:1.12;
+  letter-spacing:-.02em;
+  font-weight:800;
 }
-.grad{
-  background:linear-gradient(110deg,#3b82f6 0%,#f59e0b 52%,#f97316 100%);
-  -webkit-background-clip:text;
-  background-clip:text;
-  color:transparent;
-}
+.accent-text{color:var(--accent)}
 .lead{
-  max-width:540px;
-  margin:16px auto 0;
+  max-width:480px;
+  margin:20px 0 0;
   color:var(--soft);
-  font-size:14px;
-  line-height:1.5;
+  font-size:16px;
+  line-height:1.6;
   font-weight:400;
 }
-.bento{
-  display:grid;
-  grid-template-columns:1.35fr .65fr .65fr;
-  grid-auto-rows:110px;
-  gap:10px;
-  margin-top:20px;
-  margin-bottom:20px;
-}
-.tile{
-  position:relative;
-  overflow:hidden;
-  border-radius:14px;
-  border:1px solid var(--line);
-  background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
-  padding:20px;
-}
-.tile h3{font-size:15px;line-height:1.3;font-weight:600;letter-spacing:.01em}
-.tile p{margin-top:6px;color:#a5b4d4;font-size:12px;line-height:1.6;font-weight:400;letter-spacing:.01em}
-.icon{
-  width:32px;
-  height:32px;
-  border-radius:10px;
-  display:grid;
-  place-items:center;
-  margin-bottom:13px;
-  font-size:16px;
-  background:rgba(59,130,246,.22);
-}
-.pill{
-  display:none;
-}
-.video-card{
-  grid-row:span 2;
-  min-height:230px;
-  padding:0;
-  cursor:pointer;
-  background:#1a2849;
-}
-.video-card video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-  opacity:.74;
-  filter:saturate(1.04) contrast(1.04);
-}
-.video-card:after{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background:linear-gradient(180deg,rgba(15,23,42,.06),rgba(15,23,42,.88));
-}
-.video-label{
-  position:absolute;
-  z-index:2;
-  top:16px;
-  left:16px;
-  color:#ff8fc1;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  font-size:10px;
-  font-weight:950;
-}
-.video-copy{
-  position:absolute;
-  z-index:2;
-  left:16px;
-  right:16px;
-  bottom:16px;
-}
-.play{
-  position:absolute;
-  z-index:3;
-  left:50%;
-  top:50%;
-  width:48px;
-  height:48px;
-  border:0;
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-  background:#fff;
-  box-shadow:0 16px 30px rgba(0,0,0,.34);
-  cursor:pointer;
-}
-.play:before{
-  content:"";
-  position:absolute;
-  left:20px;
-  top:15px;
-  border-left:17px solid var(--purple);
-  border-top:10px solid transparent;
-  border-bottom:10px solid transparent;
-}
-.video-card.is-playing .play{opacity:0;pointer-events:none}
-.stat{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  background:linear-gradient(135deg,#1e3a8a,#92400e);
-}
-.stat .num{font-size:31px;line-height:1;font-weight:950}
-.stat .caption{margin-top:7px;color:#d8cef1;font-size:10px;font-weight:850}
-.news-card{
-  display:none;
-  margin-top:10px;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-  padding:14px 22px;
-  border-radius:14px;
-  border:1px solid rgba(167,139,250,.36);
-  background:linear-gradient(135deg,rgba(45,30,80,.78),rgba(42,28,77,.72));
-}
-.kicker{color:#a78bfa;text-transform:uppercase;font-size:9px;font-weight:950;letter-spacing:.16em}
-.news-card h3{font-size:17px;margin-top:7px}
-.news-card p{margin-top:5px;color:#c8bddf;font-size:11px;font-weight:650}
+.hero-actions{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
 .btn{
-  min-height:36px;
+  min-height:46px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:7px;
-  padding:0 16px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.14);
-  color:#fff;
-  font-size:11px;
-  font-weight:950;
+  gap:8px;
+  padding:0 22px;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:700;
   white-space:nowrap;
 }
-.btn-primary{background:linear-gradient(135deg,var(--purple),#8a5df1)}
-footer{border-top:1px solid var(--line);padding:25px 0 37px;color:#9f94bd;font-size:10px}
-.footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.footer-brand .brand-mark{width:34px;height:34px;font-size:18px}
-.footer-brand .brand-name{font-size:18px}
-.footer-brand .brand-sub{font-size:7px}
-@media(max-width:800px){
-  .wrap{max-width:100%;padding:0 18px}
-  .nav-in{height:auto;align-items:flex-start;flex-direction:column;padding:14px 0}
-  .nav-links{width:100%;gap:15px;overflow-x:auto;padding-bottom:4px}
-  .hero{padding-top:32px}
-  .hero-head{text-align:left}
-  h1{font-size:39px}
-  .lead{font-size:15px}
-  .bento{grid-template-columns:1fr 1fr}
-  .video-card{grid-column:span 2}
-  .news-card{align-items:flex-start;flex-direction:column}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-secondary{background:transparent;border:1px solid var(--line);color:var(--text)}
+.hero-stats{display:flex;gap:36px;margin-top:40px}
+.hero-stat .num{font-size:26px;font-weight:800}
+.hero-stat .label{margin-top:4px;color:var(--muted);font-size:12px;font-weight:600}
+.hero-visual{
+  position:relative;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  background:var(--panel);
+  aspect-ratio:4/5;
+  cursor:pointer;
+}
+.hero-visual video{width:100%;height:100%;object-fit:cover;display:block;opacity:.82}
+.hero-visual:after{
+  content:"";
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,15,28,.05),rgba(10,15,28,.82));
+}
+.visual-label{
+  position:absolute;z-index:2;top:18px;left:18px;
+  color:#fff;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  font-size:11px;
+  font-weight:700;
+  background:rgba(0,0,0,.35);
+  padding:6px 10px;
+  border-radius:6px;
+}
+.visual-copy{position:absolute;z-index:2;left:20px;right:20px;bottom:20px}
+.visual-copy h3{font-size:17px;font-weight:700}
+.visual-copy p{margin-top:5px;color:var(--soft);font-size:13px}
+.play{
+  position:absolute;z-index:3;left:50%;top:50%;
+  width:52px;height:52px;border:0;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:#fff;
+  cursor:pointer;
+}
+.play:before{
+  content:"";position:absolute;left:21px;top:16px;
+  border-left:18px solid var(--accent);
+  border-top:11px solid transparent;
+  border-bottom:11px solid transparent;
+}
+.hero-visual.is-playing .play{opacity:0;pointer-events:none}
+
+.section{padding:64px 0}
+.section-head{max-width:600px;margin-bottom:40px}
+.eyebrow{color:var(--accent);text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:.12em}
+.section-head h2{margin-top:10px;font-size:30px;font-weight:800;letter-spacing:-.015em}
+.section-head p{margin-top:10px;color:var(--muted);font-size:15px;line-height:1.6}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  padding:26px;
+  min-height:168px;
+  display:flex;
+  flex-direction:column;
+}
+.card-icon{
+  width:38px;height:38px;border-radius:9px;
+  display:grid;place-items:center;
+  background:var(--accent-soft);
+  color:var(--accent);
+  margin-bottom:16px;
+}
+.card h3{font-size:16px;font-weight:700;letter-spacing:-.005em}
+.card p{margin-top:8px;color:var(--muted);font-size:13.5px;line-height:1.55;flex:1}
+.tag{
+  align-self:flex-start;
+  margin-top:14px;
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--accent);
+  border:1px solid var(--accent-line);
+  padding:4px 9px;
+  border-radius:5px;
+}
+
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.why-item{padding-right:12px}
+.why-item .num{font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.04em}
+.why-item h4{margin-top:12px;font-size:16px;font-weight:700}
+.why-item p{margin-top:8px;color:var(--muted);font-size:13.5px;line-height:1.55}
+
+.news-strip{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  padding:24px 30px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--panel);
+}
+.news-strip .kicker{color:var(--accent);text-transform:uppercase;font-size:11px;font-weight:800;letter-spacing:.1em}
+.news-strip h3{margin-top:8px;font-size:19px;font-weight:700}
+.news-strip p{margin-top:6px;color:var(--muted);font-size:13.5px}
+
+footer{border-top:1px solid var(--line);padding:32px 0 40px}
+.footer-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-brand{display:flex;align-items:center;gap:10px}
+.footer-brand .brand-mark{width:32px;height:32px;font-size:15px}
+.footer-brand .brand-name{font-size:15px}
+.footer-copy{color:var(--muted);font-size:12.5px}
+.footer-links{display:flex;gap:22px;color:var(--muted);font-size:13px;font-weight:600}
+.footer-links a:hover{color:var(--text)}
+
+@media(max-width:900px){
+  .wrap{padding:0 20px}
+  .hero-grid{grid-template-columns:1fr}
+  .hero-visual{order:-1;aspect-ratio:16/10}
+  .grid{grid-template-columns:1fr 1fr}
+  .why-grid{grid-template-columns:1fr 1fr}
+  .nav-in{flex-wrap:wrap;height:auto;padding:14px 20px;gap:10px}
+  .nav-links{width:100%;gap:16px;overflow-x:auto}
 }
 @media(max-width:560px){
-  .bento{grid-template-columns:1fr}
-  .video-card{grid-column:auto}
+  .grid{grid-template-columns:1fr}
+  .why-grid{grid-template-columns:1fr}
+  .hero-stats{gap:24px}
+  .news-strip{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -281,9 +262,9 @@ footer{border-top:1px solid var(--line);padding:25px 0 37px;color:#9f94bd;font-s
       <a class="active" href="#">Home</a>
       <a href="#services">Services</a>
       <a href="/static/news.html">News</a>
-      <a href="#">Why Us</a>
-      <a href="#">Contact</a>
-      <a class="nav-cta" href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank">UGC Videos</a>
+      <a href="#why-us">Why Us</a>
+      <a href="/static/contact.html">Contact</a>
+      <a class="nav-cta" href="/order">Order a Video</a>
     </div>
   </div>
 </nav>
@@ -291,91 +272,162 @@ footer{border-top:1px solid var(--line);padding:25px 0 37px;color:#9f94bd;font-s
 <main>
   <section class="hero">
     <div class="wrap">
-      <div class="hero-head">
-        <div class="badge"><span class="dot"></span> AI for every part of your business</div>
-        <h1>Your business, on <span class="grad">AI autopilot.</span></h1>
-        <p class="lead">Videos, social, chatbots, automation — built for all.</p>
-      </div>
+      <div class="hero-grid">
+        <div>
+          <div class="badge"><span class="dot"></span> AI infrastructure for Indian businesses</div>
+          <h1>Run your business<br>on <span class="accent-text">AI autopilot.</span></h1>
+          <p class="lead">Video ads, social posting, WhatsApp support, and voice reception — built and managed for you, so you can focus on running the business.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/order">Order a Video Ad</a>
+            <a class="btn btn-secondary" href="/static/contact.html">Talk to Us</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><div class="num">24h</div><div class="label">Average delivery</div></div>
+            <div class="hero-stat"><div class="num">₹499</div><div class="label">Starting price</div></div>
+            <div class="hero-stat"><div class="num">24/7</div><div class="label">WhatsApp support</div></div>
+          </div>
+        </div>
 
-      <section class="bento" aria-label="Vishleshak services">
-        <a href="/static/ugc-landing.html" class="tile video-card" id="videoAdTile" style="cursor: pointer;">
-          <video id="videoAdPreview" src="/static/videos/jyoti-bags-video-branded-smooth-demo.mp4" muted loop playsinline preload="metadata"></video>
-          <div class="video-label">AI Video Ads</div>
+        <a href="/static/ugc-landing.html" class="hero-visual" id="videoAdTile">
+          <video id="videoAdPreview" src="https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc.mp4" muted loop playsinline preload="metadata"></video>
+          <div class="visual-label">Sample AI video ad</div>
           <button class="play" id="videoAdPlay" type="button" aria-label="Play AI video ad preview"></button>
-          <div class="video-copy">
+          <div class="visual-copy">
             <h3>AI Video Ads</h3>
-            <p>From Rs. 499, ready in minutes.</p>
+            <p>From product photo to platform-ready video, in minutes.</p>
           </div>
         </a>
+      </div>
+    </div>
+  </section>
 
-        <a href="https://vishleshak-ugc-production.up.railway.app/static/news.html" target="_blank" class="tile" style="cursor:pointer">
-          <div class="icon">&#128241;</div>
-          <h3>AI Social Studio</h3>
-          <p>Auto-post to Instagram & Facebook daily.</p>
-        </a>
-
-        <a href="https://vishleshak-ugc-production.up.railway.app/static/chatbot.html" target="_blank" class="tile" style="cursor: pointer;">
-          <span class="pill" style="background:#5b7cff;color:#fff">LIVE</span>
-          <div class="icon">&#128172;</div>
-          <h3>AI Chat Assistant</h3>
-          <p>WhatsApp bot, 24/7.</p>
-        </a>
-
-        <article class="tile stat">
-          <div class="num">24h</div>
-          <div class="caption">Average delivery</div>
-        </article>
-
-        <a href="https://vishleshak-ugc-production.up.railway.app/static/ai-reception.html" target="_blank" class="tile" style="cursor: pointer;">
-          <span class="pill" style="background:var(--teal)">LIVE</span>
-          <div class="icon">&#9742;</div>
-          <h3>AI Voice Reception</h3>
-          <p>Never miss a call.</p>
-        </a>
-
-        <article class="tile" id="services">
-          <span class="pill" style="background:#ffcf24">NEW</span>
-          <div class="icon">&#128240;</div>
-          <h3>AI News Engine</h3>
-          <p>Auto news blog + socials.</p>
-        </article>
-
-        <article class="tile">
-          <span class="pill" style="background:#ff9f43">NEW</span>
-          <div class="icon">&#9881;</div>
-          <h3>AI Automation</h3>
-          <p>Leads, payments, reminders.</p>
-        </article>
-
-        <a href="http://localhost:8001/academy_v2.html" target="_blank" class="tile" style="cursor:pointer">
-          <div class="icon">&#127979;</div>
-          <h3>Vishleshak Academy</h3>
-          <p>Finance through stories — free for everyone.</p>
-        </a>
-      </section>
-
-      <section class="news-card">
-        <div>
-          <div class="kicker">Vishleshak Market News</div>
-          <h3>India's business day in 10 headlines</h3>
-          <p>Twice daily, live demo of our automation.</p>
+  <section class="section" id="services">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Services</div>
+        <h2>Everything your business needs, in one place</h2>
+        <p>A single team handling video, social, support, and admin work with AI — so you don't need to hire five different specialists.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 9.5l4-2.5v10l-4-2.5"/></svg>
+          </div>
+          <h3>AI Video Ads</h3>
+          <p>Send one product photo, get a platform-ready video ad with voiceover — from ₹499, ready in minutes.</p>
+          <div class="tag">Live</div>
         </div>
-        <a class="btn btn-primary" href="/static/news.html">Read News -></a>
-      </section>
+        <a href="/static/news.html" class="card" style="cursor:pointer">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20M8 4v4"/></svg>
+          </div>
+          <h3>AI Social Studio</h3>
+          <p>Daily branded posts, auto-published to Instagram and Facebook — market updates, offers, and announcements.</p>
+          <div class="tag">Live</div>
+        </a>
+        <a href="/static/chatbot.html" class="card" style="cursor:pointer">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.5 8.5 0 0 1-12.36 7.58L3 20l1.08-4.5A8.5 8.5 0 1 1 21 11.5z"/></svg>
+          </div>
+          <h3>AI Chat Assistant</h3>
+          <p>A WhatsApp bot that answers customer questions, takes orders, and books appointments — 24 hours a day.</p>
+          <div class="tag">Live</div>
+        </a>
+        <a href="/static/ai-reception.html" class="card" style="cursor:pointer">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <h3>AI Voice Reception</h3>
+          <p>Never miss a call. An AI receptionist answers, books appointments, and passes on messages.</p>
+          <div class="tag">Live</div>
+        </a>
+        <div class="card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V5H6.5A2.5 2.5 0 0 0 4 7.5v12z"/><path d="M4 19.5V17"/><path d="M8 7h8M8 11h8"/></svg>
+          </div>
+          <h3>AI News Engine</h3>
+          <p>Automated market briefs and news roundups, published as a blog and pushed to social daily.</p>
+          <div class="tag">New</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <h3>AI Automation</h3>
+          <p>Lead capture, payment reminders, and follow-ups — quietly running in the background for your business.</p>
+          <div class="tag">New</div>
+        </div>
+        <a href="https://academy-vishleshak-production.up.railway.app/" target="_blank" class="card" style="cursor:pointer">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>
+          </div>
+          <h3>Vishleshak Academy</h3>
+          <p>Free financial literacy lessons for teenagers, told through stories — our community initiative.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="why-us" style="border-top:1px solid var(--line)">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Why Us</div>
+        <h2>Built for Indian small businesses, not enterprise budgets</h2>
+      </div>
+      <div class="why-grid">
+        <div class="why-item">
+          <div class="num">01</div>
+          <h4>Priced for SMBs</h4>
+          <p>Video ads from ₹499, not the ₹10,000+ agencies typically charge for a single shoot.</p>
+        </div>
+        <div class="why-item">
+          <div class="num">02</div>
+          <h4>WhatsApp-first</h4>
+          <p>Order, get updates, and receive your finished work over WhatsApp — no new app to learn.</p>
+        </div>
+        <div class="why-item">
+          <div class="num">03</div>
+          <h4>Fast turnaround</h4>
+          <p>Most video ads are delivered within 24 hours of approval, not weeks.</p>
+        </div>
+        <div class="why-item">
+          <div class="num">04</div>
+          <h4>See it working</h4>
+          <p>Our own News and Social channels run on the same automation we sell — check the live feed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="news-strip">
+        <div>
+          <div class="kicker">Vishleshak Market Brief</div>
+          <h3>India's business day in 10 headlines</h3>
+          <p>Twice daily, live demo of our automation — see it running in real time.</p>
+        </div>
+        <a class="btn btn-primary" href="/static/news.html">Read the Brief</a>
+      </div>
     </div>
   </section>
 </main>
 
 <footer>
-  <div class="wrap">
+  <div class="wrap footer-in">
     <div class="footer-brand">
       <div class="brand-mark">V</div>
       <div>
-        <div class="brand-name">Vishleshak</div>
-        <div class="brand-sub">ANALYSE. CREATE. AUTOMATE.</div>
+        <div class="brand-name" style="font-weight:800">Vishleshak</div>
+        <div class="footer-copy">AI for Indian business</div>
       </div>
     </div>
-    <div>&copy; 2026 Vishleshak - AI for Indian business.</div>
+    <div class="footer-links">
+      <a href="/static/contact.html">Contact</a>
+      <a href="/static/news.html">News</a>
+      <a href="/order">Order</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 Vishleshak</div>
   </div>
 </footer>
 
@@ -384,7 +436,8 @@ const videoAdTile = document.getElementById("videoAdTile");
 const videoAdPreview = document.getElementById("videoAdPreview");
 const videoAdPlay = document.getElementById("videoAdPlay");
 
-function playVideoAdPreview(){
+function playVideoAdPreview(e){
+  e.preventDefault();
   if (!videoAdPreview || !videoAdTile) return;
   videoAdPreview.muted = false;
   videoAdPreview.play().then(() => {
