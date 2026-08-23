@@ -1,788 +1,203 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vishleshak News | Daily Market Brief</title>
+<title>Market Briefs — Vishleshak</title>
 <style>
-:root{
-  --bg:#f6f2fb;
-  --ink:#211639;
-  --muted:#756985;
-  --purple:#8756f5;
-  --deep:#2a174e;
-  --line:#ded6ea;
-  --panel:#fff;
-  --green:#12a474;
-  --red:#a3191f;
-  --gold:#f5bd11;
-  --blue:#225fa5;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  min-height:100vh;
-  color:var(--ink);
-  font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
-  background:linear-gradient(180deg,#f7f3fc,#fff);
-}
-button,input,select{font:inherit}
-button{cursor:pointer}
-a{color:inherit;text-decoration:none}
-.wrap{width:min(1320px,calc(100% - 56px));margin:0 auto}
-.nav{background:var(--deep);color:#fff}
-.nav-in{
-  min-height:78px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:24px;
-}
-.brand{display:flex;align-items:center;gap:12px}
-.mark{
-  width:44px;height:44px;border-radius:13px;
-  display:grid;place-items:center;
-  background:linear-gradient(135deg,#a78bfa,#7c3aed);
-  font-size:24px;font-weight:950;
-}
-.brand strong{display:block;font-size:25px;line-height:1}
-.brand span{display:block;margin-top:3px;color:#b9acd9;font-size:12px}
-.links{display:flex;align-items:center;gap:34px;color:#c9bddf;font-size:16px}
-.links a.active,.links a:hover{color:#fff}
-.hero{padding:34px 0 20px}
-.crumb{color:#9186a8;font-size:15px}
-.hero-grid{
-  margin-top:20px;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 330px;
-  gap:32px;
-  align-items:end;
-}
-.eyebrow{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 15px;
-  border-radius:999px;
-  background:#ede6ff;
-  color:var(--purple);
-  font-size:13px;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
-h1{
-  max-width:760px;
-  margin-top:18px;
-  font-size:clamp(38px,4.2vw,58px);
-  line-height:1.04;
-  letter-spacing:-.03em;
-}
-.hero p{max-width:720px;margin-top:16px;color:#5f566f;font-size:18px;line-height:1.55}
-.schedule{
-  padding:20px;
-  border-radius:20px;
-  background:#fff;
-  border:1px solid var(--line);
-  box-shadow:0 20px 50px rgba(43,27,76,.08);
-}
-.schedule b{font-size:19px}
-.schedule div{margin-top:12px;display:grid;gap:9px;color:#5f566f;font-size:15px}
-.tag{
-  display:inline-flex;
-  align-items:center;
-  width:max-content;
-  padding:7px 11px;
-  border-radius:999px;
-  background:#f7f1df;
-  color:#7a5600;
-  font-size:12px;
-  font-weight:900;
-}
-.news-layout{
-  display:grid;
-  grid-template-columns:250px minmax(0,1fr);
-  gap:28px;
-  align-items:start;
-  padding:10px 0 78px;
-}
-.archive{
-  position:sticky;
-  top:18px;
-  max-height:calc(100vh - 36px);
-  overflow:auto;
-  padding:16px;
-  border-radius:20px;
-  background:#fff;
-  border:1px solid var(--line);
-  box-shadow:0 16px 42px rgba(43,27,76,.07);
-}
-.archive-top{
-  display:flex;
-  align-items:flex-start;
-  flex-direction:column;
-  gap:16px;
-  margin-bottom:16px;
-}
-.archive-title h2{font-size:24px;line-height:1.1}
-.archive-title p{margin-top:5px;color:var(--muted);font-size:15px}
-.month-controls{
-  width:100%;
-  display:grid;
-  grid-template-columns:1fr;
-  gap:10px;
-  align-items:center;
-}
-.select{
-  width:100%;
-  min-height:42px;
-  border:1px solid var(--line);
-  border-radius:14px;
-  background:#faf8ff;
-  color:var(--ink);
-  padding:0 12px;
-  font-weight:800;
-}
-.today-btn{
-  width:100%;
-  min-height:42px;
-  border:0;
-  border-radius:14px;
-  background:var(--deep);
-  color:#fff;
-  padding:0 14px;
-  font-weight:900;
-}
-.date-strip{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:8px;
-}
-.date-btn{
-  min-height:42px;
-  width:100%;
-  border:1px solid #e8e1f1;
-  border-radius:13px;
-  background:#faf8ff;
-  color:#4e425f;
-  font-weight:900;
-  text-align:left;
-  padding:0 14px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-.date-btn span{font-size:17px}
-.date-btn small{color:#9a90aa;font-size:11px;font-weight:900;text-transform:uppercase}
-.date-btn.active small{color:rgba(255,255,255,.8)}
-.date-btn:hover{border-color:#bda7f8;color:#5b2fe0}
-.date-btn.active{
-  background:linear-gradient(135deg,#8b5cf6,#6d28d9);
-  border-color:#7c3aed;
-  color:#fff;
-  box-shadow:0 10px 24px rgba(124,58,237,.22);
-}
-.date-btn.today:not(.active){border-color:#12a474;color:#0f7a56;background:#ecfdf5}
-.date-btn.future{opacity:.42}
-.day{
-  min-width:0;
-}
-.day-head{
-  display:flex;
-  align-items:end;
-  justify-content:space-between;
-  gap:24px;
-  margin-bottom:18px;
-}
-.day-head h2{font-size:34px;line-height:1.05}
-.day-head p{margin-top:8px;color:var(--muted);font-size:16px}
-.status-pill{
-  display:inline-flex;
-  align-items:center;
-  min-height:38px;
-  padding:0 14px;
-  border-radius:999px;
-  background:#dcfce7;
-  color:#166534;
-  font-size:13px;
-  font-weight:900;
-  white-space:nowrap;
-}
-.status-pill.pending{background:#f7f1df;color:#7a5600}
-.status-pill.empty{background:#f3f0f8;color:#756985}
-.summary-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:18px;
-}
-.summary-card{
-  min-height:340px;
-  display:flex;
-  flex-direction:column;
-  border:1px solid var(--line);
-  border-radius:22px;
-  background:#fff;
-  box-shadow:0 16px 42px rgba(43,27,76,.07);
-  overflow:hidden;
-}
-.summary-top{
-  min-height:116px;
-  padding:20px;
-  color:#fff;
-  background:linear-gradient(155deg,#0b1630,#18385a);
-}
-.summary-card[data-type="morning"] .summary-top{background:linear-gradient(155deg,#052e25,#0f644c)}
-.summary-card[data-type="close"] .summary-top{background:linear-gradient(155deg,#102345,#1f4b78)}
-.summary-card[data-type="takeaway"] .summary-top{background:linear-gradient(155deg,#3d0708,#7c181d)}
-.kicker{
-  color:var(--gold);
-  font-size:12px;
-  font-weight:950;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-}
-.summary-top h3{margin-top:10px;font-size:27px;line-height:1.08;letter-spacing:-.02em}
-.summary-body{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  padding:18px;
-}
-.meta{color:#9186a8;font-size:13px}
-.summary{margin-top:10px;color:#584f67;font-size:15px;line-height:1.5}
-.mini-list{display:grid;gap:9px;margin-top:15px}
-.mini-item{
-  display:grid;
-  grid-template-columns:28px 1fr;
-  gap:8px;
-  color:#4d415f;
-  font-size:13.5px;
-  line-height:1.35;
-}
-.mini-item span{color:var(--gold);font-weight:950}
-.open-detail{
-  width:100%;
-  min-height:42px;
-  margin-top:auto;
-  border:0;
-  border-radius:14px;
-  background:#f0eaff;
-  color:#6938d4;
-  font-weight:950;
-}
-.open-detail:hover{background:#e2d7ff}
-.detail-panel{
-  margin-top:20px;
-  border:1px solid var(--line);
-  border-radius:24px;
-  background:#fff;
-  box-shadow:0 16px 42px rgba(43,27,76,.07);
-  overflow:hidden;
-}
-.detail-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:20px;
-  padding:24px;
-  color:#fff;
-  background:linear-gradient(155deg,#2a174e,#552aa5);
-}
-.detail-head h3{margin-top:8px;font-size:34px;line-height:1.08}
-.detail-close{
-  width:42px;
-  height:42px;
-  border:1px solid rgba(255,255,255,.25);
-  border-radius:50%;
-  background:rgba(255,255,255,.12);
-  color:#fff;
-  font-size:24px;
-  line-height:1;
-}
-.detail-body{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 330px;
-  gap:22px;
-  padding:24px;
-}
-.detail-copy{color:#504660;font-size:17px;line-height:1.62}
-.detail-copy p+p{margin-top:14px}
-.detail-list{
-  margin-top:18px;
-  display:grid;
-  gap:12px;
-}
-.detail-row{
-  display:grid;
-  grid-template-columns:42px 1fr;
-  gap:12px;
-  padding-bottom:12px;
-  border-bottom:1px solid #ece6f4;
-}
-.detail-row:last-child{border-bottom:0}
-.num{color:var(--gold);font-size:24px;font-weight:950;line-height:1}
-.detail-row b{display:block;font-size:18px;line-height:1.25}
-.detail-row span{display:block;margin-top:5px;color:#776b8a;font-size:14px;line-height:1.45}
-.detail-side{
-  padding:18px;
-  border-radius:18px;
-  background:#faf8ff;
-  border:1px solid #ece6f4;
-  align-self:start;
-}
-.detail-side h4{font-size:18px}
-.caption-box{
-  margin-top:12px;
-  padding:14px;
-  border-radius:16px;
-  background:#f3eefc;
-  color:#48375f;
-  font-size:14px;
-  line-height:1.55;
-}
-.source-links{display:grid;gap:10px;margin-top:14px}
-.source-links a{
-  display:block;
-  padding:12px;
-  border-radius:14px;
-  background:#fff;
-  border:1px solid #ece6f4;
-  color:#6d28d9;
-  font-size:13px;
-  font-weight:900;
-}
-.footer{background:var(--deep);color:#c9bddf;padding:24px 0;font-size:15px}
-@media(max-width:1180px){
-  .news-layout{grid-template-columns:230px minmax(0,1fr)}
-  .hero-grid,.detail-body{grid-template-columns:1fr}
-}
-@media(max-width:980px){
-  .summary-grid{grid-template-columns:1fr}
-}
-@media(max-width:720px){
-  .wrap{width:min(100% - 30px,1500px)}
-  .nav-in,.day-head{align-items:flex-start;flex-direction:column}
-  .links{gap:18px;overflow-x:auto;width:100%;padding-bottom:4px}
-  .hero{padding-top:30px}
-  .news-layout{display:block;padding-bottom:60px}
-  .archive{position:static;max-height:none;margin-bottom:22px}
-  .summary-grid{grid-template-columns:1fr}
-  .month-controls{width:100%;display:grid;grid-template-columns:1fr 1fr}
-  .today-btn{grid-column:1 / -1}
-  .date-strip{grid-template-columns:1fr}
+:root { --bg: #0a0e27; --blue: #3b82f6; --gold: #fbbf24; --text: #ffffff; --muted: #cbd5e1; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif; }
+nav { position: sticky; top: 0; z-index: 100; background: rgba(10,14,39,.92); border-bottom: 1px solid rgba(255,255,255,.08); }
+.nav-wrap { max-width: 1200px; margin: 0 auto; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; }
+.logo { font-size: 22px; font-weight: 900; }
+.logo .sub { font-size: 9px; color: var(--gold); margin-top: 2px; }
+.nav-links { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
+.nav-links a { color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
+.nav-links a:hover, .nav-links a.active { color: var(--gold); }
+.nav-cta { background: linear-gradient(135deg, var(--blue), #2563eb); color: white !important; padding: 10px 22px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+.news-section { padding: 30px 40px; max-width: 1200px; margin: 0 auto; }
+.section-header { margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+.date-nav-header { display: flex; gap: 12px; align-items: center; }
+.date-nav-header #currentDate { color: var(--gold); font-weight: 700; font-size: 13px; min-width: 110px; text-align: center; }
+.section-label { color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.tab-switcher { display: flex; gap: 24px; margin-bottom: 20px; }
+.tab { padding: 0; background: transparent; border: none; color: var(--muted); font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; position: relative; transition: .2s; }
+.tab::after { content: ''; position: absolute; bottom: -6px; left: 0; width: 0; height: 2px; background: var(--gold); transition: width .2s; }
+.tab.active { color: var(--gold); }
+.tab.active::after { width: 100%; }
+.tab:hover { color: var(--gold); }
+.summary-btn { background: linear-gradient(135deg, var(--gold), #f59e0b); color: var(--bg) !important; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: .2s; cursor: pointer; border: none; }
+.summary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(251,191,36,.3); }
+.section-title { font-size: 32px; font-weight: 900; margin-bottom: 16px; }
+.date-nav-btn { padding: 6px 12px; background: transparent; border: 1px solid rgba(255,255,255,.2); color: var(--gold); font-weight: 700; font-size: 12px; cursor: pointer; border-radius: 6px; transition: .2s; }
+.date-nav-btn:hover { background: var(--gold); color: var(--bg); }
+.briefs-timeline { display: flex; gap: 28px; margin-bottom: 20px; position: relative; align-items: flex-start; }
+.timeline-bar { width: 140px; display: flex; flex-direction: column; gap: 0; }
+.timeline-header { color: var(--gold); font-size: 12px; font-weight: 700; white-space: nowrap; line-height: 1.3; padding: 16px 0; height: 90px; display: flex; flex-direction: column; justify-content: center; }
+.briefs-list { flex: 1; display: flex; flex-direction: column; gap: 0; }
+.brief-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 16px; transition: .2s; height: 90px; display: flex; flex-direction: column; justify-content: space-between; }
+.brief-card:hover { background: rgba(255,255,255,.08); border-color: rgba(59,130,246,.4); }
+.brief-time { font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase; margin-bottom: 6px; }
+.brief-title { font-size: 15px; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+.brief-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+.brief-link { color: var(--gold); font-size: 12px; font-weight: 700; text-decoration: none; }
+.brief-link:hover { text-decoration: underline; }
+.modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.modal.active { display: flex; }
+.modal-content { background: var(--bg); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 40px; max-width: 600px; width: 100%; text-align: center; position: relative; }
+.modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--gold); font-size: 28px; cursor: pointer; }
+.modal-image { width: 100%; max-height: 400px; border-radius: 12px; margin-bottom: 24px; background: rgba(255,255,255,.05); display: flex; align-items: center; justify-content: center; min-height: 200px; color: var(--muted); font-size: 14px; }
+.modal-social { display: flex; gap: 16px; justify-content: center; }
+.modal-social-btn { padding: 12px 24px; border: 1px solid var(--gold); color: var(--gold); background: transparent; border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: .2s; }
+.modal-social-btn:hover { background: var(--gold); color: var(--bg); }
+footer { border-top: 1px solid rgba(255,255,255,.08); padding: 40px; text-align: center; color: var(--muted); font-size: 13px; }
+@media (max-width: 768px) {
+  .nav-wrap { flex-direction: column; gap: 16px; }
+  .nav-links { width: 100%; flex-wrap: wrap; gap: 12px; }
+  .news-section { padding: 40px 20px; }
+  .section-title { font-size: 32px; }
+  .briefs-timeline { gap: 20px; }
 }
 </style>
 </head>
 <body>
-<nav class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="/static/vishleshak_home.html">
-      <div class="mark">V</div>
-      <div><strong>Vishleshak</strong><span>AI Content Studio</span></div>
-    </a>
-    <div class="links">
-      <a href="/static/vishleshak_home.html">Home</a>
-      <a href="/static/vishleshak_home.html#services">Services</a>
-      <a href="/static/vishleshak_home.html#samples">Samples</a>
-      <a class="active" href="/static/news.html">News</a>
-      <a href="/static/vishleshak_home.html#contact">Contact</a>
+<nav>
+  <div class="nav-wrap">
+    <div class="logo">Vishleshak<div class="sub">INVESTMENT RESEARCH</div></div>
+    <div class="nav-links">
+      <a href="index.html">Main</a>
+      <a href="research.html" target="_blank">Research</a>
+      <a href="news.html" class="active">News</a>
+      <a href="https://www.facebook.com/profile.php?id=61590366341243" target="_blank" style="display: flex; align-items: center; gap: 6px; color: var(--gold); font-size: 14px; text-decoration: none; font-weight: 700; padding: 6px 12px; border: 1px solid var(--gold); border-radius: 6px;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--bg)';" onmouseout="this.style.background='none'; this.style.color='var(--gold)';">f Facebook</a>
+      <a href="https://www.instagram.com/vishleshak.market.brief/" target="_blank" style="display: flex; align-items: center; gap: 6px; color: var(--gold); font-size: 14px; text-decoration: none; font-weight: 700; padding: 6px 12px; border: 1px solid var(--gold); border-radius: 6px;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--bg)';" onmouseout="this.style.background='none'; this.style.color='var(--gold)';">📷 Instagram</a>
+      <a href="https://wa.me/919953910987" target="_blank" class="nav-cta">Inquire Now</a>
     </div>
   </div>
 </nav>
-
-<main class="wrap">
-  <section class="hero">
-    <div class="crumb">Home / News / Daily Markets</div>
-    <div class="hero-grid">
-      <div>
-        <div class="eyebrow"><span class="dot"></span> Vishleshak Daily Markets</div>
-        <h1>Daily market archive, grouped by date.</h1>
-        <p>Select year, month, and date. Each trading day opens with four summarized sections, and each section expands into details on the same page.</p>
+<section class="news-section">
+  <div class="section-header">
+    <div>
+      <span class="section-label">Daily Market Intelligence</span>
+      <div class="tab-switcher">
+        <a href="news.html" class="tab active">Market Briefs</a>
+        <a href="research-report.html" class="tab">Daily Summary Report</a>
       </div>
-      <aside class="schedule">
-        <span class="tag">Daily format</span>
-        <div>
-          <b>Four sections per date</b>
-          <span>9 AM - pre-market watchlist</span>
-          <span>Top 10 - business headlines</span>
-          <span>4 PM - close + top gainers/losers</span>
-          <span>Takeaway - five simple signals</span>
-        </div>
-      </aside>
+      <h1 class="section-title"><img src="news-briefs-icon.svg" width="32" height="32" alt="News" style="vertical-align: middle; margin-right: 12px;">Market Briefs</h1>
     </div>
-  </section>
-
-  <div class="news-layout">
-    <aside class="archive" aria-label="News archive selector">
-      <div class="archive-top">
-        <div class="archive-title">
-          <h2>News Archive</h2>
-          <p>Today is selected automatically. Click any previous date to review that day.</p>
-        </div>
-        <div class="month-controls">
-          <select id="year-select" class="select" aria-label="Select year"></select>
-          <select id="month-select" class="select" aria-label="Select month"></select>
-          <button id="today-btn" class="today-btn" type="button">Today</button>
-        </div>
-      </div>
-      <div id="date-strip" class="date-strip"></div>
-    </aside>
-
-    <section class="day">
-      <div class="day-head">
-        <div>
-          <h2 id="selected-date-title">4 June 2026</h2>
-          <p id="selected-date-subtitle">Vishleshak Market Brief for the selected trading day.</p>
-        </div>
-        <span id="feed-status" class="status-pill pending">Loading daily brief</span>
-      </div>
-
-      <div id="summary-grid" class="summary-grid"></div>
-      <section id="detail-panel" class="detail-panel" hidden></section>
-    </section>
+    <div class="date-nav-header">
+      <button class="date-nav-btn" onclick="previousDate()">← Prev</button>
+      <span id="currentDate">June 18, 2026</span>
+      <button class="date-nav-btn" onclick="nextDate()">Next →</button>
+      <a href="research-report.html" class="summary-btn">📊 View Daily Summary</a>
+    </div>
   </div>
-</main>
+  <div class="briefs-timeline">
+    <div class="timeline-bar">
+      <div class="timeline-header">Pre-Market Brief<br>9:00 AM</div>
+      <div class="timeline-header">Closing Bell<br>4:00 PM</div>
+      <div class="timeline-header">Gainers & Losers<br>4:15 PM</div>
+      <div class="timeline-header">Summary Sheet<br>4:30 PM</div>
+      <div class="timeline-header">Tomorrow's Watchlist<br>6:00 PM</div>
+    </div>
+    <div class="briefs-list">
+      <div class="brief-card">
+        <div class="brief-title">Pre-Market Brief</div>
+        <div class="brief-desc">Nifty 50 & Sensex outlook, global banner, gold/silver prices, AI-curated watchlist insights.</div>
+        <a href="#" class="brief-link" onclick="openModal(event, 'Pre-Market Brief')">View Brief →</a>
+      </div>
+      <div class="brief-card">
+        <div class="brief-title">Closing Bell</div>
+        <div class="brief-desc">Market recap with closing indices, sector leaders & laggards, top 7 market-moving news headlines.</div>
+        <a href="#" class="brief-link" onclick="openModal(event, 'Closing Bell')">View Brief →</a>
+      </div>
+      <div class="brief-card">
+        <div class="brief-title">Gainers & Losers</div>
+        <div class="brief-desc">Top 5 gainers in green, top 5 losers in red. Real NSE data with color-coded performance metrics.</div>
+        <a href="#" class="brief-link" onclick="openModal(event, 'Gainers & Losers')">View Brief →</a>
+      </div>
+      <div class="brief-card">
+        <div class="brief-title">Summary Sheet</div>
+        <div class="brief-desc">Complete market snapshot: Nifty, Sensex, Gold, Silver, USD-INR with percentage changes.</div>
+        <a href="#" class="brief-link" onclick="openModal(event, 'Summary Sheet')">View Brief →</a>
+      </div>
+      <div class="brief-card">
+        <div class="brief-title">Tomorrow's Watchlist</div>
+        <div class="brief-desc">Nifty levels, sector watch, 3 recommended stocks, global market cues for next-day trading.</div>
+        <a href="#" class="brief-link" onclick="openModal(event, 'Tomorrow''s Watchlist')">View Brief →</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-<footer class="footer">
-  <div class="wrap">Vishleshak - AI-generated market news, updated twice daily.</div>
+<!-- MODAL -->
+<div class="modal" id="briefModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-image" id="modalImage">
+      <img src="" alt="Brief" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+    </div>
+    <div class="modal-social">
+      <a href="https://www.instagram.com/vishleshak.market.brief/" target="_blank" class="modal-social-btn">📷 Share on Instagram</a>
+      <a href="https://www.facebook.com/profile.php?id=61590366341243" target="_blank" class="modal-social-btn">f Share on Facebook</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2026 Vishleshak — Investment Research & Market Intelligence for Indian Finance.</p>
 </footer>
 
 <script>
-(function(){
-  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const shortMonths = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const sectionOrder = ["morning","top10","close","takeaway"];
-  const yearSelect = document.getElementById("year-select");
-  const monthSelect = document.getElementById("month-select");
-  const todayBtn = document.getElementById("today-btn");
-  const dateStrip = document.getElementById("date-strip");
-  const titleEl = document.getElementById("selected-date-title");
-  const subtitleEl = document.getElementById("selected-date-subtitle");
-  const statusEl = document.getElementById("feed-status");
-  const summaryGrid = document.getElementById("summary-grid");
-  const detailPanel = document.getElementById("detail-panel");
+let currentDate = new Date(2026, 5, 18);
 
-  const today = new Date();
-  const state = {
-    year: today.getFullYear(),
-    month: today.getMonth(),
-    day: today.getDate(),
-    liveItems: [],
-    morningBrief: null,
-    closeBrief: null
-  };
+function updateDateDisplay() {
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('currentDate').textContent = currentDate.toLocaleDateString('en-US', options);
+}
 
-  const archive = {
-    "2026-06-03": {
-      source: "Sample archive",
-      sections: {
-        morning: {
-          title: "3 things smart money watched before 10 AM",
-          summary: "RBI cues, IT support, and heavyweight earnings shaped the morning watchlist.",
-          bullets: ["RBI policy at 3 PM kept banking in focus.", "IT names tested key support zones.", "Coal India results were watched for index weight impact.", "Crude and rupee cues shaped energy and import-sensitive names.", "Global market mood stayed important before the first hour."],
-          detail: "The morning setup was less about chasing the open and more about watching where institutional money reacted first. Banking, IT, and large earnings names gave the clearest signals for the day.",
-          caption: "Vishleshak Market Brief - 9 AM watchlist. RBI, IT support, and results in focus. Educational only."
-        },
-        top10: {
-          title: "India's business day in 10 headlines",
-          summary: "A compact headline stack covering market, policy, earnings, forex, commodities, auto, and energy.",
-          bullets: ["Reliance crosses Rs.20 lakh crore market cap.", "Sensex closes +1.5%, Nifty tops 23,400.", "RBI holds repo rate at 6.5% for 8th time.", "TCS bags $1.2 billion European deal.", "Zomato Q4 profit triples YoY.", "Rupee strengthens to 83.1 vs US dollar.", "Gold crosses Rs.74,000 per 10 grams.", "Tata Motors EV sales jump 40%.", "Adani Green commissions 2 GW solar.", "Infosys raises FY27 revenue guidance."],
-          detail: "The top 10 format is built for quick scanning. It gives social viewers a reason to save the post and website visitors a single place to understand the broad business day.",
-          caption: "Top 10 - Business Today by Vishleshak. Save this for a quick daily market scan."
-        },
-        close: {
-          title: "Today's winners made money for one reason",
-          summary: "Banks, energy, and autos led the green close while market breadth improved.",
-          bullets: ["Top 5 gainers: Banking leaders, energy majors, auto names, PSU pockets, select consumer names.", "Top 5 losers: Weak IT pockets, metal laggards, high-beta midcaps, select realty, profit-booked defensives.", "Index mood: Sensex and Nifty closed with positive bias.", "Sector mood: Banking and energy carried the session.", "Breadth check: The close looked stronger where participation widened."],
-          detail: "The useful close was sector rotation. Money moved into leaders with clearer earnings or macro support, while weaker pockets lagged. That makes tomorrow's watchlist easier to build.",
-          caption: "Vishleshak Market Brief - 4 PM close. Winners were not random; sector rotation did the work."
-        },
-        takeaway: {
-          title: "Strength had legs, but selectivity mattered",
-          summary: "The market was green, but leadership was concentrated in sectors with stronger cues.",
-          bullets: ["What moved: Banking and energy.", "What held: Large-cap leaders.", "What lagged: Select IT and metals.", "What changed: Money rotated toward stronger earnings visibility.", "What to watch: Whether breadth follows tomorrow."],
-          detail: "A strong day is more useful when we ask where the strength came from. If leadership broadens, the rally looks healthier. If it stays narrow, the next session needs caution.",
-          caption: "The takeaway: follow rotation, not noise. Educational only. Not investment advice."
-        }
-      }
-    },
-    "2026-06-04": {
-      source: "Live feed",
-      sections: {}
-    }
-  };
-
-  function pad(num){ return String(num).padStart(2, "0"); }
-  function keyFor(year, month, day){ return year + "-" + pad(month + 1) + "-" + pad(day); }
-  function isToday(year, month, day){ return year === today.getFullYear() && month === today.getMonth() && day === today.getDate(); }
-  function isFuture(year, month, day){
-    const selected = new Date(year, month, day);
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    return selected.getTime() > todayStart.getTime();
+function previousDate() {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(currentDate.getDate() - 7);
+  if (currentDate > sevenDaysAgo) {
+    currentDate.setDate(currentDate.getDate() - 1);
+    updateDateDisplay();
   }
-  function daysInMonth(year, month){ return new Date(year, month + 1, 0).getDate(); }
-  function dateLabel(year, month, day){ return day + " " + monthNames[month] + " " + year; }
-  function cleanTitle(text){ return String(text || "").replace(/\s+-\s+[^-]+$/, "").trim(); }
-  function snippet(text, max){
-    const clean = cleanTitle(text);
-    return clean.length > max ? clean.slice(0, max - 1).trim() + "..." : clean;
-  }
-  function setStatus(text, kind){
-    statusEl.textContent = text;
-    statusEl.className = "status-pill" + (kind ? " " + kind : "");
-  }
+}
 
-  function setupSelectors(){
-    const startYear = today.getFullYear() - 2;
-    const endYear = today.getFullYear();
-    for (let year = endYear; year >= startYear; year--) {
-      const opt = document.createElement("option");
-      opt.value = String(year);
-      opt.textContent = String(year);
-      yearSelect.appendChild(opt);
-    }
-    monthNames.forEach((name, index) => {
-      const opt = document.createElement("option");
-      opt.value = String(index);
-      opt.textContent = name;
-      monthSelect.appendChild(opt);
-    });
-    yearSelect.value = String(state.year);
-    monthSelect.value = String(state.month);
+function nextDate() {
+  const today = new Date(2026, 5, 18);
+  if (currentDate < today) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    updateDateDisplay();
   }
+}
 
-  function renderDates(){
-    dateStrip.innerHTML = "";
-    const max = daysInMonth(state.year, state.month);
-    for (let day = 1; day <= max; day++) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "date-btn";
-      btn.innerHTML = '<span>' + String(day) + '</span><small>' + shortMonths[state.month] + '</small>';
-      btn.setAttribute("aria-label", dateLabel(state.year, state.month, day));
-      if (day === state.day) btn.classList.add("active");
-      if (isToday(state.year, state.month, day)) btn.classList.add("today");
-      if (isFuture(state.year, state.month, day)) btn.classList.add("future");
-      btn.addEventListener("click", () => {
-        state.day = day;
-        renderPage();
-      });
-      dateStrip.appendChild(btn);
-    }
-  }
+const briefImages = {
+  'Pre-Market Brief': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzBhMGUyNyIvPjxyZWN0IHdpZHRoPSI2MDAiIGhlaWdodD0iNjAiIGZpbGw9IiMxZTNhOGEiLz48dGV4dCB4PSI0MCIgeT0iNDUiIGZvbnQtc2l6ZT0iMjgiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmYmJmMjQiIGZvbnQtZmFtaWx5PSJJbnRlciI+UFJFLU1BUktFVCBCUklFRjwvdGV4dD48dGV4dCB4PSI0MCIgeT0iMTMwIiBmb250LXNpemU9IjE4IiBmaWxsPSIjY2JkNWUxIiBmb250LWZhbWlseT0iSW50ZXIiPk5pZnR5IDUwPC90ZXh0Pjx0ZXh0IHg9IjQwIiB5PSIxNjAiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNmZmZmZmYiIGZvbnQtZmFtaWx5PSJJbnRlciI+MjMsNDUwLjUwPC90ZXh0Pjx0ZXh0IHg9IjQwIiB5PSIyMDUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiMxMGI5ODEiIGZvbnQtZmFtaWx5PSJJbnRlciI+K08uNzUlIHwgR29sZDogOTk3IC8gU2lsdmVyOiA0Mi4yNTwvdGV4dD48dGV4dCB4PSI0MCIgeT0iMjcwIiBmb250LXNpemU9IjE0IiBmaWxsPSIjY2JkNWUxIiBmb250LWZhbWlseT0iSW50ZXIiPkdsb2JhbCBNYXJrZXRzOiBTJlBANTAw4pCiIHwgTmFzZGFxOiAxOCw5MDAgfCBEQVg6IDE4LDcwMDwvdGV4dD48dGV4dCB4PSI0MCIgeT0iMzIwIiBmb250LXNpemU9IjE0IiBmaWxsPSIjY2JkNWUxIiBmb250LWZhbWlseT0iSW50ZXIiPkluZGlhIFZJWDogMTkuNSB8IFVTRy1JTlI6IDgzLjU1IHwgQWV4IGphdCAKV2VkbmVzZGF5wqDSh5cgMzBcbiAxMjwyNCg0WzANCjwvdGV4dD48dGV4dCB4PSI0MCIgeT0iMzc1IiBmb250LXNpemU9IjExIiBmaWxsPSIjY2JkNWUxIiBmb250LWZhbWlseT0iSW50ZXIiIGZvbnQtc3R5bGU9Iml0YWxpYyI+VmlzaGxlc2hhaiBNYXJrZXQgQnJpZWYgfCBKdW5lIDE4LCAyMDI2PC90ZXh0Pjwvc3ZnPg==',
+  'Closing Bell': `data:image/svg+xml,%3Csvg width='600' height='700' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='700' fill='%234c1d95'/%3E%3Crect width='600' height='80' fill='%233b0764'/%3E%3Ctext x='30' y='25' font-size='12' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EVishleshak Market Brief%3C/text%3E%3Ctext x='30' y='42' font-size='11' fill='%23cbd5e1' font-family='Inter'%3EAI-powered daily market intelligence%3C/text%3E%3Ctext x='490' y='35' font-size='12' fill='%23a78bfa' font-weight='600' font-family='Inter' text-anchor='end'%3E4:00 PM %E2%80%A2 18 JUN 2026%3C/text%3E%3Ctext x='30' y='130' font-size='42' fill='%23ffffff' font-weight='900' font-family='Inter'%3EClosing Market Summary%3C/text%3E%3Cline x1='30' y1='145' x2='200' y2='145' stroke='%23fbbf24' stroke-width='3'/%3E%3Ctext x='30' y='190' font-size='14' fill='%23e0e7ff' font-family='Inter'%3E1. Sensex: 77,245 (+544 pts) %7C Nifty: 23,489 (+125)%3C/text%3E%3Ctext x='30' y='220' font-size='14' fill='%23e0e7ff' font-family='Inter'%3E2. Dalal Street Rally: Autos, IT gain %7C Banks mixed%3C/text%3E%3Ctext x='30' y='250' font-size='14' fill='%23e0e7ff' font-family='Inter'%3E3. Top Gainers: Tata Motors, HDFC Bank, Reliance%3C/text%3E%3Ctext x='30' y='280' font-size='14' fill='%23e0e7ff' font-family='Inter'%3E4. VIX: 17.5 (Normal volatility) %7C FII Inflow: %E2%82%B94,200Cr%3C/text%3E%3Ctext x='30' y='310' font-size='14' fill='%23e0e7ff' font-family='Inter'%3E5. Volume: 45%25 above avg %7C Healthcare weakness%3C/text%3E%3Ctext x='30' y='360' font-size='13' fill='%2310b981' font-weight='600' font-family='Inter'%3E%E2%9C%93 Bullish Close %7C Watch: Fed decision tomorrow%3C/text%3E%3Ctext x='30' y='590' font-size='13' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EFull brief %E2%86%92 vishleshak.in/news%3C/text%3E%3Ctext x='30' y='660' font-size='11' fill='%23888' font-style='italic' font-family='Inter'%3E@vishleshak.market.brief %E2%80%A2 Educational only, not investment advice%3C/text%3E%3C/svg%3E`,
+  'Gainers & Losers': `data:image/svg+xml,%3Csvg width='600' height='700' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='700' fill='%234c1d95'/%3E%3Crect width='600' height='80' fill='%233b0764'/%3E%3Ctext x='30' y='25' font-size='12' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EVishleshak Market Brief%3C/text%3E%3Ctext x='30' y='42' font-size='11' fill='%23cbd5e1' font-family='Inter'%3EAI-powered daily market intelligence%3C/text%3E%3Ctext x='490' y='35' font-size='12' fill='%23a78bfa' font-weight='600' font-family='Inter' text-anchor='end'%3E4:15 PM %E2%80%A2 18 JUN 2026%3C/text%3E%3Ctext x='30' y='130' font-size='42' fill='%23ffffff' font-weight='900' font-family='Inter'%3EGainers %26 Losers%3C/text%3E%3Cline x1='30' y1='145' x2='200' y2='145' stroke='%23fbbf24' stroke-width='3'/%3E%3Ctext x='30' y='180' font-size='13' fill='%23fbbf24' font-weight='700' font-family='Inter'%3E%F0%9F%9F%A2 TOP 5 GAINERS%3C/text%3E%3Ctext x='30' y='205' font-size='13' fill='%2310b981' font-family='Inter'%3E1. Tata Motors +4.2%25 %7C 2. HDFC Bank +3.8%25 %7C 3. Infosys +2.9%25%3C/text%3E%3Ctext x='30' y='225' font-size='13' fill='%2310b981' font-family='Inter'%3E4. Reliance +2.5%25 %7C 5. ICICI Bank +1.8%25%3C/text%3E%3Ctext x='30' y='270' font-size='13' fill='%23ff7f7f' font-weight='700' font-family='Inter'%3E%F0%9F%94%B4 TOP 5 LOSERS%3C/text%3E%3Ctext x='30' y='295' font-size='13' fill='%23ef4444' font-family='Inter'%3E1. Pharma index -2.1%25 %7C 2. Bharti Airtel -1.8%25%3C/text%3E%3Ctext x='30' y='315' font-size='13' fill='%23ef4444' font-family='Inter'%3E3. TCS -1.5%25 %7C 4. Maruti -0.9%25 %7C 5. Hero MotoCorp -0.7%25%3C/text%3E%3Ctext x='30' y='360' font-size='13' fill='%23fbbf24' font-weight='600' font-family='Inter'%3E%F0%9F%92%A1 Auto Sector Leading %7C Healthcare Under Pressure%3C/text%3E%3Ctext x='30' y='590' font-size='13' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EFull brief %E2%86%92 vishleshak.in/news%3C/text%3E%3Ctext x='30' y='660' font-size='11' fill='%23888' font-style='italic' font-family='Inter'%3E@vishleshak.market.brief %E2%80%A2 Educational only, not investment advice%3C/text%3E%3C/svg%3E`,
+  'Summary Sheet': `data:image/svg+xml,%3Csvg width='600' height='700' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='700' fill='%234c1d95'/%3E%3Crect width='600' height='80' fill='%233b0764'/%3E%3Ctext x='30' y='25' font-size='12' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EVishleshak Market Brief%3C/text%3E%3Ctext x='30' y='42' font-size='11' fill='%23cbd5e1' font-family='Inter'%3EAI-powered daily market intelligence%3C/text%3E%3Ctext x='490' y='35' font-size='12' fill='%23a78bfa' font-weight='600' font-family='Inter' text-anchor='end'%3E4:30 PM %E2%80%A2 18 JUN 2026%3C/text%3E%3Ctext x='30' y='130' font-size='42' fill='%23ffffff' font-weight='900' font-family='Inter'%3EMarket Summary%3C/text%3E%3Cline x1='30' y1='145' x2='200' y2='145' stroke='%23fbbf24' stroke-width='3'/%3E%3Ctext x='30' y='190' font-size='14' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EKEY INDICES%3C/text%3E%3Ctext x='30' y='215' font-size='13' fill='%23e0e7ff' font-family='Inter'%3ENifty 50: 23,489 %E2%80%A2 Sensex: 77,245 %E2%80%A2 Nifty Midcap: 11,850%3C/text%3E%3Ctext x='30' y='240' font-size='13' fill='%23e0e7ff' font-family='Inter'%3EBank Nifty: 48,750 %E2%80%A2 IT Index: 35,420 %E2%80%A2 Pharma: 14,250%3C/text%3E%3Ctext x='30' y='275' font-size='14' fill='%23fbbf24' font-weight='700' font-family='Inter'%3ECOMMODITIES%3C/text%3E%3Ctext x='30' y='300' font-size='13' fill='%23e0e7ff' font-family='Inter'%3EGold: %E2%82%B965,180/10g %7C Silver: %E2%82%B975,480/kg %7C Crude: $82.5/bbl%3C/text%3E%3Ctext x='30' y='335' font-size='14' fill='%23fbbf24' font-weight='700' font-family='Inter'%3ECURRENCY%3C/text%3E%3Ctext x='30' y='360' font-size='13' fill='%23e0e7ff' font-family='Inter'%3EUSD-INR: 83.48 %7C EUR-INR: 90.25 %7C GBP-INR: 105.50%3C/text%3E%3Ctext x='30' y='590' font-size='13' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EFull brief %E2%86%92 vishleshak.in/news%3C/text%3E%3Ctext x='30' y='660' font-size='11' fill='%23888' font-style='italic' font-family='Inter'%3E@vishleshak.market.brief %E2%80%A2 Educational only, not investment advice%3C/text%3E%3C/svg%3E`,
+  'Tomorrow\'s Watchlist': `data:image/svg+xml,%3Csvg width='600' height='700' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='700' fill='%234c1d95'/%3E%3Crect width='600' height='80' fill='%233b0764'/%3E%3Ctext x='30' y='25' font-size='12' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EVishleshak Market Brief%3C/text%3E%3Ctext x='30' y='42' font-size='11' fill='%23cbd5e1' font-family='Inter'%3EAI-powered daily market intelligence%3C/text%3E%3Ctext x='490' y='35' font-size='12' fill='%23a78bfa' font-weight='600' font-family='Inter' text-anchor='end'%3E6:00 PM %E2%80%A2 18 JUN 2026%3C/text%3E%3Ctext x='30' y='130' font-size='42' fill='%23ffffff' font-weight='900' font-family='Inter'%3ETomorrow%27s Watchlist%3C/text%3E%3Cline x1='30' y1='145' x2='200' y2='145' stroke='%23fbbf24' stroke-width='3'/%3E%3Ctext x='30' y='190' font-size='13' fill='%23fbbf24' font-weight='700' font-family='Inter'%3E%F0%9F%93%8A NIFTY LEVELS TO WATCH%3C/text%3E%3Ctext x='30' y='215' font-size='13' fill='%23e0e7ff' font-family='Inter'%3EResistance: 23,600 %7C Support: 23,350 %7C Range: 250 pts%3C/text%3E%3Ctext x='30' y='250' font-size='13' fill='%23fbbf24' font-weight='700' font-family='Inter'%3E%E2%AD%90 3 STOCKS TO TRACK%3C/text%3E%3Ctext x='30' y='275' font-size='13' fill='%23e0e7ff' font-family='Inter'%3E1. Tata Motors: Watch %E2%82%B9650-660 breakout (earnings soon)%3C/text%3E%3Ctext x='30' y='300' font-size='13' fill='%23e0e7ff' font-family='Inter'%3E2. HDFC Bank: Support at 1,580 %7C Q1 results Tuesday%3C/text%3E%3Ctext x='30' y='325' font-size='13' fill='%23e0e7ff' font-family='Inter'%3E3. Reliance: 3,100-3,120 sideways trading zone%3C/text%3E%3Ctext x='30' y='360' font-size='13' fill='%23fbbf24' font-weight='700' font-family='Inter'%3E%F0%9F%8C%8D GLOBAL CUES: Fed decision (Wed 1:30 PM IST)%3C/text%3E%3Ctext x='30' y='590' font-size='13' fill='%23fbbf24' font-weight='700' font-family='Inter'%3EFull brief %E2%86%92 vishleshak.in/news%3C/text%3E%3Ctext x='30' y='660' font-size='11' fill='%23888' font-style='italic' font-family='Inter'%3E@vishleshak.market.brief %E2%80%A2 Educational only, not investment advice%3C/text%3E%3C/svg%3E`
+};
 
-  function liveSections(){
-    const headlines = state.liveItems.length ? state.liveItems : [];
-    const morningBullets = state.morningBrief && Array.isArray(state.morningBrief.bullets) ? state.morningBrief.bullets.slice(0, 5).map(cleanTitle) : [
-      "Index mood near the open",
-      "Sector rotation in banks, IT, auto and energy",
-      "News catalysts from results, policy and global cues",
-      "Rupee, crude and global market cues",
-      "Stocks with earnings or management commentary"
-    ];
-    const closeBullets = [
-      "Top 5 gainers: leaders from the strongest sectors of the day.",
-      "Top 5 losers: stocks or sectors where selling pressure stayed visible.",
-      "Index close: Sensex, Nifty and Bank Nifty direction.",
-      "Sector close: strongest and weakest sector groups.",
-      "Tomorrow watchlist: names with follow-through or reversal risk."
-    ];
-    const topBullets = headlines.slice(0, 10).map(item => cleanTitle(item.title));
-    return {
-      morning: {
-        title: state.morningBrief && state.morningBrief.hook ? state.morningBrief.hook : "Smart money watchlist before the market opens",
-        summary: "A quick morning lens for what can shape sentiment in the first trading hour.",
-        bullets: morningBullets,
-        detail: "The 9 AM brief is designed for a fast pre-market scan. It tracks index mood, sector rotation, and the headline cues that can matter before the first hour settles.",
-        caption: state.morningBrief && state.morningBrief.caption ? state.morningBrief.caption : "Vishleshak Market Brief - 9 AM watchlist. Educational only. Not investment advice."
-      },
-      top10: {
-        title: "India's business day in 10 headlines",
-        summary: "A live headline stack for markets, business, policy, and sector cues.",
-        bullets: topBullets.length ? topBullets : ["Live market headlines are loading."],
-        detail: "The top 10 section keeps the day scannable. It is the best place to turn live news flow into a saved Instagram or Facebook carousel.",
-        caption: "Vishleshak Market Brief - Top 10 business headlines. Save this for the daily market scan."
-      },
-      close: {
-        title: "Closing bell: movers, gainers and losers",
-        summary: "The close should show who led, who lagged, and where tomorrow's watchlist begins.",
-        bullets: closeBullets,
-        detail: "The 4 PM close looks at what changed by the end of the session: index direction, sector leadership, pressure areas, and what deserves attention tomorrow.",
-        caption: state.closeBrief && state.closeBrief.caption ? state.closeBrief.caption : "Vishleshak Market Brief - 4 PM close. Educational only. Not investment advice."
-      },
-      takeaway: {
-        title: "The useful takeaway for tomorrow",
-        summary: "Plain-language context on what moved, what held, and what to watch next.",
-        bullets: ["What moved: the strongest theme from the day.", "What held: resilient pockets during pressure.", "What fell: the weakest sector or stock group.", "What changed: rotation, breadth or sentiment.", "What to watch: whether the move continues tomorrow."],
-        detail: "This is the editorial layer. It turns the day's summaries into one practical explanation without giving investment advice.",
-        caption: "The takeaway: follow rotation, not noise. Educational only. Not investment advice."
-      }
-    };
-  }
+function openModal(event, briefTitle) {
+  event.preventDefault();
+  const modal = document.getElementById('briefModal');
+  const modalImg = modal.querySelector('img');
+  modalImg.src = briefImages[briefTitle] || 'https://via.placeholder.com/600x400?text=Brief+Image';
+  modalImg.alt = briefTitle;
+  modal.classList.add('active');
+}
 
-  function emptySections(){
-    return {
-      morning: {
-        title: "9 AM brief not published yet",
-        summary: "This date is ahead of today, so the morning brief is not available.",
-        bullets: ["Scheduled for 9:00 AM.", "Will include five cues to watch.", "Index mood.", "Sector rotation.", "Educational only."],
-        detail: "Future-dated briefs will appear here after the daily automation runs.",
-        caption: "Not published yet."
-      },
-      top10: {
-        title: "Top 10 not published yet",
-        summary: "The business headline list will appear after the feed runs for this date.",
-        bullets: ["Scheduled headline feed.", "Source links will be attached.", "Social post summary can be created from this."],
-        detail: "This section is waiting for that date's source headlines.",
-        caption: "Not published yet."
-      },
-      close: {
-        title: "4 PM close not published yet",
-        summary: "The closing summary will appear after market close.",
-        bullets: ["Scheduled for 4:00 PM.", "Top 5 gainers.", "Top 5 losers.", "Index and sector mood.", "Educational only."],
-        detail: "The close cannot be summarized before the market session ends.",
-        caption: "Not published yet."
-      },
-      takeaway: {
-        title: "Takeaway not published yet",
-        summary: "The evening context section appears after the closing summary.",
-        bullets: ["What moved.", "What held.", "What fell.", "What changed.", "What to watch next."],
-        detail: "The takeaway depends on the final market close and sector behavior.",
-        caption: "Not published yet."
-      }
-    };
-  }
+function closeModal() {
+  document.getElementById('briefModal').classList.remove('active');
+}
 
-  function sectionsForSelectedDate(){
-    if (isFuture(state.year, state.month, state.day)) return {source: "Not published", sections: emptySections(), kind: "empty"};
-    if (isToday(state.year, state.month, state.day)) return {source: "Live feed", sections: liveSections(), kind: "live"};
-    const key = keyFor(state.year, state.month, state.day);
-    if (archive[key]) return {source: archive[key].source, sections: archive[key].sections, kind: "archive"};
-    return {source: "Archive pending", sections: emptySections(), kind: "empty"};
-  }
-
-  function cardMeta(type){
-    return {
-      morning: ["9 AM Brief", "Pre-market / 9:00 AM"],
-      top10: ["Top 10", "Business / Headlines"],
-      close: ["4 PM Closing Bell", "Market close / 4:00 PM"],
-      takeaway: ["What It Means", "Evening context"]
-    }[type];
-  }
-
-  function renderSummaries(){
-    const data = sectionsForSelectedDate();
-    summaryGrid.innerHTML = "";
-    sectionOrder.forEach(type => {
-      const section = data.sections[type];
-      const meta = cardMeta(type);
-      const card = document.createElement("article");
-      card.className = "summary-card";
-      card.dataset.type = type;
-      const miniItems = section.bullets.slice(0, 5).map((item, index) =>
-        '<div class="mini-item"><span>' + pad(index + 1) + '</span><b>' + snippet(item, 86) + '</b></div>'
-      ).join("");
-      card.innerHTML =
-        '<div class="summary-top"><div class="kicker">' + meta[0] + '</div><h3>' + section.title + '</h3></div>' +
-        '<div class="summary-body">' +
-          '<div class="meta">' + meta[1] + ' / ' + data.source + '</div>' +
-          '<p class="summary">' + section.summary + '</p>' +
-          '<div class="mini-list">' + miniItems + '</div>' +
-          '<button class="open-detail" type="button">Open details</button>' +
-        '</div>';
-      card.querySelector(".open-detail").addEventListener("click", () => renderDetail(type, section, data.source));
-      summaryGrid.appendChild(card);
-    });
-  }
-
-  function renderDetail(type, section, source){
-    const meta = cardMeta(type);
-    const sourceItems = state.liveItems.slice(0, 4);
-    const detailRows = section.bullets.map((item, index) =>
-      '<div class="detail-row"><div class="num">' + pad(index + 1) + '</div><div><b>' + cleanTitle(item) + '</b><span>' + (type === "top10" ? "Headline item from the daily stack." : "Key point from the selected section.") + '</span></div></div>'
-    ).join("");
-    const sourceLinks = sourceItems.map(item =>
-      '<a href="' + item.link + '" target="_blank" rel="noopener">' + snippet(item.title, 74) + '</a>'
-    ).join("");
-    detailPanel.hidden = false;
-    detailPanel.innerHTML =
-      '<div class="detail-head">' +
-        '<div><div class="kicker">' + meta[0] + ' / ' + dateLabel(state.year, state.month, state.day) + '</div><h3>' + section.title + '</h3></div>' +
-        '<button class="detail-close" type="button" aria-label="Close detail">x</button>' +
-      '</div>' +
-      '<div class="detail-body">' +
-        '<div class="detail-copy">' +
-          '<p>' + section.detail + '</p>' +
-          '<div class="detail-list">' + detailRows + '</div>' +
-        '</div>' +
-        '<aside class="detail-side">' +
-          '<h4>Social caption</h4>' +
-          '<div class="caption-box">' + section.caption + '</div>' +
-          '<h4 style="margin-top:18px">Source check</h4>' +
-          '<div class="source-links">' + (sourceLinks || '<a href="#top">No source links for this archived sample.</a>') + '</div>' +
-        '</aside>' +
-      '</div>';
-    detailPanel.querySelector(".detail-close").addEventListener("click", () => {
-      detailPanel.hidden = true;
-      detailPanel.innerHTML = "";
-    });
-    detailPanel.scrollIntoView({behavior:"smooth", block:"start"});
-  }
-
-  function renderPage(){
-    yearSelect.value = String(state.year);
-    monthSelect.value = String(state.month);
-    const max = daysInMonth(state.year, state.month);
-    if (state.day > max) state.day = max;
-    titleEl.textContent = dateLabel(state.year, state.month, state.day);
-    subtitleEl.textContent = isToday(state.year, state.month, state.day)
-      ? "Today's Vishleshak Market Brief is selected automatically."
-      : "Vishleshak Market Brief archive for the selected date.";
-    if (isFuture(state.year, state.month, state.day)) setStatus("Not published yet", "empty");
-    else if (isToday(state.year, state.month, state.day)) setStatus(state.liveItems.length ? "Live feed working" : "Loading live feed", "pending");
-    else setStatus(archive[keyFor(state.year, state.month, state.day)] ? "Archive sample" : "Archive pending", "empty");
-    detailPanel.hidden = true;
-    detailPanel.innerHTML = "";
-    renderDates();
-    renderSummaries();
-  }
-
-  function loadLiveData(){
-    Promise.allSettled([
-      fetch("/api/news/feed?limit=10", {cache:"no-store"}).then(response => response.json()),
-      fetch("/api/news/brief?slot=morning&limit=6", {cache:"no-store"}).then(response => response.json()),
-      fetch("/api/news/brief?slot=close&limit=6", {cache:"no-store"}).then(response => response.json())
-    ]).then(results => {
-      const feed = results[0].status === "fulfilled" ? results[0].value : null;
-      if (feed && feed.status === "ok" && Array.isArray(feed.items)) state.liveItems = feed.items;
-      state.morningBrief = results[1].status === "fulfilled" ? results[1].value : null;
-      state.closeBrief = results[2].status === "fulfilled" ? results[2].value : null;
-      if (isToday(state.year, state.month, state.day)) setStatus(state.liveItems.length ? "Live feed working" : "Feed pending", state.liveItems.length ? "" : "pending");
-      renderSummaries();
-    }).catch(() => {
-      if (isToday(state.year, state.month, state.day)) setStatus("Feed error", "empty");
-    });
-  }
-
-  setupSelectors();
-  yearSelect.addEventListener("change", () => {
-    state.year = Number(yearSelect.value);
-    renderPage();
-  });
-  monthSelect.addEventListener("change", () => {
-    state.month = Number(monthSelect.value);
-    renderPage();
-  });
-  todayBtn.addEventListener("click", () => {
-    state.year = today.getFullYear();
-    state.month = today.getMonth();
-    state.day = today.getDate();
-    renderPage();
-  });
-  renderPage();
-  loadLiveData();
-})();
+document.getElementById('briefModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
 </script>
 </body>
 </html>

@@ -1018,6 +1018,9 @@ async function loadOrdersAdmin() {
     list.querySelectorAll("[data-approve-veo3]").forEach(btn =>
       btn.addEventListener("click", () => approveVeo3(btn.dataset.approveVeo3))
     );
+    list.querySelectorAll("[data-approve-gemini-omni]").forEach(btn =>
+      btn.addEventListener("click", () => approveGeminiOmni(btn.dataset.approveGeminiOmni))
+    );
     list.querySelectorAll("[data-reject]").forEach(btn =>
       btn.addEventListener("click", () => rejectOrder(btn.dataset.reject))
     );
@@ -1249,7 +1252,8 @@ function renderOrderCard(order) {
     const approveButtons = order.output_type === "image"
       ? `<button class="approve-btn primary-action" data-approve="${order.id}">Approve Image</button>`
       : `<button class="approve-btn primary-action" data-approve="${order.id}">Approve Talking Ad</button>
-         <button class="approve-btn secondary-action" data-approve-veo3="${order.id}">Approve Cinematic Ad</button>`;
+         <button class="approve-btn secondary-action" data-approve-veo3="${order.id}">Approve Cinematic (Veo3)</button>
+         <button class="approve-btn gemini-omni-action" data-approve-gemini-omni="${order.id}">✨ Gemini Omni</button>`;
     actions = `<div class="order-actions">
       ${approveButtons}
       <button class="reject-btn" data-reject="${order.id}">Reject</button>
@@ -1339,6 +1343,18 @@ async function approveVeo3(orderId) {
     const resp = await fetch(`/api/orders/${orderId}/approve-veo3`, {method: "POST"});
     if (!resp.ok) { const d = await resp.json(); throw new Error(d.detail); }
     showToast("Cinematic ad started. This usually takes 5-8 min.");
+    loadOrdersAdmin();
+  } catch(e) {
+    showToast("Error: " + e.message);
+  }
+}
+
+async function approveGeminiOmni(orderId) {
+  if (!(await checkModelReady(orderId))) return;
+  try {
+    const resp = await fetch(`/api/orders/${orderId}/approve-gemini-omni`, {method: "POST"});
+    if (!resp.ok) { const d = await resp.json(); throw new Error(d.detail); }
+    showToast("🎬 Gemini Omni started! Cinematic UGC video with voiceover. Takes ~5-10 min.");
     loadOrdersAdmin();
   } catch(e) {
     showToast("Error: " + e.message);

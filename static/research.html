@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment Research Library - Vishleshak</title>
+<style>
+:root {
+  --bg: #0a0e27;
+  --bg2: #1a1f3a;
+  --navy: #1e3a8a;
+  --blue: #3b82f6;
+  --gold: #fbbf24;
+  --green: #10b981;
+  --red: #ef4444;
+  --text: #ffffff;
+  --muted: #cbd5e1;
+  --card: rgba(255,255,255,.05);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* NAVBAR */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,14,39,.92);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(12px);
+}
+
+.nav-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.logo .sub {
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  margin-top: 2px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+
+.nav-links a {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--gold);
+}
+
+.nav-cta {
+  background: linear-gradient(135deg, var(--blue), #2563eb);
+  color: white !important;
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(59,130,246,.3);
+}
+
+/* RESEARCH LIBRARY */
+.research-library {
+  padding: 60px 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.library-header {
+  margin-bottom: 40px;
+}
+
+.library-section-label {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.library-title {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+}
+
+.library-subtitle {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.search-container {
+  margin-bottom: 32px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  transition: .2s;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  background: rgba(59,130,246,.08);
+}
+
+.filter-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,.2);
+  color: var(--muted);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  border-color: rgba(255,255,255,.4);
+  color: var(--text);
+}
+
+.filter-btn.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+  font-weight: 700;
+}
+
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.report-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 24px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  transition: .2s;
+}
+
+.report-bar:hover {
+  background: rgba(255,255,255,.08);
+  border-left-color: var(--gold);
+  transform: translateX(4px);
+}
+
+.report-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.report-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.report-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.report-link {
+  padding: 8px 16px;
+  background: var(--blue);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: .2s;
+  white-space: nowrap;
+}
+
+.report-link:hover {
+  background: #2563eb;
+  box-shadow: 0 4px 12px rgba(59,130,246,.3);
+}
+
+.empty-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
+  background: rgba(255,255,255,.02);
+  border: 1px dashed rgba(255,255,255,.1);
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+/* FOOTER */
+footer {
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 60px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .nav-wrap {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .research-library {
+    padding: 40px 20px;
+  }
+
+  .library-title {
+    font-size: 32px;
+  }
+
+  .report-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .report-link {
+    align-self: flex-start;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-wrap">
+    <div>
+      <div class="logo">
+        Vishleshak
+        <div class="sub">INVESTMENT RESEARCH</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="investment_vishleshak.html">Back to Main</a>
+      <a href="https://www.facebook.com/profile.php?id=61590366341243" target="_blank" style="display: flex; align-items: center; gap: 6px; color: var(--gold); font-size: 20px; text-decoration: none; font-weight: 700; padding: 8px 14px; border: 1px solid var(--gold); border-radius: 6px; transition: .2s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--bg)';" onmouseout="this.style.background='none'; this.style.color='var(--gold)';">f Facebook</a>
+      <a href="https://www.instagram.com/vishleshak.market.brief/" target="_blank" style="display: flex; align-items: center; gap: 6px; color: var(--gold); font-size: 20px; text-decoration: none; font-weight: 700; padding: 8px 14px; border: 1px solid var(--gold); border-radius: 6px; transition: .2s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--bg)';" onmouseout="this.style.background='none'; this.style.color='var(--gold)';">📷 Instagram</a>
+      <a href="https://wa.me/919953910987" target="_blank" class="nav-cta">Inquire Now</a>
+    </div>
+  </div>
+</nav>
+
+<!-- RESEARCH LIBRARY -->
+<section class="research-library">
+  <div class="library-header">
+    <span class="library-section-label">Research Library</span>
+    <h2 class="library-title">Investment Research</h2>
+    <p class="library-subtitle">Latest research reports, sector analysis, and equity research — newest to oldest.</p>
+  </div>
+
+  <!-- SEARCH BAR -->
+  <div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search by stock name or industry...">
+  </div>
+
+  <!-- FILTER BUTTONS -->
+  <div class="filter-container">
+    <button class="filter-btn active" onclick="filterByDate(this, 'all')">All</button>
+    <button class="filter-btn" onclick="filterByDate(this, 'month')">This Month</button>
+    <button class="filter-btn" onclick="filterByDate(this, 'quarter')">This Quarter</button>
+    <button class="filter-btn" onclick="filterByDate(this, 'year')">This Year</button>
+  </div>
+
+  <!-- REPORTS LIST -->
+  <div class="reports-list" id="reportsList">
+    <!-- June 2026 -->
+    <div class="report-bar" data-date="2026-06-15" data-search="HUL Hindustan Unilever equity research valuation dividend">
+      <div class="report-content">
+        <p class="report-title">HUL Equity Research — Valuation, dividend sustainability & growth outlook</p>
+        <p class="report-meta">June 2026 • Finance</p>
+      </div>
+      <a href="/view-research?doc=EquityResearch_HUL.pdf" class="report-link">View</a>
+    </div>
+
+    <!-- May 2026 -->
+    <div class="report-bar" data-date="2026-05-20" data-search="Maruti Suzuki automotive equity research valuation">
+      <div class="report-content">
+        <p class="report-title">Maruti Suzuki — Auto sector equity research & demand outlook</p>
+        <p class="report-meta">May 2026 • Automotive</p>
+      </div>
+      <a href="/view-research?doc=EquityResearch_MarutiSuzuki.pdf" class="report-link">View</a>
+    </div>
+
+    <!-- April 2026 -->
+    <div class="report-bar" data-date="2026-04-05" data-search="Diwali paint seasonality sector analysis alpha stocks">
+      <div class="report-content">
+        <p class="report-title">Diwali Paint Seasonality — Sector trends & stock alpha opportunities</p>
+        <p class="report-meta">April 2026 • Paint & Consumer</p>
+      </div>
+      <a href="/view-research?doc=DiwaliPaint_Analysis_Report.pdf" class="report-link">View</a>
+    </div>
+
+    <!-- March 2026 -->
+    <div class="report-bar" data-date="2026-03-12" data-search="Alpha analysis Diwali stocks quantitative investment">
+      <div class="report-content">
+        <p class="report-title">Alpha Analysis: Diwali Stocks — Quantitative investment opportunities</p>
+        <p class="report-meta">March 2026 • Paint & Consumer</p>
+      </div>
+      <a href="/view-research?doc=AlphaAnalysis_Diwali.docx" class="report-link">View</a>
+    </div>
+
+    <!-- February 2026 -->
+    <div class="report-bar" data-date="2026-02-28" data-search="Auto sector executive summary seasonality Diwali demand">
+      <div class="report-content">
+        <p class="report-title">Auto Sector Executive Summary — Seasonality & Diwali demand patterns</p>
+        <p class="report-meta">February 2026 • Automotive</p>
+      </div>
+      <a href="/view-research?doc=ExecutiveSummary_AutoDiwali.docx" class="report-link">View</a>
+    </div>
+
+    <div class="report-bar" data-date="2026-02-15" data-search="Hospital chains handbook healthcare sector India research">
+      <div class="report-content">
+        <p class="report-title">Hospital Chains Handbook — India healthcare sector overview & analysis</p>
+        <p class="report-meta">February 2026 • Healthcare</p>
+      </div>
+      <a href="/view-research?doc=HospitalChains_ResearchHandbook.pdf" class="report-link">View</a>
+    </div>
+
+    <!-- January 2026 -->
+    <div class="report-bar" data-date="2026-01-10" data-search="Healthcare sector research India investment opportunities">
+      <div class="report-content">
+        <p class="report-title">Healthcare Sector Research — Investment opportunities & market dynamics</p>
+        <p class="report-meta">January 2026 • Healthcare</p>
+      </div>
+      <a href="/view-research?doc=HospitalSector_Research.pdf" class="report-link">View</a>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty-message" style="display: none;">
+    No reports found. Try adjusting your search or date filter.
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>&copy; 2026 Vishleshak — Investment Research & Market Intelligence for Indian Finance.</p>
+</footer>
+
+<script>
+let currentDateFilter = 'all';
+
+function filterByDate(btn, period) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentDateFilter = period;
+  applyFilters();
+}
+
+function applyFilters() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const bars = document.querySelectorAll('.report-bar');
+  const today = new Date();
+  let visibleCount = 0;
+
+  bars.forEach(bar => {
+    const dateStr = bar.getAttribute('data-date');
+    const searchText = bar.getAttribute('data-search') || '';
+
+    let matchesSearch = searchTerm === '' || searchText.includes(searchTerm);
+    let matchesDate = true;
+
+    if (matchesSearch && dateStr) {
+      const barDate = new Date(dateStr);
+      const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+      const quarterAgo = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+      const yearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+
+      if (currentDateFilter === 'month') {
+        matchesDate = barDate >= monthAgo;
+      } else if (currentDateFilter === 'quarter') {
+        matchesDate = barDate >= quarterAgo;
+      } else if (currentDateFilter === 'year') {
+        matchesDate = barDate >= yearAgo;
+      }
+    }
+
+    const shouldShow = matchesSearch && matchesDate;
+    bar.style.display = shouldShow ? 'flex' : 'none';
+    if (shouldShow) visibleCount++;
+  });
+
+  document.getElementById('emptyState').style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+</script>
+
+</body>
+</html>
