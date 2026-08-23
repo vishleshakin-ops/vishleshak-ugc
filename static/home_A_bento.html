@@ -6,15 +6,15 @@
 <title>Vishleshak - AI Content Studio</title>
 <style>
 :root{
-  --bg:#0a0f1c;
-  --panel:#111a2e;
-  --line:rgba(255,255,255,.09);
-  --text:#eef1f8;
-  --muted:#8b96b3;
-  --soft:#c3cae0;
-  --accent:#3b6fe0;
-  --accent-soft:rgba(59,111,224,.14);
-  --accent-line:rgba(59,111,224,.35);
+  --bg:#ffffff;
+  --panel:#f7f8f9;
+  --line:#e5e7eb;
+  --text:#16191f;
+  --muted:#6b7280;
+  --soft:#3f4551;
+  --accent:#0f9d58;
+  --accent-soft:rgba(15,157,88,.08);
+  --accent-line:rgba(15,157,88,.32);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -32,8 +32,9 @@ svg{display:block}
   position:sticky;
   top:0;
   z-index:30;
-  background:rgba(10,15,28,.92);
+  background:rgba(255,255,255,.92);
   border-bottom:1px solid var(--line);
+  box-shadow:0 1px 2px rgba(16,24,40,.04);
   backdrop-filter:blur(18px);
   width:100%;
 }
@@ -62,7 +63,7 @@ svg{display:block}
 .brand-sub{margin-top:4px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.16em}
 .nav-links{display:flex;align-items:center;gap:30px;color:var(--soft);font-size:14px;font-weight:600}
 .nav-links a{opacity:.82;white-space:nowrap}
-.nav-links a:hover,.nav-links a.active{opacity:1;color:#fff}
+.nav-links a:hover,.nav-links a.active{opacity:1;color:var(--accent)}
 .nav-cta{
   opacity:1!important;
   color:#fff!important;
@@ -80,12 +81,12 @@ svg{display:block}
   border-radius:6px;
   background:var(--accent-soft);
   border:1px solid var(--accent-line);
-  color:#cfe0ff;
+  color:#0a7a45;
   font-size:12px;
   font-weight:700;
   letter-spacing:.01em;
 }
-.dot{width:6px;height:6px;border-radius:50%;background:#3ecf8e}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
 h1{
   margin-top:20px;
   font-size:clamp(32px,3.6vw,50px);
@@ -264,7 +265,7 @@ footer{border-top:1px solid var(--line);padding:32px 0 40px}
       <a href="/static/news.html">News</a>
       <a href="#why-us">Why Us</a>
       <a href="/static/contact.html">Contact</a>
-      <a class="nav-cta" href="/order">Order a Video</a>
+      <a class="nav-cta" href="#services">Get Started</a>
     </div>
   </div>
 </nav>
@@ -272,31 +273,19 @@ footer{border-top:1px solid var(--line);padding:32px 0 40px}
 <main>
   <section class="hero">
     <div class="wrap">
-      <div class="hero-grid">
-        <div>
-          <div class="badge"><span class="dot"></span> AI infrastructure for Indian businesses</div>
-          <h1>Run your business<br>on <span class="accent-text">AI autopilot.</span></h1>
-          <p class="lead">Video ads, social posting, WhatsApp support, and voice reception — built and managed for you, so you can focus on running the business.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="/order">Order a Video Ad</a>
-            <a class="btn btn-secondary" href="/static/contact.html">Talk to Us</a>
-          </div>
-          <div class="hero-stats">
-            <div class="hero-stat"><div class="num">24h</div><div class="label">Average delivery</div></div>
-            <div class="hero-stat"><div class="num">₹499</div><div class="label">Starting price</div></div>
-            <div class="hero-stat"><div class="num">24/7</div><div class="label">WhatsApp support</div></div>
-          </div>
+      <div class="hero-head">
+        <div class="badge"><span class="dot"></span> AI infrastructure for Indian businesses</div>
+        <h1>Run your business<br>on <span class="accent-text">AI autopilot.</span></h1>
+        <p class="lead">Video ads, social posting, WhatsApp support, voice reception, news, and automation — seven services, one team, built for Indian small businesses.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#services">Explore Services</a>
+          <a class="btn btn-secondary" href="/static/contact.html">Talk to Us</a>
         </div>
-
-        <a href="/static/ugc-landing.html" class="hero-visual" id="videoAdTile">
-          <video id="videoAdPreview" src="https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc.mp4" muted loop playsinline preload="metadata"></video>
-          <div class="visual-label">Sample AI video ad</div>
-          <button class="play" id="videoAdPlay" type="button" aria-label="Play AI video ad preview"></button>
-          <div class="visual-copy">
-            <h3>AI Video Ads</h3>
-            <p>From product photo to platform-ready video, in minutes.</p>
-          </div>
-        </a>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="num">7</div><div class="label">Services, one team</div></div>
+          <div class="hero-stat"><div class="num">24h</div><div class="label">Average delivery</div></div>
+          <div class="hero-stat"><div class="num">24/7</div><div class="label">WhatsApp support</div></div>
+        </div>
       </div>
     </div>
   </section>
