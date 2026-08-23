@@ -3096,6 +3096,8 @@ async def get_status(job_id: str):
 
 @app.get("/")
 async def serve_root():
+    if APP_MODE == "client":
+        return FileResponse("static/home_A_bento.html")
     return FileResponse("static/index.html")
 
 @app.get("/admin")
