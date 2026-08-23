@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI UGC Videos - Vishleshak</title>
+  <script src="https://cdn.jsdelivr.net/npm/cloudinary-core@latest/cloudinary-core.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a14;
+      --text: #fff;
+      --muted: #a0a0b0;
+      --purple: #7c5cfa;
+      --green: #10b981;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+
+    @keyframes float {
+      0%, 100% { transform: translateX(-50%) translateY(0px); }
+      50% { transform: translateX(-50%) translateY(-8px); }
+    }
+
+    /* NAV */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(10, 10, 20, 0.93);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+    }
+    .nav-in {
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 16px;
+    }
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #a78bfa, #7c5cfa);
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      color: white;
+    }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #b0b0c0;
+    }
+    .nav-links a {
+      opacity: 0.7;
+      transition: 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      opacity: 1;
+      color: white;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 48px 0 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .hero-content { max-width: 480px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: rgba(124, 92, 250, 0.12);
+      border: 1px solid rgba(124, 92, 250, 0.25);
+      color: #d4c5f0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      margin-bottom: 16px;
+    }
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+    }
+    h1 {
+      font-size: 56px;
+      font-weight: 950;
+      line-height: 1.12;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+    .grad {
+      background: linear-gradient(110deg, #a78bfa, #f174ad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-content > p {
+      font-size: 14px;
+      color: #b0b0c0;
+      line-height: 1.7;
+      margin-bottom: 28px;
+      font-weight: 500;
+    }
+    .buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 28px;
+      border-radius: 7px;
+      font-weight: 700;
+      font-size: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #7c5cfa, #8b7cff);
+      color: white;
+      box-shadow: 0 6px 16px rgba(124, 92, 250, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(124, 92, 250, 0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+    .btn-secondary:hover {
+      border-color: var(--purple);
+      background: rgba(124, 92, 250, 0.08);
+    }
+
+    /* PHONE MOCKUP */
+    .phone-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .phone {
+      width: 240px;
+      height: 480px;
+      background: #000;
+      border-radius: 40px;
+      padding: 10px;
+      box-shadow: 0 0 60px rgba(124, 92, 250, 0.6), 0 30px 70px rgba(0, 0, 0, 0.7), inset 0 0 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+    .phone::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 24px;
+      background: #000;
+      border-radius: 0 0 28px 28px;
+      z-index: 10;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a3a5c 0%, #0f2844 100%);
+      border-radius: 36px;
+      overflow: hidden;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .phone-image {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #5a8ac1 0%, #3d6a9f 100%);
+      border-radius: 10px;
+      position: absolute;
+      inset: 0;
+      object-fit: cover;
+    }
+    .price-card {
+      background: white;
+      border-radius: 18px;
+      padding: 18px 20px;
+      width: 190px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      position: absolute;
+      right: -150px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 6;
+      animation: float 3s ease-in-out infinite;
+    }
+    .price-card-title {
+      color: #1a1a1a;
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 1px;
+      letter-spacing: -0.015em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .price-card-title::before {
+      content: "📷";
+      font-size: 16px;
+    }
+    .price-card-subtitle {
+      color: #999;
+      font-size: 11px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      margin-left: 24px;
+    }
+    .price-video {
+      color: var(--purple);
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.015em;
+    }
+    .price-video::before {
+      content: "📹";
+      font-size: 16px;
+    }
+    .price-time {
+      color: #999;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 24px;
+    }
+    .phone-audio {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 7px 12px;
+      border-radius: 18px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #1a1a1a;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 7;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .phone-audio:hover {
+      transform: translateX(-50%) scale(1.05);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+    .phone-audio::before {
+      content: "🔊";
+      font-size: 11px;
+    }
+    .phone-audio.muted::before {
+      content: "🔇";
+    }
+
+    @media (max-width: 960px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 40px 0 40px;
+        gap: 36px;
+      }
+      h1 { font-size: 44px; }
+      .phone { width: 220px; height: 440px; }
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const audioBtn = document.querySelector('.phone-audio');
+    const video = document.querySelector('.phone-image');
+
+    // Direct Cloudinary URLs
+    const videoList = [
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/Vishleshak%20UGC%20-%20AI%20Video%20Generator.mp4',
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/Vishleshak%20UGC%20-%20AI%20Video%20Generator_2.mp4',
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/Vishleshak%20UGC%20-%20AI%20Video%20Generator_3.mp4',
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/Vishleshak%20UGC%20-%20AI%20Video%20Generator_4.mp4',
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/Vishleshak%20UGC%20-%20AI%20Video%20Generator_5.mp4',
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc.mp4',
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc_2.mp4',
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc%20%284%29.mp4',
+      'https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc%20%285%29.mp4'
+    ];
+
+    let currentVideoIndex = 0;
+
+    // Start with random video
+    function initializeRandomVideo() {
+      if (videoList.length > 0) {
+        currentVideoIndex = Math.floor(Math.random() * videoList.length);
+        if (video && videoList[currentVideoIndex]) {
+          video.src = videoList[currentVideoIndex];
+          video.load();
+          video.play().catch(err => console.log('Autoplay prevented:', err));
+        }
+      }
+    }
+
+    // Cycle to next video
+    function playNextVideo() {
+      if (videoList.length > 1) {
+        currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+        if (video && videoList[currentVideoIndex]) {
+          video.src = videoList[currentVideoIndex];
+          video.load();
+          video.play().catch(err => console.log('Play error:', err));
+        }
+      }
+    }
+
+    // Audio button toggle
+    if (audioBtn && video) {
+      audioBtn.addEventListener('click', function() {
+        video.muted = !video.muted;
+        audioBtn.classList.toggle('muted');
+      });
+
+      // Auto-play next video when current ends
+      video.addEventListener('ended', playNextVideo);
+    }
+
+    // Initialize
+    initializeRandomVideo();
+  });
+</script>
+
+<nav class="nav">
+  <div class="nav-in">
+    <a class="brand" href="home_A_bento.html">
+      <div class="brand-mark">V</div>
+      <div>Vishleshak</div>
+    </a>
+    <div class="nav-links">
+      <a href="home_A_bento.html">Home</a>
+      <a href="#" class="active">UGC Videos</a>
+      <a href="https://vishleshak-ugc-production.up.railway.app/static/news.html">News</a>
+      <a href="#">Why Us</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="wrap">
+    <div class="hero">
+      <div class="hero-content">
+        <div class="badge">
+          <span class="dot"></span>
+          AI-Powered for Modern Businesses
+        </div>
+        <h1>Smart <span class="grad">AI Solutions</span> for Your Business</h1>
+        <p>AI image ads from ₹49 intro, video ads from ₹499. WhatsApp chatbots. AI receptionists. Everything your business needs to sell more — delivered fast.</p>
+        <div class="buttons">
+          <button class="btn btn-primary" onclick="window.open('https://vishleshak-ugc-production.up.railway.app/order', '_blank')">
+            ▶ Try UGC Videos
+          </button>
+          <button class="btn btn-secondary">Free Consultation</button>
+        </div>
+      </div>
+
+      <div class="phone-wrapper">
+        <div class="phone">
+          <div class="phone-screen">
+            <video class="phone-image" autoplay muted loop playsinline>
+              <source src="sample-video.mp4" type="video/mp4">
+            </video>
+            <div class="phone-audio">Tap for audio</div>
+          </div>
+        </div>
+        <div class="price-card">
+          <div class="price-card-title">Image — ₹49 intro</div>
+          <div class="price-card-subtitle">Ready in 5 min</div>
+          <div class="price-video">Video — ₹499</div>
+          <div class="price-time">Ready in 30 min</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+</body>
+</html>

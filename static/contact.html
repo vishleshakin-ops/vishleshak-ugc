@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact - Vishleshak</title>
+  <style>
+    :root{
+      --bg:#120b24;
+      --panel:#201638;
+      --line:rgba(255,255,255,.12);
+      --text:#fff;
+      --muted:#b7add2;
+      --soft:#ded7ef;
+      --purple:#8b5cf6;
+      --blue:#346df5;
+      --pink:#f174ad;
+      --green:#25d366;
+      --teal:#2dd4bf;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      min-height:100vh;
+      overflow-x:hidden;
+      color:var(--text);
+      font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
+      background:
+        radial-gradient(circle at 76% 18%,rgba(139,92,246,.32),transparent 34rem),
+        radial-gradient(circle at 24% 0%,rgba(52,109,245,.14),transparent 27rem),
+        var(--bg);
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:760px;margin:0 auto;padding:0 22px}
+    .nav{
+      position:sticky;
+      top:0;
+      z-index:30;
+      background:rgba(18,11,36,.88);
+      border-bottom:1px solid var(--line);
+      backdrop-filter:blur(18px);
+    }
+    .nav-in{
+      min-height:62px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+    }
+    .brand{display:flex;align-items:center;gap:10px;min-width:max-content}
+    .brand-mark{
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,#a78bfa,#7c3ff2);
+      box-shadow:0 12px 26px rgba(139,92,246,.28);
+      font-size:18px;
+      font-weight:950;
+    }
+    .brand-name{font-size:18px;font-weight:950;line-height:1}
+    .brand-sub{margin-top:2px;color:#9f91c6;font-size:7px;font-weight:850;letter-spacing:.22em}
+    .nav-links{display:flex;align-items:center;gap:18px;color:#c8bedf;font-size:11px;font-weight:850}
+    .nav-links a{opacity:.84;white-space:nowrap;transition:.2s}
+    .nav-links a:hover,.nav-links a.active{opacity:1;color:#fff}
+    .nav-cta{
+      opacity:1!important;
+      color:#fff!important;
+      padding:8px 15px;
+      border-radius:999px;
+      background:linear-gradient(135deg,var(--purple),#7b4df1);
+    }
+    .hero{padding:60px 0 80px}
+    .hero-head{text-align:center;max-width:720px;margin:0 auto 50px}
+    .kicker{
+      color:var(--purple);
+      text-transform:uppercase;
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.08em;
+      margin-bottom:16px;
+    }
+    h1{
+      font-size:clamp(34px,3.4vw,46px);
+      line-height:1.05;
+      letter-spacing:-.035em;
+      font-weight:950;
+      margin-bottom:16px;
+    }
+    .lead{
+      max-width:540px;
+      margin:0 auto;
+      color:var(--soft);
+      font-size:14px;
+      line-height:1.48;
+    }
+    .contact-container{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:40px;
+      margin-top:50px;
+    }
+    .contact-item{
+      padding:24px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
+    }
+    .contact-label{
+      color:var(--purple);
+      text-transform:uppercase;
+      font-size:10px;
+      font-weight:950;
+      letter-spacing:.08em;
+      margin-bottom:12px;
+    }
+    .contact-value{
+      font-size:16px;
+      font-weight:850;
+      line-height:1.4;
+      color:#fff;
+      word-break:break-all;
+    }
+    .buttons{
+      display:flex;
+      gap:12px;
+      flex-direction:column;
+      margin-top:32px;
+    }
+    .btn{
+      min-height:48px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:0 24px;
+      border-radius:10px;
+      border:none;
+      font-size:13px;
+      font-weight:950;
+      cursor:pointer;
+      transition:.2s;
+      white-space:nowrap;
+    }
+    .btn-primary{
+      background:linear-gradient(135deg,var(--purple),#8a5df1);
+      color:#fff;
+    }
+    .btn-primary:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 24px rgba(139,92,246,.3);
+    }
+    .btn-secondary{
+      background:transparent;
+      border:1.5px solid rgba(255,255,255,.2);
+      color:#fff;
+    }
+    .btn-secondary:hover{
+      border-color:var(--purple);
+      background:rgba(139,92,246,.1);
+    }
+    .socials{
+      display:flex;
+      gap:12px;
+      margin-top:24px;
+    }
+    .social-btn{
+      width:44px;
+      height:44px;
+      border-radius:8px;
+      border:none;
+      font-size:20px;
+      cursor:pointer;
+      transition:.2s;
+      display:grid;
+      place-items:center;
+      flex-shrink:0;
+    }
+    .social-instagram{background:#e1306c;color:#fff}
+    .social-facebook{background:#1877f2;color:#fff}
+    .social-youtube{background:#ff0000;color:#fff}
+    .social-btn:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(0,0,0,.3)}
+    footer{
+      border-top:1px solid var(--line);
+      padding:25px 0 37px;
+      color:#9f94bd;
+      font-size:10px;
+      margin-top:60px;
+    }
+    .footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .footer-brand .brand-mark{width:34px;height:34px;font-size:18px}
+    .footer-brand .brand-name{font-size:18px}
+    .footer-brand .brand-sub{font-size:7px}
+    @media(max-width:800px){
+      .wrap{max-width:100%;padding:0 18px}
+      .nav-in{height:auto;align-items:flex-start;flex-direction:column;padding:14px 0}
+      .nav-links{width:100%;gap:15px;overflow-x:auto;padding-bottom:4px}
+      .hero{padding:40px 0 50px}
+      h1{font-size:36px}
+      .contact-container{grid-template-columns:1fr;gap:24px;margin-top:32px}
+      .buttons{flex-direction:row;flex-wrap:wrap}
+    }
+  </style>
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="home_A_bento.html">
+      <div class="brand-mark">V</div>
+      <div>
+        <div class="brand-name">Vishleshak</div>
+        <div class="brand-sub">ANALYSE. CREATE. AUTOMATE.</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="home_A_bento.html">Home</a>
+      <a href="#services">Services</a>
+      <a href="/static/news.html">News</a>
+      <a href="#">Why Us</a>
+      <a href="#" class="active">Contact</a>
+      <a class="nav-cta" href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank">UGC Videos</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-head">
+        <div class="kicker">Get in Touch</div>
+        <h1>Ready to Grow Your Business with AI?</h1>
+        <p class="lead">Join 500+ businesses already using Vishleshak AI tools. Reach out — we respond fast on WhatsApp.</p>
+      </div>
+
+      <div class="contact-container">
+        <div class="contact-item">
+          <div class="contact-label">💬 WhatsApp</div>
+          <div class="contact-value">+91 99539 10987</div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-label">📧 Email</div>
+          <div class="contact-value">vishleshak.in@gmail.com</div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <a href="https://wa.me/919953910987" target="_blank" class="btn btn-primary">
+          💬 Chat on WhatsApp
+        </a>
+        <a href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank" class="btn btn-secondary">
+          ▶ Try UGC Videos
+        </a>
+      </div>
+
+      <div style="margin-top:40px;text-align:center">
+        <div style="color:var(--muted);font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">Follow Us</div>
+        <div class="socials" style="justify-content:center">
+          <a href="https://instagram.com" target="_blank" class="social-btn social-instagram" title="Instagram">📷</a>
+          <a href="https://facebook.com" target="_blank" class="social-btn social-facebook" title="Facebook">f</a>
+          <a href="https://youtube.com" target="_blank" class="social-btn social-youtube" title="YouTube">▶</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-brand">
+      <div class="brand-mark">V</div>
+      <div>
+        <div class="brand-name">Vishleshak</div>
+        <div class="brand-sub">ANALYSE. CREATE. AUTOMATE.</div>
+      </div>
+    </div>
+    <div>&copy; 2026 Vishleshak - AI for Indian business.</div>
+  </div>
+</footer>
+</body>
+</html>

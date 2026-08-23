@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vishleshak - AI Content Studio</title>
+<style>
+:root{
+  --bg:#0f172a;
+  --panel:#1a2849;
+  --line:rgba(255,255,255,.12);
+  --text:#fff;
+  --muted:#a5b4d4;
+  --soft:#d1dce8;
+  --purple:#3b82f6;
+  --blue:#f59e0b;
+  --pink:#f97316;
+  --green:#25d366;
+  --teal:#06b6d4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;
+  overflow-x:hidden;
+  color:var(--text);
+  font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 76% 18%,rgba(59,130,246,.2),transparent 34rem),
+    radial-gradient(circle at 24% 0%,rgba(245,158,11,.14),transparent 27rem),
+    var(--bg);
+}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1200px;margin:0 auto;padding:0 40px}
+.nav{
+  position:sticky;
+  top:0;
+  z-index:30;
+  background:rgba(15,23,42,.88);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(18px);
+  width:100%;
+  padding:0;
+  margin:0;
+}
+.nav-in{
+  min-height:62px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:0 32px;
+  width:100%;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:max-content;margin-right:auto;margin-left:0;padding-left:0}
+.brand-mark{
+  width:42px;
+  height:42px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#3b82f6,#f59e0b);
+  box-shadow:0 12px 26px rgba(59,130,246,.28);
+  font-size:22px;
+  font-weight:950;
+}
+.brand-name{font-size:18px;font-weight:950;line-height:1}
+.brand-sub{margin-top:5px;color:#9f91c6;font-size:7px;font-weight:850;letter-spacing:.22em}
+.nav-links{display:flex;align-items:center;gap:24px;color:#c8bedf;font-size:14px;font-weight:700}
+.nav-links a{opacity:.84;white-space:nowrap}
+.nav-links a:hover,.nav-links a.active{opacity:1;color:#fff}
+.nav-cta{
+  opacity:1!important;
+  color:#fff!important;
+  padding:8px 15px;
+  border-radius:999px;
+  background:linear-gradient(135deg,var(--purple),var(--blue));
+}
+.hero{padding:24px 0 20px}
+.hero-head{text-align:center;max-width:720px;margin:0 auto 26px}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 13px;
+  border-radius:999px;
+  background:rgba(59,130,246,.12);
+  border:1px solid rgba(59,130,246,.34);
+  color:#bfdbfe;
+  font-size:11px;
+  font-weight:850;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(37,211,102,.12)}
+h1{
+  margin-top:18px;
+  font-size:clamp(34px,3.4vw,46px);
+  line-height:1.05;
+  letter-spacing:-.035em;
+  font-weight:950;
+}
+.grad{
+  background:linear-gradient(110deg,#3b82f6 0%,#f59e0b 52%,#f97316 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.lead{
+  max-width:540px;
+  margin:16px auto 0;
+  color:var(--soft);
+  font-size:14px;
+  line-height:1.5;
+  font-weight:400;
+}
+.bento{
+  display:grid;
+  grid-template-columns:1.35fr .65fr .65fr;
+  grid-auto-rows:110px;
+  gap:10px;
+  margin-top:20px;
+  margin-bottom:20px;
+}
+.tile{
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
+  padding:20px;
+}
+.tile h3{font-size:15px;line-height:1.3;font-weight:600;letter-spacing:.01em}
+.tile p{margin-top:6px;color:#a5b4d4;font-size:12px;line-height:1.6;font-weight:400;letter-spacing:.01em}
+.icon{
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  margin-bottom:13px;
+  font-size:16px;
+  background:rgba(59,130,246,.22);
+}
+.pill{
+  display:none;
+}
+.video-card{
+  grid-row:span 2;
+  min-height:230px;
+  padding:0;
+  cursor:pointer;
+  background:#1a2849;
+}
+.video-card video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  opacity:.74;
+  filter:saturate(1.04) contrast(1.04);
+}
+.video-card:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(15,23,42,.06),rgba(15,23,42,.88));
+}
+.video-label{
+  position:absolute;
+  z-index:2;
+  top:16px;
+  left:16px;
+  color:#ff8fc1;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:10px;
+  font-weight:950;
+}
+.video-copy{
+  position:absolute;
+  z-index:2;
+  left:16px;
+  right:16px;
+  bottom:16px;
+}
+.play{
+  position:absolute;
+  z-index:3;
+  left:50%;
+  top:50%;
+  width:48px;
+  height:48px;
+  border:0;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:#fff;
+  box-shadow:0 16px 30px rgba(0,0,0,.34);
+  cursor:pointer;
+}
+.play:before{
+  content:"";
+  position:absolute;
+  left:20px;
+  top:15px;
+  border-left:17px solid var(--purple);
+  border-top:10px solid transparent;
+  border-bottom:10px solid transparent;
+}
+.video-card.is-playing .play{opacity:0;pointer-events:none}
+.stat{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  background:linear-gradient(135deg,#1e3a8a,#92400e);
+}
+.stat .num{font-size:31px;line-height:1;font-weight:950}
+.stat .caption{margin-top:7px;color:#d8cef1;font-size:10px;font-weight:850}
+.news-card{
+  display:none;
+  margin-top:10px;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:14px 22px;
+  border-radius:14px;
+  border:1px solid rgba(167,139,250,.36);
+  background:linear-gradient(135deg,rgba(45,30,80,.78),rgba(42,28,77,.72));
+}
+.kicker{color:#a78bfa;text-transform:uppercase;font-size:9px;font-weight:950;letter-spacing:.16em}
+.news-card h3{font-size:17px;margin-top:7px}
+.news-card p{margin-top:5px;color:#c8bddf;font-size:11px;font-weight:650}
+.btn{
+  min-height:36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:0 16px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  color:#fff;
+  font-size:11px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.btn-primary{background:linear-gradient(135deg,var(--purple),#8a5df1)}
+footer{border-top:1px solid var(--line);padding:25px 0 37px;color:#9f94bd;font-size:10px}
+.footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.footer-brand .brand-mark{width:34px;height:34px;font-size:18px}
+.footer-brand .brand-name{font-size:18px}
+.footer-brand .brand-sub{font-size:7px}
+@media(max-width:800px){
+  .wrap{max-width:100%;padding:0 18px}
+  .nav-in{height:auto;align-items:flex-start;flex-direction:column;padding:14px 0}
+  .nav-links{width:100%;gap:15px;overflow-x:auto;padding-bottom:4px}
+  .hero{padding-top:32px}
+  .hero-head{text-align:left}
+  h1{font-size:39px}
+  .lead{font-size:15px}
+  .bento{grid-template-columns:1fr 1fr}
+  .video-card{grid-column:span 2}
+  .news-card{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:560px){
+  .bento{grid-template-columns:1fr}
+  .video-card{grid-column:auto}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-in">
+    <a class="brand" href="#">
+      <div class="brand-mark">V</div>
+      <div>
+        <div class="brand-name">Vishleshak</div>
+        <div class="brand-sub">ANALYSE. CREATE. AUTOMATE.</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a class="active" href="#">Home</a>
+      <a href="#services">Services</a>
+      <a href="/static/news.html">News</a>
+      <a href="#">Why Us</a>
+      <a href="#">Contact</a>
+      <a class="nav-cta" href="https://vishleshak-ugc-production.up.railway.app/order" target="_blank">UGC Videos</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-head">
+        <div class="badge"><span class="dot"></span> AI for every part of your business</div>
+        <h1>Your business, on <span class="grad">AI autopilot.</span></h1>
+        <p class="lead">Videos, social, chatbots, automation — built for all.</p>
+      </div>
+
+      <section class="bento" aria-label="Vishleshak services">
+        <a href="ugc-landing.html" class="tile video-card" id="videoAdTile" style="cursor: pointer;">
+          <video id="videoAdPreview" src="/static/videos/jyoti-bags-video-branded-smooth-demo.mp4" muted loop playsinline preload="metadata"></video>
+          <div class="video-label">AI Video Ads</div>
+          <button class="play" id="videoAdPlay" type="button" aria-label="Play AI video ad preview"></button>
+          <div class="video-copy">
+            <h3>AI Video Ads</h3>
+            <p>From Rs. 499, ready in minutes.</p>
+          </div>
+        </a>
+
+        <a href="https://vishleshak-ugc-production.up.railway.app/static/news.html" target="_blank" class="tile" style="cursor:pointer">
+          <div class="icon">&#128241;</div>
+          <h3>AI Social Studio</h3>
+          <p>Auto-post to Instagram & Facebook daily.</p>
+        </a>
+
+        <a href="https://vishleshak-ugc-production.up.railway.app/static/chatbot.html" target="_blank" class="tile" style="cursor: pointer;">
+          <span class="pill" style="background:#5b7cff;color:#fff">LIVE</span>
+          <div class="icon">&#128172;</div>
+          <h3>AI Chat Assistant</h3>
+          <p>WhatsApp bot, 24/7.</p>
+        </a>
+
+        <article class="tile stat">
+          <div class="num">24h</div>
+          <div class="caption">Average delivery</div>
+        </article>
+
+        <a href="https://vishleshak-ugc-production.up.railway.app/static/ai-reception.html" target="_blank" class="tile" style="cursor: pointer;">
+          <span class="pill" style="background:var(--teal)">LIVE</span>
+          <div class="icon">&#9742;</div>
+          <h3>AI Voice Reception</h3>
+          <p>Never miss a call.</p>
+        </a>
+
+        <article class="tile" id="services">
+          <span class="pill" style="background:#ffcf24">NEW</span>
+          <div class="icon">&#128240;</div>
+          <h3>AI News Engine</h3>
+          <p>Auto news blog + socials.</p>
+        </article>
+
+        <article class="tile">
+          <span class="pill" style="background:#ff9f43">NEW</span>
+          <div class="icon">&#9881;</div>
+          <h3>AI Automation</h3>
+          <p>Leads, payments, reminders.</p>
+        </article>
+
+        <a href="http://localhost:8001/academy_v2.html" target="_blank" class="tile" style="cursor:pointer">
+          <div class="icon">&#127979;</div>
+          <h3>Vishleshak Academy</h3>
+          <p>Finance through stories — free for everyone.</p>
+        </a>
+      </section>
+
+      <section class="news-card">
+        <div>
+          <div class="kicker">Vishleshak Market News</div>
+          <h3>India's business day in 10 headlines</h3>
+          <p>Twice daily, live demo of our automation.</p>
+        </div>
+        <a class="btn btn-primary" href="/static/news.html">Read News -></a>
+      </section>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-brand">
+      <div class="brand-mark">V</div>
+      <div>
+        <div class="brand-name">Vishleshak</div>
+        <div class="brand-sub">ANALYSE. CREATE. AUTOMATE.</div>
+      </div>
+    </div>
+    <div>&copy; 2026 Vishleshak - AI for Indian business.</div>
+  </div>
+</footer>
+
+<script>
+const videoAdTile = document.getElementById("videoAdTile");
+const videoAdPreview = document.getElementById("videoAdPreview");
+const videoAdPlay = document.getElementById("videoAdPlay");
+
+function playVideoAdPreview(){
+  if (!videoAdPreview || !videoAdTile) return;
+  videoAdPreview.muted = false;
+  videoAdPreview.play().then(() => {
+    videoAdTile.classList.add("is-playing");
+  }).catch(() => {
+    videoAdPreview.muted = true;
+    videoAdPreview.play().then(() => videoAdTile.classList.add("is-playing")).catch(() => {});
+  });
+}
+
+if (videoAdPlay) videoAdPlay.addEventListener("click", playVideoAdPreview);
+if (videoAdPreview && videoAdTile) {
+  videoAdPreview.addEventListener("pause", () => videoAdTile.classList.remove("is-playing"));
+  videoAdPreview.addEventListener("ended", () => videoAdTile.classList.remove("is-playing"));
+}
+</script>
+</body>
+</html>
