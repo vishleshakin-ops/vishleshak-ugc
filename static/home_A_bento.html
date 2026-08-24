@@ -41,8 +41,8 @@ h1,h2,h3{font-family:"Source Serif 4",Georgia,serif;font-weight:500;letter-spaci
 .nav-cta:hover{opacity:.88;color:#fff!important}
 
 .hero{position:relative;padding:140px 48px 120px;min-height:82vh;display:flex;align-items:center;overflow:hidden;background:#0c1712;color:#fff}
-.hero-bg{position:absolute;inset:0;z-index:0;display:flex;justify-content:center;align-items:center}
-.hero-bg video{height:100%;width:auto;max-width:60%;object-fit:contain;opacity:.7;transition:opacity .7s ease}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-bg video{width:100%;height:100%;object-fit:cover;object-position:center 20%;opacity:.6;transition:opacity .7s ease}
 .hero-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,20,15,.55),rgba(9,20,15,.88) 65%,#0c1712)}
 .hero-inner{position:relative;z-index:1;max-width:700px}
 .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent-deep);text-transform:uppercase}
@@ -261,9 +261,7 @@ footer{border-top:1px solid var(--line);margin-top:64px}
 (function(){
   var heroVideos = [
     "https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc.mp4",
-    "https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc_2.mp4",
-    "https://res.cloudinary.com/da9mechjr/video/upload/v1779999868/vishleshak-ugc/22a725b0-06a6-4116-a661-76f86b671d52.mp4",
-    "https://res.cloudinary.com/da9mechjr/video/upload/v1779959194/vishleshak-ugc/8aed5473-647f-485a-be38-3dc9014aa6a2.mp4"
+    "https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc_2.mp4"
   ];
   var heroVideo = document.getElementById("heroBgVideo");
   if (heroVideo) {
@@ -277,7 +275,7 @@ footer{border-top:1px solid var(--line);margin-top:64px}
       setTimeout(function(){
         heroIndex = (heroIndex + 1) % heroVideos.length;
         playHero(heroIndex);
-        heroVideo.style.opacity = .55;
+        heroVideo.style.opacity = .6;
       }, 700);
     }
     playHero(heroIndex);
