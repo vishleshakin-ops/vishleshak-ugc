@@ -41,8 +41,11 @@ h1,h2,h3{font-family:"Source Serif 4",Georgia,serif;font-weight:500;letter-spaci
 .nav-cta:hover{opacity:.88;color:#fff!important}
 
 .hero{position:relative;padding:140px 48px 120px;min-height:82vh;display:flex;align-items:center;overflow:hidden;background:#0c1712;color:#fff}
-.hero-bg{position:absolute;inset:0;z-index:0}
-.hero-bg video{width:100%;height:100%;object-fit:cover;object-position:center 20%;opacity:.6;transition:opacity .7s ease}
+.hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+.hero-bg .hslide{position:absolute;inset:0;background-size:cover;background-position:center 15%;opacity:0;transition:opacity 1.2s ease;animation:heroZoom 12s ease-in-out infinite}
+.hero-bg .hslide.active{opacity:.6}
+@keyframes heroZoom{0%{transform:scale(1)}100%{transform:scale(1.08)}}
+.hero-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,20,15,.55),rgba(9,20,15,.88) 65%,#0c1712)}
 .hero-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,20,15,.55),rgba(9,20,15,.88) 65%,#0c1712)}
 .hero-inner{position:relative;z-index:1;max-width:700px}
 .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent-deep);text-transform:uppercase}
@@ -160,7 +163,12 @@ footer{border-top:1px solid var(--line);margin-top:64px}
 </nav>
 
 <section class="hero">
-  <div class="hero-bg"><video id="heroBgVideo" autoplay muted loop playsinline></video></div>
+  <div class="hero-bg" id="heroBg">
+    <div class="hslide" style="background-image:url('/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg')"></div>
+    <div class="hslide" style="background-image:url('/static/images/86dde3ab-d088-4dad-a72b-9360124e7622.jpg')"></div>
+    <div class="hslide" style="background-image:url('/static/images/7509d168-018e-4020-bf22-2e60669c98e8.jpg')"></div>
+    <div class="hslide" style="background-image:url('/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg')"></div>
+  </div>
   <div class="wrap">
     <div class="hero-inner">
       <div class="eyebrow">AI infrastructure for Indian businesses</div>
@@ -259,27 +267,15 @@ footer{border-top:1px solid var(--line);margin-top:64px}
 
 <script>
 (function(){
-  var heroVideos = [
-    "https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc.mp4",
-    "https://res.cloudinary.com/da9mechjr/video/upload/vishleshak-samples/videos/vishleshak-ugc_2.mp4"
-  ];
-  var heroVideo = document.getElementById("heroBgVideo");
-  if (heroVideo) {
-    var heroIndex = Math.floor(Math.random() * heroVideos.length);
-    function playHero(i){
-      heroVideo.src = heroVideos[i];
-      heroVideo.play().catch(function(){});
-    }
-    function nextHero(){
-      heroVideo.style.opacity = 0;
-      setTimeout(function(){
-        heroIndex = (heroIndex + 1) % heroVideos.length;
-        playHero(heroIndex);
-        heroVideo.style.opacity = .6;
-      }, 700);
-    }
-    playHero(heroIndex);
-    setInterval(nextHero, 9000);
+  var slides = document.querySelectorAll("#heroBg .hslide");
+  if (slides.length) {
+    var heroIndex = Math.floor(Math.random() * slides.length);
+    slides[heroIndex].classList.add("active");
+    setInterval(function(){
+      slides[heroIndex].classList.remove("active");
+      heroIndex = (heroIndex + 1) % slides.length;
+      slides[heroIndex].classList.add("active");
+    }, 6000);
   }
 })();
 </script>
