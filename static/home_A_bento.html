@@ -53,12 +53,12 @@ h1{font-size:clamp(32px,5vw,58px);line-height:1.08;letter-spacing:-.02em;margin:
 .btn-secondary{border:1px solid var(--line);color:var(--ink)!important;background:#fff}
 .btn-secondary:hover{border-color:var(--ink)}
 
-.hero-visual{max-width:1040px;margin:56px auto 0;padding:0 20px}
+.hero-visual{max-width:420px;margin:56px auto 0;padding:0 20px}
 .hero-visual .hbox{
-  position:relative;border-radius:24px;overflow:hidden;aspect-ratio:16/11;
+  position:relative;border-radius:24px;overflow:hidden;aspect-ratio:4/5;
   background:var(--panel);
 }
-.hero-visual .hslide{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center center;opacity:0;transition:opacity 1.2s ease}
+.hero-visual .hslide{position:absolute;inset:0;background-size:cover;background-position:center top;opacity:0;transition:opacity 1.2s ease}
 .hero-visual .hslide.active{opacity:1}
 .hero-visual .hbox:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.32),transparent 45%)}
 
