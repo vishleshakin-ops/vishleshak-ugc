@@ -42,7 +42,7 @@ a{color:inherit;text-decoration:none}
 
 .hero-bg-glow{position:relative;background:var(--bg)}
 .hero-bg-glow:before{content:"";position:absolute;inset:0;z-index:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,.18) 32%,rgba(255,255,255,.58) 64%,rgba(255,255,255,.94) 86%,#ffffff 100%),url('/static/images/hero-bg-custom.avif');
+  background:linear-gradient(180deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,.18) 32%,rgba(255,255,255,.58) 64%,rgba(255,255,255,.94) 86%,#ffffff 100%),url('/static/images/hero-bg-enhanced.webp');
   background-size:cover;background-position:center top}
 .hero-bg-glow>*{position:relative;z-index:1}
 .hero{padding:52px 32px 0;max-width:1180px;margin:0 auto;position:relative}
@@ -62,7 +62,7 @@ h1{font-size:clamp(32px,4.4vw,54px);line-height:1.1;letter-spacing:-.02em;margin
 .btn-split .split-icon{width:38px;height:38px;border-radius:50%;background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .btn-split .split-label{padding-right:16px;font-size:14px;font-weight:600}
 
-.hero-visual{position:absolute;top:4px;right:32px;width:220px;z-index:2}
+.hero-visual{position:absolute;top:130px;right:56px;width:280px;z-index:2}
 .hero-visual .hbox{
   position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3.6;
   background:var(--panel);box-shadow:0 24px 48px rgba(17,18,20,.22);border:1px solid rgba(255,255,255,.6)
@@ -70,8 +70,10 @@ h1{font-size:clamp(32px,4.4vw,54px);line-height:1.1;letter-spacing:-.02em;margin
 .hero-visual .hslide{position:absolute;inset:0;background-size:cover;background-position:center 12%;opacity:0;transition:opacity 1.2s ease}
 .hero-visual .hslide.active{opacity:1}
 .hero-visual .hcaption{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:0 2px}
-.hero-visual .hcaption h4{font-size:13px;font-weight:700}
-.hero-visual .hcaption span{font-size:11.5px;color:var(--muted)}
+.hero-visual .hcaption-text h4{font-size:13px;font-weight:700}
+.hero-visual .hcaption-text span{font-size:11.5px;color:var(--muted)}
+.hero-visual .hcaption-arrow{width:26px;height:26px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hero-visual .hcaption-arrow svg{width:13px;height:13px}
 @media(max-width:900px){
   .hero{text-align:center;padding-top:40px}
   .hero-copy{text-align:center;max-width:100%;margin:0 auto}
@@ -203,18 +205,21 @@ footer{border-top:1px solid var(--line);margin-top:80px}
         </a>
       </div>
     </div>
+  </div>
 
-    <div class="hero-visual">
-      <div class="hbox" id="heroBg">
-        <div class="hslide" style="background-image:url('/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg')"></div>
-        <div class="hslide" style="background-image:url('/static/images/86dde3ab-d088-4dad-a72b-9360124e7622.jpg')"></div>
-        <div class="hslide" style="background-image:url('/static/images/7509d168-018e-4020-bf22-2e60669c98e8.jpg')"></div>
-        <div class="hslide" style="background-image:url('/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg')"></div>
-      </div>
-      <div class="hcaption">
+  <div class="hero-visual">
+    <div class="hbox" id="heroBg">
+      <div class="hslide" style="background-image:url('/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg')"></div>
+      <div class="hslide" style="background-image:url('/static/images/86dde3ab-d088-4dad-a72b-9360124e7622.jpg')"></div>
+      <div class="hslide" style="background-image:url('/static/images/7509d168-018e-4020-bf22-2e60669c98e8.jpg')"></div>
+      <div class="hslide" style="background-image:url('/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg')"></div>
+    </div>
+    <div class="hcaption">
+      <div class="hcaption-text">
         <h4>AI Video Ad</h4>
         <span>Jewelry brand</span>
       </div>
+      <div class="hcaption-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></div>
     </div>
   </div>
 
