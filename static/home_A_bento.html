@@ -74,6 +74,7 @@ h1{white-space:nowrap}
 .phone-screen{width:100%;height:100%;border-radius:29px;overflow:hidden;position:relative}
 .phone-screen .hslide{position:absolute;inset:0;background-size:cover;background-position:center 15%;opacity:0;transition:opacity 1.2s ease}
 .phone-screen .hslide.active{opacity:1}
+.phone-screen video.hslide{object-fit:cover;width:100%;height:100%;background:#000}
 .phone-screen:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.35),transparent 40%)}
 .phone-audio-pill{position:absolute;bottom:16px;right:16px;width:34px;height:34px;background:rgba(20,20,22,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:3}
 .phone-audio-pill svg{width:18px;height:18px}
@@ -226,6 +227,7 @@ footer{border-top:1px solid var(--line);margin-top:80px}
       <div class="phone-notch"></div>
       <div class="phone-screen" id="heroBg">
         <div class="hslide" style="background-image:url('/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg')"></div>
+        <video class="hslide" src="/static/images/hero-jewelry-video.mp4" autoplay muted loop playsinline></video>
         <div class="hslide" style="background-image:url('/static/images/86dde3ab-d088-4dad-a72b-9360124e7622.jpg')"></div>
         <div class="hslide" style="background-image:url('/static/images/7509d168-018e-4020-bf22-2e60669c98e8.jpg')"></div>
         <div class="hslide" style="background-image:url('/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg')"></div>
