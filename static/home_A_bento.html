@@ -42,7 +42,7 @@ a{color:inherit;text-decoration:none}
 
 .hero-bg-glow{position:relative;background:var(--bg)}
 .hero-bg-glow:before{content:"";position:absolute;inset:0;z-index:0;
-  background:linear-gradient(180deg,transparent 0%,transparent 46%,rgba(255,255,255,.7) 54%,#ffffff 60%,#ffffff 100%),url('/static/images/hero-bg-transparent.webp');
+  background:linear-gradient(180deg,transparent 0%,transparent 94%,#ffffff 100%),url('/static/images/hero-bg-transparent.webp');
   background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat,no-repeat}
 .hero-bg-glow>*{position:relative;z-index:1}
 .hero{padding:52px 32px 0;max-width:1180px;margin:0 auto;position:relative}
@@ -84,16 +84,16 @@ h1{font-size:clamp(32px,4.4vw,54px);line-height:1.1;letter-spacing:-.02em;margin
 .hero-visual .hbox:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.32),transparent 45%)}
 
 .marquee-wrap{padding:96px 0 4px;overflow:hidden}
-.marquee-label{text-align:center;font-size:13px;color:rgba(17,18,20,.5);margin-bottom:20px}
+.marquee-label{text-align:center;font-size:13px;color:rgba(255,255,255,.75);margin-bottom:20px;text-shadow:0 1px 6px rgba(0,0,0,.35)}
 .marquee-track{display:flex;gap:56px;width:max-content;animation:marqueeScroll 22s linear infinite}
-.marquee-item{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:rgba(17,18,20,.78);white-space:nowrap}
-.marquee-item svg{width:22px;height:22px;color:rgba(17,18,20,.78);flex-shrink:0}
+.marquee-item{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#fff;white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.marquee-item svg{width:22px;height:22px;color:#fff;flex-shrink:0;filter:drop-shadow(0 1px 4px rgba(0,0,0,.4))}
 @keyframes marqueeScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 .stats{margin-top:0}
 .stats-in{display:flex;padding:12px 32px 40px;gap:56px;flex-wrap:wrap;justify-content:center}
-.stat-num{font-size:26px;font-weight:700;color:var(--ink)}
-.stat-label{font-size:12.5px;color:var(--soft);margin-top:4px}
+.stat-num{font-size:26px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.stat-label{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:4px;text-shadow:0 1px 6px rgba(0,0,0,.35)}
 
 .section{padding:88px 32px 0}
 .section:last-of-type{padding-bottom:0}
