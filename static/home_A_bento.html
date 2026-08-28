@@ -113,6 +113,36 @@ h1{font-size:clamp(28px,3.6vw,44px);line-height:1.12;letter-spacing:-.02em;margi
 .why-grid h3{font-size:16px;font-weight:700}
 .why-grid p{font-size:13.5px;color:#b5b6ba;line-height:1.55;margin-top:8px}
 
+.process{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.pstep .pnum{font-size:12.5px;font-weight:700;color:var(--muted)}
+.pstep h3{font-size:17px;font-weight:700;margin-top:10px}
+.pstep p{font-size:13.5px;color:var(--soft);line-height:1.55;margin-top:8px}
+
+.pricing{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.pcard{border:1px solid var(--line);border-radius:18px;padding:26px}
+.pcard.featured{border-color:var(--ink);border-width:2px}
+.pcard .ptag{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.pcard .pprice{font-size:30px;font-weight:800;margin-top:10px}
+.pcard .pprice span{font-size:13px;font-weight:500;color:var(--muted)}
+.pcard ul{list-style:none;margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.pcard li{font-size:13px;color:var(--soft)}
+.pcard .btn{width:100%;justify-content:center;margin-top:20px}
+
+.faq{max-width:760px;margin:0 auto}
+.faqitem{border-bottom:1px solid var(--line);padding:22px 0}
+.faqitem summary{font-size:15.5px;font-weight:600;cursor:pointer;list-style:none}
+.faqitem summary::-webkit-details-marker{display:none}
+.faqitem p{font-size:14px;color:var(--soft);line-height:1.6;margin-top:12px}
+
+@media(max-width:900px){
+  .process{grid-template-columns:1fr 1fr}
+  .pricing{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .process{grid-template-columns:1fr}
+  .pricing{grid-template-columns:1fr}
+}
+
 footer{border-top:1px solid var(--line);margin-top:80px}
 .footer-in{padding:32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
 .footer-brand{display:flex;align-items:center;gap:10px}
@@ -274,6 +304,87 @@ footer{border-top:1px solid var(--line);margin-top:80px}
     </div>
   </div>
 </div>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Process</div>
+      <h2>From product photo to delivered ad</h2>
+    </div>
+    <div class="process">
+      <div class="pstep"><div class="pnum">01</div><h3>Send a photo</h3><p>Share one product photo over WhatsApp or the order form &mdash; that's all we need to start.</p></div>
+      <div class="pstep"><div class="pnum">02</div><h3>AI generates</h3><p>Script, voiceover, and video are generated automatically in your choice of Hindi, English, or Hinglish.</p></div>
+      <div class="pstep"><div class="pnum">03</div><h3>You review</h3><p>See a preview before final delivery. Request a redo if it's not right.</p></div>
+      <div class="pstep"><div class="pnum">04</div><h3>Delivered</h3><p>Final video lands on WhatsApp, ready to post &mdash; most orders within 24 hours.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Pricing</div>
+      <h2>Simple, per-video pricing</h2>
+    </div>
+    <div class="pricing">
+      <div class="pcard">
+        <div class="ptag">5 Second</div>
+        <div class="pprice">&#8377;499</div>
+        <ul><li>Platform-ready video ad</li><li>AI voiceover included</li><li>Delivered via WhatsApp</li></ul>
+        <a class="btn btn-secondary" href="/order">Order Now</a>
+      </div>
+      <div class="pcard featured">
+        <div class="ptag">10 Second</div>
+        <div class="pprice">&#8377;999</div>
+        <ul><li>Platform-ready video ad</li><li>AI voiceover included</li><li>Delivered via WhatsApp</li></ul>
+        <a class="btn btn-primary" href="/order">Order Now</a>
+      </div>
+      <div class="pcard">
+        <div class="ptag">15 Second</div>
+        <div class="pprice">&#8377;1,499</div>
+        <ul><li>Platform-ready video ad</li><li>AI voiceover included</li><li>Delivered via WhatsApp</li></ul>
+        <a class="btn btn-secondary" href="/order">Order Now</a>
+      </div>
+      <div class="pcard">
+        <div class="ptag">Cinematic (6s)</div>
+        <div class="pprice">&#8377;599</div>
+        <ul><li>Google Veo3 cinematic style</li><li>AI voiceover included</li><li>Delivered via WhatsApp</li></ul>
+        <a class="btn btn-secondary" href="/order">Order Now</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">FAQ</div>
+      <h2>Common questions</h2>
+    </div>
+    <div class="faq">
+      <details class="faqitem" open>
+        <summary>How fast will I get my video?</summary>
+        <p>Most orders are delivered within 24 hours of you approving the script and photo. Cinematic (Veo3) videos can take a bit longer, usually 20&ndash;30 minutes for generation plus review time.</p>
+      </details>
+      <details class="faqitem">
+        <summary>What do I need to send to get started?</summary>
+        <p>Just one clear photo of your product. We'll write the script, generate the voiceover, and build the video from there &mdash; you can request changes before final delivery.</p>
+      </details>
+      <details class="faqitem">
+        <summary>What languages are supported?</summary>
+        <p>Hindi, English, and Hinglish voiceovers are all available at no extra cost.</p>
+      </details>
+      <details class="faqitem">
+        <summary>Do you offer ongoing social media posting too?</summary>
+        <p>Yes &mdash; our AI Social Studio can auto-post branded content to Instagram and Facebook daily. Ask us about combining it with video ads.</p>
+      </details>
+      <details class="faqitem">
+        <summary>Is there a subscription or is it pay-per-video?</summary>
+        <p>Video ads are pay-per-video, no subscription required. Some services like AI Chat Assistant and Voice Reception run as a monthly service &mdash; talk to us for pricing on those.</p>
+      </details>
+    </div>
+  </div>
+</section>
 
 <footer>
   <div class="wrap footer-in">
