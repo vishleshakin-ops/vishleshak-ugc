@@ -41,49 +41,54 @@ a{color:inherit;text-decoration:none}
 .nav-cta-pill{background:var(--ink);color:#fff!important;padding:13px 24px;border-radius:999px;font-weight:600;font-size:13.5px;white-space:nowrap;box-shadow:0 4px 20px rgba(17,18,20,.15);flex-shrink:0;margin-left:auto}
 .nav-cta-pill:hover{opacity:.85}
 
-.hero-bg-glow{position:relative;background:var(--bg)}
+.hero-bg-glow{position:relative;background:#0c0a1f}
 .hero-bg-glow:before{content:"";position:absolute;inset:0;z-index:0;
-  background:linear-gradient(180deg,transparent 0%,transparent 94%,#ffffff 100%),url('/static/images/hero-bg-transparent.webp');
-  background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat,no-repeat}
+  background:
+    radial-gradient(ellipse 900px 600px at 22% 15%,rgba(124,58,237,.55) 0%,rgba(124,58,237,0) 60%),
+    radial-gradient(ellipse 700px 500px at 78% 30%,rgba(59,60,180,.4) 0%,rgba(59,60,180,0) 60%),
+    linear-gradient(180deg,#150f35 0%,#0c0a1f 55%,#0c0a1f 92%,#ffffff 100%)}
 .hero-bg-glow>*{position:relative;z-index:1}
 .hero{padding:94px 48px 0;max-width:1900px;margin:0 auto;position:relative}
 .hero-copy{max-width:540px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;animation:fadeUp .7s ease both}
-h1{font-size:clamp(34px,3.8vw,70px);line-height:1.1;letter-spacing:-.02em;margin:22px 0 0;font-weight:500;color:rgba(17,18,20,.85);animation:fadeUp .7s .08s ease both}
-.h-soft{color:rgba(17,18,20,.4);font-weight:500}
-.lead{font-size:16px;line-height:1.6;color:var(--soft);margin:20px 0 0;max-width:440px;animation:fadeUp .7s .16s ease both}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;color:rgba(255,255,255,.55);text-transform:uppercase;animation:fadeUp .7s ease both}
+h1{font-size:clamp(34px,3.8vw,70px);line-height:1.1;letter-spacing:-.02em;margin:22px 0 0;font-weight:500;color:rgba(255,255,255,.92);animation:fadeUp .7s .08s ease both}
+.h-soft{color:rgba(255,255,255,.4);font-weight:500}
+.lead{font-size:16px;line-height:1.6;color:rgba(255,255,255,.65);margin:20px 0 0;max-width:440px;animation:fadeUp .7s .16s ease both}
 .hero-actions{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;animation:fadeUp .7s .24s ease both}
 .btn{padding:13px 24px;border-radius:40px;font-weight:400;font-size:14px;display:inline-flex;align-items:center;white-space:nowrap}
 .btn-primary{background:var(--ink);color:#fff!important}
 .btn-primary:hover{opacity:.85}
 .btn-secondary{border:1px solid var(--line);color:var(--ink)!important;background:#fff}
 .btn-secondary:hover{border-color:var(--ink)}
-.btn-split{display:inline-flex;align-items:center;border-radius:999px;background:var(--ink);color:#fff!important;padding:6px;gap:10px}
+.btn-split{display:inline-flex;align-items:center;border-radius:999px;background:#fff;color:var(--ink)!important;padding:6px;gap:10px}
 .btn-split:hover{opacity:.88}
-.btn-split .split-icon{width:38px;height:38px;border-radius:50%;background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.btn-split .split-icon{width:38px;height:38px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .btn-split .split-label{padding-right:16px;font-size:14px;font-weight:600}
 
-.hero-visual{position:absolute;top:130px;right:56px;width:280px;z-index:2;animation:fadeUp .8s .3s ease both}
-.hero-visual .hbox{
-  position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3.6;
-  background:var(--panel);box-shadow:0 24px 48px rgba(17,18,20,.22);border:1px solid rgba(255,255,255,.6)
-}
-.hero-visual .hslide{position:absolute;inset:0;background-size:cover;background-position:center 12%;opacity:0;transition:opacity 1.2s ease}
-.hero-visual .hslide.active{opacity:1}
-.hero-visual .hcaption{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:0 2px}
-.hero-visual .hcaption-text h4{font-size:13px;font-weight:700}
-.hero-visual .hcaption-text span{font-size:11.5px;color:var(--muted)}
-.hero-visual .hcaption-arrow{width:26px;height:26px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.hero-visual .hcaption-arrow svg{width:13px;height:13px}
+.hero-visual{position:absolute;top:56px;right:80px;width:420px;height:520px;z-index:2;animation:fadeUp .8s .3s ease both}
+.phone-frame{width:250px;margin-left:auto;aspect-ratio:9/19;background:#0a0a0c;border-radius:38px;padding:9px;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 2px rgba(255,255,255,.06);position:relative}
+.phone-notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:84px;height:20px;background:#0a0a0c;border-radius:0 0 14px 14px;z-index:2}
+.phone-screen{width:100%;height:100%;border-radius:29px;overflow:hidden;position:relative}
+.phone-screen .hslide{position:absolute;inset:0;background-size:cover;background-position:center 15%;opacity:0;transition:opacity 1.2s ease}
+.phone-screen .hslide.active{opacity:1}
+.phone-screen:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.35),transparent 40%)}
+.phone-audio-pill{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.95);padding:8px 15px;border-radius:999px;font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:3;color:var(--ink)}
+.price-card{position:absolute;left:0;bottom:96px;background:#fff;border-radius:18px;padding:16px 18px;box-shadow:0 24px 60px rgba(0,0,0,.4);width:220px;z-index:3}
+.price-row{display:flex;align-items:center;gap:11px;padding:8px 0}
+.price-row+.price-row{border-top:1px solid var(--line)}
+.price-icon{width:34px;height:34px;border-radius:10px;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.price-text strong{display:block;font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3}
+.price-text span{font-size:11.5px;color:var(--muted)}
 @media(max-width:900px){
   .hero{text-align:center;padding-top:40px}
   .hero-copy{text-align:center;max-width:100%;margin:0 auto}
   .hero-actions{justify-content:center}
   .lead{margin-left:auto;margin-right:auto}
-  .hero-visual{position:static;width:100%;max-width:260px;margin:32px auto 0}
+  .hero-visual{position:static;width:100%;max-width:320px;height:auto;margin:40px auto 0;padding-bottom:40px}
+  .phone-frame{margin:0 auto}
+  .price-card{left:50%;transform:translateX(-50%);bottom:-24px}
 }
-.hero-visual .hbox:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.32),transparent 45%)}
 
 .marquee-wrap{padding:96px 0 4px;overflow:hidden;animation:fadeUp .7s .42s ease both}
 .marquee-label{text-align:left;padding-left:48px;font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-bottom:22px;text-shadow:0 1px 6px rgba(0,0,0,.35)}
@@ -213,18 +218,25 @@ footer{border-top:1px solid var(--line);margin-top:80px}
   </div>
 
   <div class="hero-visual">
-    <div class="hbox" id="heroBg">
-      <div class="hslide" style="background-image:url('/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg')"></div>
-      <div class="hslide" style="background-image:url('/static/images/86dde3ab-d088-4dad-a72b-9360124e7622.jpg')"></div>
-      <div class="hslide" style="background-image:url('/static/images/7509d168-018e-4020-bf22-2e60669c98e8.jpg')"></div>
-      <div class="hslide" style="background-image:url('/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg')"></div>
-    </div>
-    <div class="hcaption">
-      <div class="hcaption-text">
-        <h4>AI Video Ad</h4>
-        <span>Jewelry brand</span>
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen" id="heroBg">
+        <div class="hslide" style="background-image:url('/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg')"></div>
+        <div class="hslide" style="background-image:url('/static/images/86dde3ab-d088-4dad-a72b-9360124e7622.jpg')"></div>
+        <div class="hslide" style="background-image:url('/static/images/7509d168-018e-4020-bf22-2e60669c98e8.jpg')"></div>
+        <div class="hslide" style="background-image:url('/static/images/c8ab5e57-7fda-4668-96c6-b996cbfc0a83.jpg')"></div>
+        <div class="phone-audio-pill">&#128266; Tap for audio</div>
       </div>
-      <div class="hcaption-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></div>
+    </div>
+    <div class="price-card">
+      <div class="price-row">
+        <div class="price-icon">&#127909;</div>
+        <div class="price-text"><strong>Video Ad &mdash; &#8377;499</strong><span>Delivered in 24h</span></div>
+      </div>
+      <div class="price-row">
+        <div class="price-icon">&#127908;</div>
+        <div class="price-text"><strong>Voiceover included</strong><span>Hindi, English, Hinglish</span></div>
+      </div>
     </div>
   </div>
 
