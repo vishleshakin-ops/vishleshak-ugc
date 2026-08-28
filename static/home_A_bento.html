@@ -456,18 +456,32 @@ footer{border-top:1px solid var(--line);margin-top:80px}
 <script>
 (function(){
   var slides = document.querySelectorAll("#heroBg .hslide");
+  var video = document.getElementById("heroVideo");
+  var audioToggle = document.getElementById("audioToggle");
+
+  function syncSlide(el){
+    if (!video || !audioToggle) return;
+    if (el === video) {
+      audioToggle.style.display = "";
+      video.play();
+    } else {
+      audioToggle.style.display = "none";
+      video.pause();
+    }
+  }
+
   if (slides.length) {
     var heroIndex = Math.floor(Math.random() * slides.length);
     slides[heroIndex].classList.add("active");
+    syncSlide(slides[heroIndex]);
     setInterval(function(){
       slides[heroIndex].classList.remove("active");
       heroIndex = (heroIndex + 1) % slides.length;
       slides[heroIndex].classList.add("active");
+      syncSlide(slides[heroIndex]);
     }, 6000);
   }
 
-  var video = document.getElementById("heroVideo");
-  var audioToggle = document.getElementById("audioToggle");
   var muteSlash = document.getElementById("muteSlash");
   if (video && audioToggle) {
     audioToggle.addEventListener("click", function(){
