@@ -58,7 +58,7 @@ h1{font-size:clamp(32px,5vw,58px);line-height:1.08;letter-spacing:-.02em;margin:
   position:relative;border-radius:24px;overflow:hidden;aspect-ratio:16/11;
   background:var(--panel);
 }
-.hero-visual .hslide{position:absolute;inset:0;background-size:cover;background-position:center 25%;opacity:0;transition:opacity 1.2s ease}
+.hero-visual .hslide{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center center;opacity:0;transition:opacity 1.2s ease}
 .hero-visual .hslide.active{opacity:1}
 .hero-visual .hbox:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.32),transparent 45%)}
 
