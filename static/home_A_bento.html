@@ -128,6 +128,9 @@ h1{white-space:nowrap}
 .btile h3{font-size:16px;font-weight:700}
 .btile p{font-size:13px;line-height:1.5;margin-top:6px;color:var(--soft)}
 .btile.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btile.media{background-size:cover;background-position:center 15%}
+.btile.media:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 40%,rgba(0,0,0,.8))}
+.btile.media h3,.btile.media p{position:relative;z-index:1}
 .btile.dark p{color:#b5b6ba}
 .chat-mock{position:absolute;top:18px;right:18px;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
 .chat-bubble{background:#fff;color:var(--ink);font-size:10.5px;font-weight:600;padding:5px 9px;border-radius:9px 9px 2px 9px;max-width:110px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -302,6 +305,11 @@ footer{border-top:1px solid var(--line);margin-top:80px}
     </div>
 
     <div class="bento">
+      <a class="btile dark media" href="/static/ugc-landing.html" style="background-image:url('/static/images/b1c66048-5ecf-4bac-bb29-1a19ae073ad4.jpg')">
+        <h3>AI Video Ads</h3>
+        <p>From &#8377;499, delivered in 24h.</p>
+      </a>
+
       <a class="btile dark" href="/static/chatbot.html">
         <div class="chat-mock">
           <div class="chat-bubble in">Order status?</div>
@@ -326,7 +334,7 @@ footer{border-top:1px solid var(--line);margin-top:80px}
         <p>Leads, payments, reminders.</p>
       </div>
 
-      <a class="btile dark" href="https://academy-vishleshak-production.up.railway.app/" target="_blank" style="grid-column:span 2">
+      <a class="btile dark" href="https://academy-vishleshak-production.up.railway.app/" target="_blank">
         <h3>Vishleshak Academy</h3>
         <p>Free financial literacy for teens.</p>
       </a>
