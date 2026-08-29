@@ -4773,12 +4773,15 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                     if idx < len(_alt_slots):
                         _picked = _alt_slots[idx]
                         import re as _re2
-                        _m = _re2.search(r'(\d+):?\d*\s*(am|pm)', _picked.lower())
+                        _m = _re2.search(r'(\d+):?(\d*)\s*(am|pm)', _picked.lower())
                         if _m:
                             _ph = int(_m.group(1))
-                            if _m.group(2) == "pm" and _ph != 12:
+                            _pm_min = _m.group(2)
+                            if _m.group(3) == "pm" and _ph != 12:
                                 _ph += 12
-                            dental["gcal_hour"] = _ph
+                            elif _m.group(3) == "am" and _ph == 12:
+                                _ph = 0
+                            dental["gcal_hour"] = _ph + (0.5 if _pm_min and int(_pm_min) >= 30 else 0)
                         dental["time_label"] = _picked
                         dental["alt_slots"] = []
                         text = _picked
