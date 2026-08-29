@@ -2659,6 +2659,7 @@ async def improve_creative_notes_endpoint(
         raw_notes = "Create a premium UGC creative that highlights the uploaded product clearly."
 
     image_b64 = base64.b64encode(image_data).decode("utf-8")
+    image_b64, image_media_type = _ensure_jpeg_b64(image_b64)
     instructions = (
         "Look at the uploaded product image and rewrite the customer's rough creative notes into a better production brief.\n"
         "Reply with ONLY valid JSON, no markdown, in this format: {\"improved_notes\":\"...\"}\n\n"
@@ -2684,7 +2685,7 @@ async def improve_creative_notes_endpoint(
             messages=[{
                 "role": "user",
                 "content": [
-                    {"type": "image", "source": {"type": "base64", "media_type": image.content_type, "data": image_b64}},
+                    {"type": "image", "source": {"type": "base64", "media_type": image_media_type, "data": image_b64}},
                     {"type": "text", "text": instructions},
                 ],
             }],
