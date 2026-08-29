@@ -202,7 +202,7 @@ def _parse_event_datetime(date_str: str, hour: int) -> datetime:
     except Exception:
         event_date = now + timedelta(days=1)
     minute = 30 if isinstance(hour, float) and hour % 1 else 0
-    return event_date.replace(hour=int(hour), minute=minute, second=0, microsecond=0)
+    return event_date.replace(hour=int(hour), minute=minute, second=0, microsecond=0, tzinfo=None)
 
 def _format_date(date_str: str, hour: int | None = None) -> str:
     """Return a nicely formatted date string like 'Tuesday, 3 June 2026'."""
