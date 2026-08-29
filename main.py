@@ -5171,7 +5171,13 @@ Emergency (severe swelling, heavy bleeding, difficulty breathing, knocked-out to
                         "Clinic hours: Mon-Fri 9am-8pm | Sat 9am-6pm\n\n"
                     )
             elif step == "ask_time":
-                dental["time"] = dental.pop("time_label", None) or dental.pop("_raw_time_text", None) or text
+                _raw_time_input = dental.pop("time_label", None) or dental.pop("_raw_time_text", None) or text
+                dental["time"] = _raw_time_input
+                if not dental.get("gcal_hour"):
+                    _parsed_time = _extract_appointment_time(_raw_time_input)
+                    if _parsed_time:
+                        dental["gcal_hour"] = _parsed_time["hour"]
+                        dental["time"] = _parsed_time["label"]
                 _check_hour = dental.get("gcal_hour") or 9
                 hours_issue = _clinic_hours_issue(dental['date'], _check_hour)
                 if hours_issue:
