@@ -6059,12 +6059,14 @@ async def create_veo3_via_kie(image_url: str, prompt: str, aspect_ratio: str = "
     ar = aspect_ratio if aspect_ratio in valid_ratios else "9:16"
     # REFERENCE_2_VIDEO only supports 16:9; use FIRST_AND_LAST_FRAMES_2_VIDEO for all other ratios
     generation_type = "REFERENCE_2_VIDEO" if ar == "16:9" else "FIRST_AND_LAST_FRAMES_2_VIDEO"
+    # REFERENCE_2_VIDEO only supports 8-second generation on kie.ai — any other duration 500s
+    final_duration = 8 if generation_type == "REFERENCE_2_VIDEO" else (duration if duration in valid_durations else 8)
     payload = {
         "prompt": prompt,
         "model": "veo3_fast",
         "aspect_ratio": ar,
         "resolution": resolution if resolution in valid_resolutions else "720p",
-        "duration": duration if duration in valid_durations else 8,
+        "duration": final_duration,
         "imageUrls": [image_url],
         "generationType": generation_type,
     }

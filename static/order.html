@@ -2174,6 +2174,7 @@
                   <button type="button" data-duration="10">Standard Ad<br /><small>8-10 sec</small></button>
                 </div>
                 <small class="helper">Need a longer video? We will review the product, script, and cost before confirming.</small>
+                <small class="helper" id="cinematic-duration-note" style="display:none;color:#f0b429">Cinematic ads on Facebook/YouTube (16:9) are generated as a fixed 8-second video, regardless of the duration selected above.</small>
               </div>
               <div class="field full">
                 <label>Tone</label>
@@ -2336,6 +2337,14 @@
       selectedRatio = selectedOutput === "image"
         ? activePlatform.dataset.imageRatio
         : activePlatform.dataset.videoRatio;
+      updateCinematicDurationNote();
+    }
+
+    function updateCinematicDurationNote() {
+      const note = document.getElementById("cinematic-duration-note");
+      if (!note) return;
+      const show = selectedOutput !== "image" && selectedStyle === "cinematic" && selectedRatio === "16:9";
+      note.style.display = show ? "block" : "none";
     }
 
     function platformFormatLabel() {
@@ -2714,7 +2723,7 @@
       updateSelectedRatio();
       updateVideoVisibility();
     });
-    wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; });
+    wireSegmented("style-group", btn => { selectedStyle = btn.dataset.style; updateCinematicDurationNote(); });
     wireSegmented("presenter-group", btn => {
       selectPresenterSource(btn.dataset.presenter);
     });
