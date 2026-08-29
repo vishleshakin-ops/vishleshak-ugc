@@ -345,7 +345,7 @@ async def check_gcal_conflict(date_str: str, start_hour: int) -> list[str]:
             candidates.append(steps * 30)
             candidates.append(-steps * 30)
 
-        alternatives = []
+        found = []  # list of (alt_start, label)
         for delta_min in candidates:
             alt_start = start_dt + timedelta(minutes=delta_min)
             alt_h, alt_m = alt_start.hour, alt_start.minute
@@ -361,11 +361,12 @@ async def check_gcal_conflict(date_str: str, start_hour: int) -> list[str]:
             ).execute())
             if not alt_result.get("items"):
                 label = _fmt_slot(alt_h, alt_m)
-                if label not in alternatives:
-                    alternatives.append(label)
-            if len(alternatives) >= 3:
+                if label not in [l for _, l in found]:
+                    found.append((alt_start, label))
+            if len(found) >= 6:
                 break
-        return alternatives
+        found.sort(key=lambda pair: pair[0])
+        return [label for _, label in found[:3]]
 
     except Exception as e:
         print(f"[GCal] Conflict check failed: {e}")
