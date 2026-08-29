@@ -4532,7 +4532,46 @@ async def serve_order_page():
 
 @app.get("/order/result/{order_id}")
 async def serve_order_result_page(order_id: str):
-    return FileResponse("static/order-result.html", headers={"Cache-Control": "no-store"})
+    from fastapi.responses import HTMLResponse
+    order = None
+    for o in load_orders():
+        if o["id"] == order_id:
+            order = o
+            break
+
+    with open("static/order-result.html", "r", encoding="utf-8") as f:
+        page_html = f.read()
+
+    if order:
+        _og_base = "https://vishleshak-ugc-production.up.railway.app"
+        def _absolute_url(u: str) -> str:
+            if not u:
+                return ""
+            if u.startswith("http://") or u.startswith("https://"):
+                return u
+            return _og_base + (u if u.startswith("/") else "/" + u)
+        og_image = _absolute_url(order.get("image_url") or "")
+        og_video = _absolute_url(order.get("video_url") or "")
+        business = order.get("business_name") or order.get("name") or "Vishleshak"
+        og_title = f"{business} — AI-generated ad" if (og_image or og_video) else "Order Status - Vishleshak AI"
+        og_description = (order.get("script") or "Created with Vishleshak AI Content Studio")[:200]
+        og_tags = f'''
+  <meta property="og:title" content="{html.escape(og_title)}" />
+  <meta property="og:description" content="{html.escape(og_description)}" />
+  <meta property="og:url" content="https://vishleshak-ugc-production.up.railway.app/order/result/{order_id}" />'''
+        if og_image:
+            og_tags += f'''
+  <meta property="og:image" content="{html.escape(og_image)}" />
+  <meta property="og:image:width" content="1080" />
+  <meta name="twitter:card" content="summary_large_image" />'''
+        elif og_video:
+            og_tags += f'''
+  <meta property="og:video" content="{html.escape(og_video)}" />
+  <meta property="og:video:type" content="video/mp4" />
+  <meta name="twitter:card" content="player" />'''
+        page_html = page_html.replace("</title>", "</title>" + og_tags, 1)
+
+    return HTMLResponse(page_html, headers={"Cache-Control": "no-store"})
 
 
 # ── WhatsApp Webhook ──────────────────────────────────────────────────────────
